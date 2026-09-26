@@ -133,9 +133,21 @@ export class TianjiView extends ItemView {
 		return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 	}
 
+	/** 规范为 datetime-local（含秒）；缺秒时补 :00 */
+	private normalizeDatetimeLocal(value: string): string {
+		const v = value.trim();
+		if (!v) return this.toDatetimeLocal(new Date());
+		if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v)) return `${v}:00`;
+		if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(v)) return v.slice(0, 19);
+		const d = new Date(v);
+		return Number.isNaN(d.getTime())
+			? this.toDatetimeLocal(new Date())
+			: this.toDatetimeLocal(d);
+	}
+
 	private parseCastTime(): Date {
 		if (!this.liuyaoCastLocal) return new Date();
-		const d = new Date(this.liuyaoCastLocal);
+		const d = new Date(this.normalizeDatetimeLocal(this.liuyaoCastLocal));
 		return Number.isNaN(d.getTime()) ? new Date() : d;
 	}
 
@@ -325,14 +337,12 @@ export class TianjiView extends ItemView {
 			const input = el.createEl('input', {
 				type: 'datetime-local',
 				cls: 'tianji-input',
-				value: this.liuyaoCastLocal.slice(0, 16),
+				value: this.normalizeDatetimeLocal(this.liuyaoCastLocal),
 			});
 			input.step = '1';
 			input.addEventListener('change', () => {
-				this.liuyaoCastLocal =
-					input.value.length === 16
-						? `${input.value}:00`
-						: input.value;
+				this.liuyaoCastLocal = this.normalizeDatetimeLocal(input.value);
+				input.value = this.liuyaoCastLocal;
 			});
 			const nowBtn = el.createEl('button', {
 				cls: 'tianji-btn',
@@ -340,7 +350,7 @@ export class TianjiView extends ItemView {
 			});
 			nowBtn.addEventListener('click', () => {
 				this.liuyaoCastLocal = this.toDatetimeLocal(new Date());
-				input.value = this.liuyaoCastLocal.slice(0, 16);
+				input.value = this.liuyaoCastLocal;
 			});
 			if (this.liuyaoResult?.ganZhiText) {
 				el.createDiv({
