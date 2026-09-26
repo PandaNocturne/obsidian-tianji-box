@@ -5,13 +5,26 @@ import {
 	moveTabInOrder,
 } from './divination-tabs';
 import type TianjiPlugin from './main';
-import type { DivinationType, OpenLocation, TianjiSettings } from './types';
+import { defaultFilenameTemplate } from './notes/reading-note';
+import type {
+	DivinationType,
+	NoteFilenameMode,
+	NoteOpenMode,
+	OpenLocation,
+	TianjiSettings,
+} from './types';
 
 export const DEFAULT_SETTINGS: TianjiSettings = {
 	openLocation: 'sidebar-right',
 	libraryLayout: 'table',
 	divinationTabs: DEFAULT_DIVINATION_TABS.map((t) => ({ ...t })),
 	lastActiveTab: null,
+	noteFolder: '天机匣/笔记',
+	noteFilenameMode: 'timestamp',
+	noteFilenameTemplate: 'YYYYMMDDHHmmss',
+	noteContentTemplate: '',
+	noteUidKey: 'tianji_uid',
+	noteOpenMode: 'modal',
 };
 
 export class TianjiSettingTab extends PluginSettingTab {
@@ -124,6 +137,123 @@ export class TianjiSettingTab extends PluginSettingTab {
 					this.display();
 				});
 		});
+
+		this.displayNoteSettings(containerEl);
+	}
+
+	private displayNoteSettings(containerEl: HTMLElement): void {
+		new Setting(containerEl)
+			.setName('笔记')
+			.setDesc(
+				'每条卦例对应唯一一篇 Markdown 笔记；文件名由卦例 id 或起卦时间决定，不随「创建」时刻变化。',
+			)
+			.setHeading();
+
+		new Setting(containerEl)
+			.setName('笔记文件夹')
+			.setDesc('库内相对路径，例如 天机匣/笔记。')
+			.addText((text) => {
+				text
+					.setPlaceholder('天机匣/笔记')
+					.setValue(this.plugin.settings.noteFolder)
+					.onChange(async (value) => {
+						this.plugin.settings.noteFolder = value.trim() || '天机匣/笔记';
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('文件名模式')
+			.setDesc(
+				'时间戳：按该卦起卦/存档时间套用 Moment；UID：使用卦例数据库 id。同一卦始终对应同一文件名。',
+			)
+			.addDropdown((dropdown) => {
+				dropdown
+					.addOption('timestamp', '时间戳（卦例时间）')
+					.addOption('uid', 'UID（卦例 id）')
+					.setValue(this.plugin.settings.noteFilenameMode)
+					.onChange(async (value) => {
+						const mode = value as NoteFilenameMode;
+						this.plugin.settings.noteFilenameMode = mode;
+						this.plugin.settings.noteFilenameTemplate =
+							defaultFilenameTemplate(mode);
+						await this.plugin.saveSettings();
+						this.display();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('文件名模板')
+			.setDesc(
+				'不含 .md。支持 Moment（相对卦例时间）与 {{uid}}（卦例 id）；用 / 可建嵌套目录。例：YYYY/MM/DD-HHmmss、{{uid}}、YYYY/MM/{{uid}}',
+			)
+			.addText((text) => {
+				text
+					.setPlaceholder(
+						defaultFilenameTemplate(
+							this.plugin.settings.noteFilenameMode,
+						),
+					)
+					.setValue(this.plugin.settings.noteFilenameTemplate)
+					.onChange(async (value) => {
+						this.plugin.settings.noteFilenameTemplate =
+							value.trim() ||
+							defaultFilenameTemplate(
+								this.plugin.settings.noteFilenameMode,
+							);
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('笔记正文模板')
+			.setDesc(
+				'新建笔记时的正文，默认为空。可用 {{title}}、{{uid}}、{{type}}、{{date}}、{{time}}。',
+			)
+			.addTextArea((area) => {
+				area
+					.setPlaceholder('（空）')
+					.setValue(this.plugin.settings.noteContentTemplate)
+					.onChange(async (value) => {
+						this.plugin.settings.noteContentTemplate = value;
+						await this.plugin.saveSettings();
+					});
+				area.inputEl.rows = 4;
+				area.inputEl.addClass('tianji-settings-template');
+			});
+
+		new Setting(containerEl)
+			.setName('UID 属性名')
+			.setDesc(
+				'写入笔记 frontmatter 的字段，值为卦例数据库 id，用于唯一查找。默认 tianji_uid。',
+			)
+			.addText((text) => {
+				text
+					.setPlaceholder('tianji_uid')
+					.setValue(this.plugin.settings.noteUidKey)
+					.onChange(async (value) => {
+						this.plugin.settings.noteUidKey =
+							value.trim() || 'tianji_uid';
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('打开笔记方式')
+			.setDesc(
+				'标签页：在主编辑区打开。弹窗：在模态窗口中嵌入 Obsidian 编辑器（参考 Modal Opener），双击边框可还原为标签页。',
+			)
+			.addDropdown((dropdown) => {
+				dropdown
+					.addOption('modal', '弹窗')
+					.addOption('tab', '标签页')
+					.setValue(this.plugin.settings.noteOpenMode)
+					.onChange(async (value) => {
+						this.plugin.settings.noteOpenMode =
+							value as NoteOpenMode;
+						await this.plugin.saveSettings();
+					});
+			});
 	}
 
 	private async moveTab(

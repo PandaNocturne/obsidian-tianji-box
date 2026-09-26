@@ -4029,10 +4029,121 @@
 	width: min(640px, 94vw);
 }
 
+/* —— File note modal（嵌入真实 Markdown 视图，参考 modal-opener） —— */
+.modal.tianji-file-note-modal {
+	width: min(920px, 94vw);
+	height: min(86vh, 960px);
+	max-height: 92vh;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.tianji-file-note-content {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+	height: 100%;
+	padding: 0 !important;
+	outline: none;
+	position: relative;
+}
+
+.tianji-file-note-fab {
+	position: absolute;
+	right: 16px;
+	bottom: 16px;
+	z-index: 50;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	pointer-events: none;
+}
+
+.tianji-file-note-fab-btn {
+	pointer-events: auto;
+	appearance: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	padding: 0;
+	margin: 0;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 50%;
+	background: var(--background-primary);
+	color: var(--text-muted);
+	box-shadow: 0 2px 10px color-mix(in srgb, var(--background-modifier-box-shadow) 35%, transparent);
+	cursor: pointer;
+	transition:
+		background var(--tianji-ease, 0.15s ease),
+		color var(--tianji-ease, 0.15s ease),
+		transform var(--tianji-ease, 0.15s ease),
+		box-shadow var(--tianji-ease, 0.15s ease);
+}
+
+.tianji-file-note-fab-btn svg {
+	width: 18px;
+	height: 18px;
+	stroke-width: 1.75;
+}
+
+.tianji-file-note-fab-btn:hover {
+	color: var(--text-normal);
+	background: var(--background-modifier-hover);
+	box-shadow: 0 4px 14px color-mix(in srgb, var(--background-modifier-box-shadow) 45%, transparent);
+	transform: translateY(-1px);
+}
+
+.tianji-file-note-fab-btn:active {
+	transform: scale(0.94);
+}
+
+.tianji-file-note-fab-btn.is-danger {
+	color: var(--text-error, #c0392b);
+}
+
+.tianji-file-note-fab-btn.is-danger:hover {
+	color: var(--text-error, #c0392b);
+	background: color-mix(in srgb, var(--text-error, #c0392b) 12%, transparent);
+	border-color: color-mix(in srgb, var(--text-error, #c0392b) 28%, transparent);
+}
+
+.tianji-file-note-host {
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
+	position: relative;
+}
+
+.tianji-file-note-host .workspace-leaf,
+.tianji-file-note-host .workspace-leaf-content,
+.tianji-file-note-host .view-content,
+.tianji-file-note-host .markdown-source-view,
+.tianji-file-note-host .markdown-preview-view {
+	height: 100%;
+}
+
+.tianji-file-note-host .view-header {
+	border-top: none;
+}
+
 .tianji-note-meta {
 	margin: 0 0 12px;
 	color: var(--text-muted);
 	font-size: 0.88em;
+}
+
+.tianji-note-path {
+	margin: -6px 0 12px;
+	color: var(--text-faint);
+	font-size: 0.78em;
+	font-family: var(--font-monospace);
+	word-break: break-all;
 }
 
 .tianji-note-tabs {
@@ -4070,6 +4181,23 @@
 	justify-content: flex-end;
 	gap: 8px;
 	margin-top: 14px;
+}
+
+.modal.tianji-confirm-modal {
+	width: min(420px, 92vw);
+}
+
+.tianji-confirm-message {
+	margin: 0 0 18px;
+	color: var(--text-muted);
+	line-height: 1.55;
+	white-space: pre-wrap;
+}
+
+.tianji-confirm-footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
 }
 
 /* —— Tarot card detail modal —— */
@@ -4321,6 +4449,13 @@
 
 .tianji-settings-tab-toggle {
 	margin-left: 4px;
+}
+
+.tianji-settings-template {
+	width: 100%;
+	min-height: 5em;
+	font-family: var(--font-monospace);
+	font-size: 0.85em;
 }
 
 .tianji-tabs.is-single .tianji-tab {

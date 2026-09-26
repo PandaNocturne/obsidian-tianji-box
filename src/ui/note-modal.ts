@@ -4,6 +4,7 @@ import {
 	MarkdownRenderer,
 	Modal,
 	Notice,
+	TFile,
 } from 'obsidian';
 
 export class ReadingNoteModal extends Modal {
@@ -14,6 +15,7 @@ export class ReadingNoteModal extends Modal {
 	private previewHost: HTMLElement | null = null;
 	private textarea: HTMLTextAreaElement | null = null;
 	private previewComponent = new Component();
+	private file: TFile | null;
 
 	constructor(
 		app: App,
@@ -21,12 +23,16 @@ export class ReadingNoteModal extends Modal {
 			title: string;
 			noteMd: string;
 			onSave: (noteMd: string) => Promise<void> | void;
+			/** 关联的库内笔记文件（可选，仅展示路径） */
+			file?: TFile;
+			uid?: string;
 		},
 	) {
 		super(app);
 		this.titleText = opts.title;
 		this.noteMd = opts.noteMd;
 		this.onSave = opts.onSave;
+		this.file = opts.file ?? null;
 		this.mode = opts.noteMd.trim() ? 'preview' : 'edit';
 	}
 
@@ -52,6 +58,12 @@ export class ReadingNoteModal extends Modal {
 			cls: 'tianji-note-meta',
 			text: this.titleText,
 		});
+		if (this.file) {
+			contentEl.createEl('p', {
+				cls: 'tianji-note-path',
+				text: this.file.path,
+			});
+		}
 
 		const tabs = contentEl.createDiv({ cls: 'tianji-note-tabs' });
 		const editTab = tabs.createEl('button', {
@@ -89,13 +101,15 @@ export class ReadingNoteModal extends Modal {
 			this.previewHost = null;
 		} else {
 			this.textarea = null;
-			this.previewHost = body.createDiv({ cls: 'tianji-note-preview markdown-preview-view' });
+			this.previewHost = body.createDiv({
+				cls: 'tianji-note-preview markdown-preview-view',
+			});
 			const md = this.noteMd.trim() || '_暂无笔记_';
 			void MarkdownRenderer.render(
 				this.app,
 				md,
 				this.previewHost,
-				'',
+				this.file?.path ?? '',
 				this.previewComponent,
 			);
 		}

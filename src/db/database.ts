@@ -3,7 +3,7 @@ import type { Plugin } from 'obsidian';
 import type { DivinationType, ReadingRecord } from '../types';
 
 const READING_COLS =
-	'id, type, title, input_json, result_json, ai_response, ai_thinking, note_md, is_favorite, created_at';
+	'id, type, title, input_json, result_json, ai_response, ai_thinking, note_md, note_uid, is_favorite, created_at';
 
 export class TianjiDatabase {
 	private SQL: SqlJsStatic | null = null;
@@ -51,6 +51,7 @@ export class TianjiDatabase {
 				ai_response TEXT NOT NULL DEFAULT '',
 				ai_thinking TEXT NOT NULL DEFAULT '',
 				note_md TEXT NOT NULL DEFAULT '',
+				note_uid TEXT NOT NULL DEFAULT '',
 				is_favorite INTEGER NOT NULL DEFAULT 0,
 				created_at TEXT NOT NULL
 			);
@@ -73,6 +74,11 @@ export class TianjiDatabase {
 		if (!cols.has('note_md')) {
 			db.run(
 				`ALTER TABLE readings ADD COLUMN note_md TEXT NOT NULL DEFAULT ''`,
+			);
+		}
+		if (!cols.has('note_uid')) {
+			db.run(
+				`ALTER TABLE readings ADD COLUMN note_uid TEXT NOT NULL DEFAULT ''`,
 			);
 		}
 		if (!cols.has('is_favorite')) {
@@ -112,8 +118,8 @@ export class TianjiDatabase {
 		const db = this.ensureDb();
 		const createdAt = new Date().toISOString();
 		db.run(
-			`INSERT INTO readings (type, title, input_json, result_json, ai_response, ai_thinking, note_md, is_favorite, created_at)
-			 VALUES (?, ?, ?, ?, ?, ?, '', 0, ?)`,
+			`INSERT INTO readings (type, title, input_json, result_json, ai_response, ai_thinking, note_md, note_uid, is_favorite, created_at)
+			 VALUES (?, ?, ?, ?, ?, ?, '', '', 0, ?)`,
 			[
 				params.type,
 				params.title,
@@ -142,6 +148,12 @@ export class TianjiDatabase {
 	async updateNote(id: number, noteMd: string): Promise<void> {
 		const db = this.ensureDb();
 		db.run(`UPDATE readings SET note_md = ? WHERE id = ?`, [noteMd, id]);
+		await this.persist();
+	}
+
+	async updateNoteUid(id: number, noteUid: string): Promise<void> {
+		const db = this.ensureDb();
+		db.run(`UPDATE readings SET note_uid = ? WHERE id = ?`, [noteUid, id]);
 		await this.persist();
 	}
 
@@ -216,6 +228,7 @@ export class TianjiDatabase {
 			aiResponse: String(row.ai_response),
 			aiThinking: String(row.ai_thinking ?? ''),
 			noteMd: String(row.note_md ?? ''),
+			noteUid: String(row.note_uid ?? ''),
 			isFavorite: Number(row.is_favorite ?? 0) === 1,
 			createdAt: String(row.created_at),
 		};

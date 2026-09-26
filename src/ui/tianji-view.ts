@@ -1,4 +1,4 @@
-import { ItemView, MarkdownRenderer, Notice, WorkspaceLeaf, setIcon } from 'obsidian';
+import { ItemView, MarkdownRenderer, Notice, TFile, WorkspaceLeaf, setIcon } from 'obsidian';
 import type TianjiPlugin from '../main';
 import { DIVINATION_TAB_META } from '../divination-tabs';
 import type {
@@ -50,10 +50,20 @@ import {
 	TarotSlotPickModal,
 	type TarotSlotPick,
 } from './tarot-slot-pick-modal';
-import { ReadingNoteModal } from './note-modal';
+import { FileNoteModal } from './file-note-modal';
+import { ConfirmModal } from './confirm-modal';
 import { TarotCardDetailModal } from './tarot-card-modal';
 import { renderLibraryGrid, type LibraryFilter, type LibraryLayout } from './library';
 import { TAROT_DECK } from '../tarot/cards';
+import {
+	ensureReadingNoteFile,
+	findReadingNoteFile,
+	buildNoteVaultPathForReading,
+	openNoteInTab,
+	readNoteBody,
+	readingHasNote,
+	resolveReadingNoteFile,
+} from '../notes/reading-note';
 
 export const TIANJI_VIEW_TYPE = 'tianji-view';
 
@@ -2676,23 +2686,122 @@ export class TianjiView extends ItemView {
 				void this.toggleFavorite(rec.id, !rec.isFavorite);
 			},
 			onEditNote: (rec) => this.openReadingNote(rec),
-			onDelete: (id) => {
-				void this.plugin.db.deleteReading(id).then(() => {
-					new Notice('已删除');
-					this.render();
-				});
-			},
+			onDelete: (id) => this.confirmDeleteReading(id),
 			onCopy: (text, tip) => void this.copyText(text, tip),
 		});
 	}
 
-	private openReadingNote(rec: ReadingRecord): void {
-		new ReadingNoteModal(this.app, {
-			title: rec.title,
-			noteMd: rec.noteMd ?? '',
-			onSave: async (noteMd) => {
-				await this.plugin.db.updateNote(rec.id, noteMd);
+	private confirmDeleteReading(id: number): void {
+		const rec = this.plugin.db.getReading(id);
+		const title = rec?.title?.trim() || '该记录';
+		const hasNote = rec ? readingHasNote(rec) : false;
+		const message = hasNote
+			? `确定删除「${title}」？关联的笔记文件不会被删除。此操作不可撤销。`
+			: `确定删除「${title}」？此操作不可撤销。`;
+
+		new ConfirmModal(this.app, {
+			title: '删除记录',
+			message,
+			confirmText: '删除',
+			danger: true,
+			onConfirm: async () => {
+				await this.plugin.db.deleteReading(id);
+				new Notice('已删除');
 				this.render();
+			},
+		}).open();
+	}
+
+	private openReadingNote(rec: ReadingRecord): void {
+		void this.openReadingNoteWithConfirm(rec);
+	}
+
+	/** 已绑定且文件存在 → 直接打开；否则先确认再创建/重新关联 */
+	private async openReadingNoteWithConfirm(
+		rec: ReadingRecord,
+	): Promise<void> {
+		try {
+			// 用库里最新记录，避免删除后仍拿着旧 noteUid
+			const latest = this.plugin.db.getReading(rec.id) ?? rec;
+			const existing = await resolveReadingNoteFile(this.plugin, latest);
+			const linked = Boolean(latest.noteUid?.trim());
+
+			if (existing && linked) {
+				if (latest.noteUid !== existing.uid) {
+					await this.plugin.db.updateNoteUid(latest.id, existing.uid);
+				}
+				await this.openNoteFile(existing.file, latest);
+				return;
+			}
+
+			const pathHint = buildNoteVaultPathForReading(
+				this.plugin.settings,
+				latest,
+			);
+
+			if (existing && !linked) {
+				new ConfirmModal(this.app, {
+					title: '打开笔记',
+					message: `发现未关联的笔记文件，是否重新打开？\n\n${existing.file.path}`,
+					confirmText: '打开',
+					onConfirm: async () => {
+						await this.plugin.db.updateNoteUid(
+							latest.id,
+							existing.uid,
+						);
+						await this.openNoteFile(existing.file, latest);
+					},
+				}).open();
+				return;
+			}
+
+			new ConfirmModal(this.app, {
+				title: '创建笔记',
+				message: `「${latest.title}」还没有笔记文件，是否创建？\n\n${pathHint}`,
+				confirmText: '创建',
+				onConfirm: () => {
+					void this.openReadingNoteAsync(latest);
+				},
+			}).open();
+		} catch (e) {
+			console.error(e);
+			new Notice(`打开笔记失败：${String(e)}`);
+		}
+	}
+
+	private async openReadingNoteAsync(rec: ReadingRecord): Promise<void> {
+		try {
+			const { file, created } = await ensureReadingNoteFile(
+				this.plugin,
+				rec,
+			);
+			if (created) {
+				new Notice('已创建笔记');
+			}
+			await this.openNoteFile(file, rec);
+		} catch (e) {
+			console.error(e);
+			new Notice(`打开笔记失败：${String(e)}`);
+		}
+	}
+
+	private async openNoteFile(
+		file: TFile,
+		rec: ReadingRecord,
+	): Promise<void> {
+		const mode = this.plugin.settings.noteOpenMode ?? 'modal';
+		if (mode === 'tab') {
+			await openNoteInTab(this.app, file);
+			this.render();
+			return;
+		}
+		new FileNoteModal(this.app, {
+			file,
+			mode: 'source',
+			onClose: () => this.render(),
+			onDeleteNote: async () => {
+				await this.plugin.db.updateNoteUid(rec.id, '');
+				await this.plugin.db.updateNote(rec.id, '');
 			},
 		}).open();
 	}
@@ -2712,28 +2821,65 @@ export class TianjiView extends ItemView {
 			cls: 'tianji-analysis-block-title',
 			text: '笔记注释',
 		});
+		const hasNote = readingHasNote(rec);
 		const editBtn = head.createEl('button', {
 			cls: 'tianji-btn',
 			type: 'button',
-			text: rec.noteMd.trim() ? '编辑笔记' : '添加笔记',
+			text: hasNote ? '打开笔记' : '添加笔记',
 		});
 		editBtn.addEventListener('click', () => this.openReadingNote(rec));
 
 		const body = block.createDiv({
 			cls: 'tianji-reading-note-body markdown-preview-view',
 		});
-		if (rec.noteMd.trim()) {
-			void MarkdownRenderer.render(
-				this.app,
-				rec.noteMd,
-				body,
-				'',
-				this,
-			);
+
+		if (hasNote) {
+			void this.renderReadingNotePreview(body, rec);
 		} else {
 			body.createDiv({
 				cls: 'tianji-empty-hint',
-				text: '暂无笔记。支持 Markdown，可记录断语与备注。',
+				text: '暂无笔记。将保存为库内 Markdown 文件。',
+			});
+		}
+	}
+
+	private async renderReadingNotePreview(
+		body: HTMLElement,
+		rec: ReadingRecord,
+	): Promise<void> {
+		try {
+			let md = '';
+			let sourcePath = '';
+			if (rec.noteUid.trim()) {
+				const file = await findReadingNoteFile(
+					this.app,
+					this.plugin.settings,
+					rec.noteUid,
+				);
+				if (!file) {
+					body.createDiv({
+						cls: 'tianji-empty-hint',
+						text: '未找到关联笔记文件（可点击打开以重新创建）。',
+					});
+					return;
+				}
+				md = await readNoteBody(this.app, file);
+				sourcePath = file.path;
+			} else {
+				md = rec.noteMd;
+			}
+			if (!md.trim()) {
+				body.createDiv({
+					cls: 'tianji-empty-hint',
+					text: '笔记文件为空。',
+				});
+				return;
+			}
+			await MarkdownRenderer.render(this.app, md, body, sourcePath, this);
+		} catch (e) {
+			body.createDiv({
+				cls: 'tianji-empty-hint',
+				text: `无法加载笔记：${String(e)}`,
 			});
 		}
 	}
