@@ -228,6 +228,7 @@
 	flex-wrap: wrap;
 	gap: 8px;
 	align-items: center;
+	justify-content: flex-end;
 	margin-bottom: 14px;
 }
 
@@ -2853,11 +2854,9 @@
 		max-width: 100%;
 	}
 
-	.tianji-tarot-spread {
-		grid-template-columns: 1fr;
-		gap: 10px;
-	}
-
+	.tianji-tarot-spread,
+	.tianji-spread-single,
+	.tianji-spread-three-time,
 	.tianji-spread-holy-triangle,
 	.tianji-spread-two-choice,
 	.tianji-spread-lovers-pyramid,
@@ -2865,11 +2864,19 @@
 	.tianji-spread-relation-six,
 	.tianji-spread-career-five,
 	.tianji-spread-hexagram-seven,
-	.tianji-spread-celtic-cross {
-		grid-template-columns: 1fr;
+	.tianji-spread-celtic-cross,
+	.tianji-spread-custom {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		align-items: flex-start;
+		align-content: flex-start;
+		gap: 12px 10px;
+		grid-template-columns: none;
 		grid-template-areas: none;
 	}
 
+	.tianji-tarot-spread > .tianji-tarot-slot,
 	.tianji-spread-holy-triangle [data-pos],
 	.tianji-spread-two-choice [data-pos],
 	.tianji-spread-lovers-pyramid [data-pos],
@@ -2878,17 +2885,17 @@
 	.tianji-spread-career-five [data-pos],
 	.tianji-spread-hexagram-seven [data-pos],
 	.tianji-spread-celtic-cross [data-pos],
-	.tianji-spread-celtic-cross .tianji-celtic-mid {
+	.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos] {
 		grid-area: auto;
-		justify-self: stretch;
-		max-width: none;
+		justify-self: auto;
+		flex: 0 1 132px;
+		width: 132px;
+		max-width: calc(50% - 6px);
+		min-width: 108px;
 	}
 
 	.tianji-spread-celtic-cross .tianji-celtic-mid {
-		display: flex;
-		flex-direction: column;
-		align-items: stretch;
-		gap: 12px;
+		display: contents;
 		padding: 0;
 	}
 
@@ -2897,21 +2904,24 @@
 		display: flex;
 		flex-direction: column;
 		gap: 6px;
-		width: 100%;
-		max-width: none;
 	}
 
 	.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos="p1"] .tianji-tarot-card,
 	.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-tarot-card {
 		grid-area: auto;
 		width: 100%;
-		max-width: 200px;
-		margin: 0 auto;
+		max-width: none;
+		margin: 0;
 		transform: none;
 	}
 
 	.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-tarot-card.is-reversed {
 		transform: none;
+	}
+
+	.tianji-tarot-slot,
+	.tianji-tarot-card {
+		max-width: 100%;
 	}
 
 	.tianji-history-actions {

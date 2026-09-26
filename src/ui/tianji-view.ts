@@ -1263,7 +1263,6 @@ export class TianjiView extends ItemView {
 			this.baziPanel = 'cast';
 			this.render();
 		});
-		this.appendFavoriteToolbarBtn(toolbar, this.baziRecordId);
 		if (this.baziRecordId == null) {
 			const addLib = toolbar.createEl('button', {
 				cls: 'tianji-btn tianji-btn-primary',
@@ -1275,6 +1274,7 @@ export class TianjiView extends ItemView {
 				void this.addBaziToLibrary(this.baziChart);
 			});
 		}
+		this.appendFavoriteToolbarBtn(toolbar, this.baziRecordId);
 
 		this.renderBaziChart(stage, this.baziChart);
 		this.appendReadingNoteSection(stage, this.baziRecordId);
@@ -1815,13 +1815,6 @@ export class TianjiView extends ItemView {
 		}
 
 		const toolbar = stage.createDiv({ cls: 'tianji-chart-toolbar' });
-		const continueBtn = toolbar.createEl('button', {
-			cls: 'tianji-btn tianji-btn-primary',
-			text: '继续提问',
-		});
-		continueBtn.addEventListener('click', () => {
-			this.continueTarotSession();
-		});
 		const backBtn = toolbar.createEl('button', {
 			cls: 'tianji-btn',
 			text: '返回抽牌',
@@ -1830,7 +1823,13 @@ export class TianjiView extends ItemView {
 			this.tarotPanel = 'cast';
 			this.render();
 		});
-		this.appendFavoriteToolbarBtn(toolbar, this.tarotRecordId);
+		const continueBtn = toolbar.createEl('button', {
+			cls: 'tianji-btn tianji-btn-primary',
+			text: '继续提问',
+		});
+		continueBtn.addEventListener('click', () => {
+			this.continueTarotSession();
+		});
 		const copyBtn = toolbar.createEl('button', {
 			cls: 'tianji-btn',
 			text: '复制牌阵',
@@ -1841,6 +1840,7 @@ export class TianjiView extends ItemView {
 				'牌阵已复制',
 			);
 		});
+		this.appendFavoriteToolbarBtn(toolbar, this.tarotRecordId);
 
 		const remain = remainingTarotDeck(this.tarotSessionUsedIds).length;
 		if (this.tarotSessionUsedIds.length > 0) {
