@@ -6,9 +6,21 @@
 
 - **六爻**：天机起卦 / 铜钱 / 手动，排盘与卦例库
 - **八字**：公历/农历生辰排盘，真太阳时，命理库
-- **塔罗**：韦特牌组本地缓存，多种牌阵，牌阵库
+- **塔罗**：韦特牌组本地缓存，多种牌阵，牌阵库；点击牌面可查看详解
 - **收藏**：历史记录可收藏筛选
 - **数据**：本地 SQLite（`sql.js` → `tianji.db`）
+
+## 外部服务说明
+
+- **塔罗释义**：正逆位与运势文案来自 [Taluo.net](https://taluo.net/)（已打包进插件，离线可读）。详情弹窗可跳转该站原文。
+- **塔罗牌面**：优先从 Taluo.net 下载并缓存到插件目录（`assets/tarot/rider-waite/{slug}.jpg`）；若失败则回退 [Sacred Texts](https://www.sacred-texts.com/tarot/pkt/) 公版图。首次使用可能产生网络请求。
+
+更新 Taluo 释义 / 牌面：
+
+```bash
+node scripts/fetch-taluo-cards.mjs
+node scripts/fetch-taluo-images.mjs
+```
 
 ## 开发
 

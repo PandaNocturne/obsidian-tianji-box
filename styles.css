@@ -2916,6 +2916,48 @@
 	height: 14px;
 }
 
+.tianji-pick-info-btn {
+	position: absolute;
+	top: 4px;
+	left: 4px;
+	z-index: 2;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	margin: 0;
+	border: 1px solid var(--tianji-border);
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--background-primary) 88%, transparent);
+	color: var(--text-muted);
+	cursor: pointer;
+	box-shadow: 0 1px 2px color-mix(in srgb, black 12%, transparent);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 120ms ease, background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.tianji-pick-card:hover .tianji-pick-info-btn,
+.tianji-pick-info-btn:focus-visible {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.tianji-pick-info-btn:hover,
+.tianji-pick-info-btn:focus-visible {
+	border-color: var(--interactive-accent);
+	color: var(--interactive-accent);
+	background: var(--background-primary);
+	outline: none;
+}
+
+.tianji-pick-info-btn svg {
+	width: 14px;
+	height: 14px;
+}
+
 .tianji-pick-mini-face {
 	aspect-ratio: 2 / 3.2;
 	border-radius: 6px;
@@ -3289,6 +3331,179 @@
 	justify-content: flex-end;
 	gap: 8px;
 	margin-top: 14px;
+}
+
+/* —— Tarot card detail modal —— */
+.tianji-tarot-card.is-clickable {
+	cursor: pointer;
+	border-radius: var(--tianji-radius-sm);
+	transition: outline var(--tianji-ease), transform var(--tianji-ease);
+}
+
+.tianji-tarot-card.is-clickable:hover .tianji-tarot-face {
+	outline: 2px solid color-mix(in srgb, var(--interactive-accent) 55%, transparent);
+	outline-offset: 2px;
+}
+
+.tianji-tarot-card.is-clickable:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 3px;
+}
+
+.tianji-tarot-detail-hint {
+	margin-top: 4px;
+	font-size: 0.72em;
+	color: var(--text-accent);
+	opacity: 0.85;
+}
+
+.modal.tianji-card-detail-modal {
+	width: min(720px, 94vw);
+	max-width: 720px;
+}
+
+.tianji-card-detail-head {
+	margin-bottom: 14px;
+}
+
+.tianji-card-detail-title {
+	margin: 0 0 4px;
+	font-size: 1.35em;
+}
+
+.tianji-card-detail-en {
+	color: var(--text-muted);
+	font-size: 0.92em;
+}
+
+.tianji-card-detail-meta {
+	margin-top: 6px;
+	font-size: 0.8em;
+	color: var(--text-muted);
+}
+
+.tianji-card-detail-body {
+	display: grid;
+	grid-template-columns: minmax(140px, 200px) minmax(0, 1fr);
+	gap: 18px;
+	align-items: start;
+}
+
+.tianji-card-detail-media {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	position: sticky;
+	top: 0;
+}
+
+.tianji-card-detail-face {
+	width: 100%;
+	max-width: 200px;
+	aspect-ratio: 2 / 3.4;
+	border-radius: var(--tianji-radius-sm);
+	overflow: hidden;
+	border: 1px solid var(--tianji-border);
+	background: var(--background-primary);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.tianji-card-detail-face.is-reversed .tianji-card-detail-img {
+	transform: rotate(180deg);
+}
+
+.tianji-card-detail-img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.tianji-card-detail-orient {
+	font-size: 0.8em;
+	font-weight: 600;
+	color: var(--text-accent);
+}
+
+.tianji-card-detail-keywords {
+	font-size: 0.88em;
+	font-weight: 600;
+	color: var(--text-accent);
+	margin-bottom: 12px;
+}
+
+.tianji-card-detail-sec {
+	margin-bottom: 12px;
+	padding: 10px 12px;
+	border-radius: var(--tianji-radius-sm);
+	border: 1px solid var(--tianji-border);
+	background: var(--tianji-surface-soft);
+}
+
+.tianji-card-detail-sec.is-active {
+	border-color: color-mix(in srgb, var(--interactive-accent) 45%, var(--tianji-border));
+	background: color-mix(in srgb, var(--interactive-accent) 10%, var(--background-primary));
+}
+
+.tianji-card-detail-sec-title {
+	font-size: 0.82em;
+	font-weight: 650;
+	margin-bottom: 6px;
+	color: var(--text-normal);
+}
+
+.tianji-card-detail-sec-body {
+	font-size: 0.9em;
+	line-height: 1.65;
+	color: var(--text-muted);
+}
+
+.tianji-card-detail-affirmation {
+	margin-top: 8px;
+	padding: 10px 12px;
+	border-radius: var(--tianji-radius-sm);
+	border: 1px dashed color-mix(in srgb, var(--interactive-accent) 35%, var(--tianji-border));
+}
+
+.tianji-card-detail-quote {
+	font-size: 0.95em;
+	line-height: 1.6;
+	color: var(--text-normal);
+	font-style: italic;
+}
+
+.tianji-card-detail-footer {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 16px;
+	padding-top: 12px;
+	border-top: 1px solid var(--tianji-border);
+}
+
+.tianji-card-detail-credit {
+	margin-right: auto;
+	font-size: 0.75em;
+	color: var(--text-faint);
+}
+
+@media (max-width: 640px) {
+	.tianji-card-detail-body {
+		grid-template-columns: 1fr;
+	}
+
+	.tianji-card-detail-media {
+		position: static;
+	}
+
+	.tianji-card-detail-face {
+		max-width: 160px;
+	}
 }
 
 /* —— Settings: divination module order —— */

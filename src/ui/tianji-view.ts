@@ -48,6 +48,7 @@ import {
 	type TarotSlotPick,
 } from './tarot-slot-pick-modal';
 import { ReadingNoteModal } from './note-modal';
+import { TarotCardDetailModal } from './tarot-card-modal';
 import { renderLibraryGrid, type LibraryFilter, type LibraryLayout } from './library';
 import { TAROT_DECK } from '../tarot/cards';
 
@@ -1959,7 +1960,12 @@ export class TianjiView extends ItemView {
 		deckId: DeckId,
 	): void {
 		const wrap = parent.createDiv({
-			cls: `tianji-tarot-card${drawn.reversed ? ' is-reversed' : ''}`,
+			cls: `tianji-tarot-card is-clickable${drawn.reversed ? ' is-reversed' : ''}`,
+			attr: {
+				role: 'button',
+				tabindex: '0',
+				title: '点击查看牌意详解',
+			},
 		});
 		const face = wrap.createDiv({ cls: 'tianji-tarot-face' });
 		const img = face.createEl('img', {
@@ -1999,6 +2005,24 @@ export class TianjiView extends ItemView {
 		cap.createDiv({
 			cls: 'tianji-tarot-meaning',
 			text: drawn.reversed ? drawn.card.reversed : drawn.card.upright,
+		});
+		cap.createDiv({
+			cls: 'tianji-tarot-detail-hint',
+			text: '点击查看详解',
+		});
+
+		const openDetail = () => {
+			new TarotCardDetailModal(this.app, this.plugin.tarotImages, {
+				card: drawn.card,
+				reversed: drawn.reversed,
+			}).open();
+		};
+		wrap.addEventListener('click', openDetail);
+		wrap.addEventListener('keydown', (ev) => {
+			if (ev.key === 'Enter' || ev.key === ' ') {
+				ev.preventDefault();
+				openDetail();
+			}
 		});
 	}
 

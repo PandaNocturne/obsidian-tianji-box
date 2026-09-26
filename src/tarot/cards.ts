@@ -1,3 +1,5 @@
+import { enrichCardWithTaluo } from './taluo';
+
 export type Arcana = 'major' | 'minor';
 export type Suit = 'wands' | 'cups' | 'swords' | 'pentacles';
 
@@ -102,7 +104,7 @@ export const TAROT_DECK: TarotCardDef[] = [
 		arcana: 'major' as const,
 	})),
 	...buildMinor(),
-];
+].map(enrichCardWithTaluo);
 
 export function getCardById(id: string): TarotCardDef | undefined {
 	return TAROT_DECK.find((c) => c.id === id);

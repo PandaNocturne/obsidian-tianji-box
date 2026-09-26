@@ -1,12 +1,17 @@
 import { requestUrl, type Plugin } from 'obsidian';
 import { TAROT_DECK, type TarotCardDef } from './cards';
-import { getRiderWaiteFilename, getRiderWaiteImageUrl } from './decks';
+import {
+	getRiderWaiteFilename,
+	getSacredTextsImageUrl,
+	getTaluoFilename,
+} from './decks';
+import { getTaluoImageUrl } from './taluo';
 
 const CONCURRENCY = 4;
 
 /**
- * 将韦特公版牌面下载到插件目录并本地复用。
- * 路径：{plugin}/assets/tarot/rider-waite/*.jpg
+ * 牌面本地缓存。优先使用已有文件；缺失时先从 Taluo.net 下载，失败再回退 Sacred Texts。
+ * 路径：{plugin}/assets/tarot/rider-waite/
  */
 export class TarotImageCache {
 	private readonly dir: string;
@@ -18,7 +23,6 @@ export class TarotImageCache {
 		this.dir = `${plugin.manifest.dir}/assets/tarot/rider-waite`;
 	}
 
-	/** 若本地已有则返回资源 URL，否则下载后返回 */
 	async ensure(card: TarotCardDef): Promise<string> {
 		const existing = this.inflight.get(card.id);
 		if (existing) return existing;
@@ -32,7 +36,6 @@ export class TarotImageCache {
 		}
 	}
 
-	/** 后台补全全部 78 张（幂等） */
 	prefetchAll(
 		onProgress?: (done: number, total: number) => void,
 	): Promise<void> {
@@ -73,21 +76,37 @@ export class TarotImageCache {
 
 	private async ensureInner(card: TarotCardDef): Promise<string> {
 		const adapter = this.plugin.app.vault.adapter;
-		const path = `${this.dir}/${getRiderWaiteFilename(card)}`;
+		const taluoPath = `${this.dir}/${getTaluoFilename(card)}`;
+		const legacyPath = `${this.dir}/${getRiderWaiteFilename(card)}`;
 
-		if (await adapter.exists(path)) {
-			return adapter.getResourcePath(path);
+		// 优先 Taluo 命名；不再优先旧 Sacred Texts 文件，避免挡住新封面
+		if (await adapter.exists(taluoPath)) {
+			return adapter.getResourcePath(taluoPath);
 		}
 
 		await this.ensureDir();
-		const remote = getRiderWaiteImageUrl(card);
+
+		try {
+			await this.downloadTo(taluoPath, getTaluoImageUrl(card));
+			return adapter.getResourcePath(taluoPath);
+		} catch (e) {
+			console.warn('Taluo image failed, fallback Sacred Texts', card.id, e);
+			// 回退仍写入 Taluo 文件名，统一缓存命名
+			if (await adapter.exists(legacyPath)) {
+				return adapter.getResourcePath(legacyPath);
+			}
+			await this.downloadTo(taluoPath, getSacredTextsImageUrl(card));
+			return adapter.getResourcePath(taluoPath);
+		}
+	}
+
+	private async downloadTo(path: string, remote: string): Promise<void> {
 		const res = await requestUrl({ url: remote });
 		const data = res.arrayBuffer;
 		if (!data || data.byteLength < 200) {
-			throw new Error(`下载牌面失败：${card.name}`);
+			throw new Error(`下载牌面失败：${remote}`);
 		}
-		await adapter.writeBinary(path, data);
-		return adapter.getResourcePath(path);
+		await this.plugin.app.vault.adapter.writeBinary(path, data);
 	}
 
 	private ensureDir(): Promise<void> {

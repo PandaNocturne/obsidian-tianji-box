@@ -8,6 +8,7 @@ import {
 import type { TarotImageCache } from '../tarot/image-cache';
 import { getSpread } from '../tarot/spreads';
 import { buildManualTarot, type TarotReading } from '../tarot/draw';
+import { TarotCardDetailModal } from './tarot-card-modal';
 
 type FilterId = 'all' | 'major' | Suit;
 
@@ -276,6 +277,24 @@ export class TarotPickModal extends Modal {
 					face?.toggleClass('is-reversed', next);
 				});
 			}
+
+			const infoBtn = media.createEl('button', {
+				cls: 'tianji-pick-info-btn',
+				type: 'button',
+				attr: {
+					title: '查看牌意详解',
+					'aria-label': '查看牌意详解',
+				},
+			});
+			setIcon(infoBtn, 'info');
+			infoBtn.addEventListener('click', (ev) => {
+				ev.preventDefault();
+				ev.stopPropagation();
+				new TarotCardDetailModal(this.app, this.images, {
+					card,
+					reversed,
+				}).open();
+			});
 
 			cell.createDiv({
 				cls: 'tianji-pick-card-name',
