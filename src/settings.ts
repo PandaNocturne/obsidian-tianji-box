@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS: TianjiSettings = {
 	openLocation: 'sidebar-right',
 	libraryLayout: 'table',
 	divinationTabs: DEFAULT_DIVINATION_TABS.map((t) => ({ ...t })),
+	lastActiveTab: null,
 };
 
 export class TianjiSettingTab extends PluginSettingTab {

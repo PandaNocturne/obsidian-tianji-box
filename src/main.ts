@@ -160,6 +160,15 @@ export default class TianjiPlugin extends Plugin {
 		this.settings.divinationTabs = normalizeDivinationTabs(
 			loaded?.divinationTabs ?? DEFAULT_SETTINGS.divinationTabs,
 		);
+		const last = this.settings.lastActiveTab;
+		if (
+			last !== null &&
+			last !== 'liuyao' &&
+			last !== 'bazi' &&
+			last !== 'tarot'
+		) {
+			this.settings.lastActiveTab = null;
+		}
 	}
 
 	async saveSettings() {

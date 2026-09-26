@@ -63,7 +63,7 @@ type PanelMode = 'cast' | 'chart' | 'library';
 
 export class TianjiView extends ItemView {
 	plugin: TianjiPlugin;
-	private activeTab: TabId = 'liuyao';
+	private activeTab: TabId;
 	private liuyaoPanel: PanelMode = 'cast';
 	private baziPanel: PanelMode = 'cast';
 	private tarotPanel: PanelMode = 'cast';
@@ -124,10 +124,26 @@ export class TianjiView extends ItemView {
 	constructor(leaf: WorkspaceLeaf, plugin: TianjiPlugin) {
 		super(leaf);
 		this.plugin = plugin;
+		this.activeTab = this.resolveInitialTab();
 		const now = new Date();
 		const pad = (n: number) => String(n).padStart(2, '0');
 		this.baziDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 		this.liuyaoCastLocal = this.toDatetimeLocal(now);
+	}
+
+	/** 上次打开的标签（若仍启用），否则第一个已启用模块 */
+	private resolveInitialTab(): TabId {
+		const enabled = this.plugin.getEnabledTabs();
+		if (enabled.length === 0) return 'liuyao';
+		const last = this.plugin.settings.lastActiveTab;
+		if (last && enabled.includes(last)) return last;
+		return enabled[0]!;
+	}
+
+	private persistActiveTab(tab: TabId): void {
+		if (this.plugin.settings.lastActiveTab === tab) return;
+		this.plugin.settings.lastActiveTab = tab;
+		void this.plugin.saveSettings();
 	}
 
 	private toDatetimeLocal(d: Date): string {
@@ -168,18 +184,25 @@ export class TianjiView extends ItemView {
 	/** 供命令切换品类页签 */
 	setTab(tab: TabId): void {
 		if (!this.plugin.getEnabledTabs().includes(tab)) return;
-		if (this.activeTab === tab) return;
+		if (this.activeTab === tab) {
+			this.persistActiveTab(tab);
+			return;
+		}
 		this.activeTab = tab;
+		this.persistActiveTab(tab);
 		this.syncTabs();
 		this.renderBody();
 	}
 
-	/** 当前页签被关闭时，落到第一个已启用模块 */
+	/** 当前页签被关闭时，落到上次有效标签或第一个已启用模块 */
 	ensureValidTab(): void {
 		const enabled = this.plugin.getEnabledTabs();
 		if (enabled.length === 0) return;
 		if (!enabled.includes(this.activeTab)) {
-			this.activeTab = enabled[0]!;
+			const last = this.plugin.settings.lastActiveTab;
+			this.activeTab =
+				last && enabled.includes(last) ? last : enabled[0]!;
+			this.persistActiveTab(this.activeTab);
 			if (this.bodyEl) {
 				this.syncTabs();
 				this.renderBody();
@@ -271,6 +294,7 @@ export class TianjiView extends ItemView {
 		btn.addEventListener('click', () => {
 			if (this.activeTab === id) return;
 			this.activeTab = id;
+			this.persistActiveTab(id);
 			this.syncTabs();
 			this.renderBody();
 		});
@@ -2780,6 +2804,7 @@ export class TianjiView extends ItemView {
 		this.liuyaoRecordId = rec.id;
 		this.liuyaoPanel = 'chart';
 		this.activeTab = 'liuyao';
+		this.persistActiveTab('liuyao');
 	}
 
 	private restoreBazi(rec: ReadingRecord): void {
@@ -2820,6 +2845,7 @@ export class TianjiView extends ItemView {
 		this.baziRecordId = rec.id;
 		this.baziPanel = 'chart';
 		this.activeTab = 'bazi';
+		this.persistActiveTab('bazi');
 	}
 
 	private restoreTarot(rec: ReadingRecord): void {
@@ -2855,6 +2881,7 @@ export class TianjiView extends ItemView {
 		this.resetTarotDraft();
 		this.tarotPanel = 'chart';
 		this.activeTab = 'tarot';
+		this.persistActiveTab('tarot');
 	}
 
 	/* -------------------- helpers -------------------- */

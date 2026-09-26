@@ -128,11 +128,15 @@
 }
 
 .tianji-tab.is-active {
-	background: var(--background-primary);
+	background: color-mix(in srgb, var(--interactive-accent) 22%, var(--background-primary));
 	color: var(--text-normal);
 	box-shadow: none;
-	border: 1px solid var(--tianji-border);
+	border: 1px solid color-mix(in srgb, var(--interactive-accent) 40%, var(--tianji-border));
 	font-weight: 650;
+}
+
+.tianji-tab.is-active .tianji-tab-icon {
+	color: var(--interactive-accent);
 }
 
 /* —— Panel switch (work / library) —— */
@@ -166,11 +170,11 @@
 }
 
 .tianji-panel-btn.is-active {
-	background: var(--background-primary);
+	background: color-mix(in srgb, var(--interactive-accent) 22%, var(--background-primary));
 	color: var(--text-normal);
 	box-shadow: none;
 	font-weight: 650;
-	border: 1px solid var(--tianji-border);
+	border: 1px solid color-mix(in srgb, var(--interactive-accent) 40%, var(--tianji-border));
 }
 
 /* —— Body / Work layout —— */
@@ -1684,11 +1688,20 @@
 .tianji-history-actions {
 	display: flex;
 	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-start;
 	gap: 8px;
+	width: 100%;
+	min-width: 0;
 	margin-top: auto;
 	padding-top: 10px;
 	border-top: 1px solid var(--tianji-border);
 	flex: 0 0 auto;
+}
+
+.tianji-history-actions .tianji-btn {
+	flex: 0 1 auto;
+	white-space: nowrap;
 }
 
 .tianji-history-preview {
@@ -3101,10 +3114,11 @@
 
 	.tianji-history-actions {
 		gap: 6px;
+		justify-content: flex-start;
 	}
 
 	.tianji-history-actions .tianji-btn {
-		flex: 1 1 auto;
+		flex: 0 1 auto;
 	}
 
 	.tianji-chart-text {

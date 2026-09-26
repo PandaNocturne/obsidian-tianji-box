@@ -30,6 +30,8 @@ export interface TianjiSettings {
 	 * 默认顺序：六爻 > 塔罗牌 > 八字。
 	 */
 	divinationTabs: DivinationTabConfig[];
+	/** 上次打开的占卜标签；重载后优先恢复，无效则落到第一个已启用模块 */
+	lastActiveTab: DivinationType | null;
 }
 
 export interface HexagramInfo {
