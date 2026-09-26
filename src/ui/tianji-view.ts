@@ -322,8 +322,6 @@ export class TianjiView extends ItemView {
 			this.renderTypeLibrary(container, {
 				type: 'liuyao',
 				emptyText: '暂无六爻卦例。确认起卦后将自动写入卦例库。',
-				viewBtn: '查看排盘',
-				copyBtn: '复制排盘',
 			});
 			return;
 		}
@@ -1071,8 +1069,6 @@ export class TianjiView extends ItemView {
 			this.renderTypeLibrary(container, {
 				type: 'bazi',
 				emptyText: '暂无八字命盘。排盘后点击「添加命理库」保存。',
-				viewBtn: '查看排盘',
-				copyBtn: '复制排盘',
 			});
 			return;
 		}
@@ -1655,8 +1651,6 @@ export class TianjiView extends ItemView {
 			this.renderTypeLibrary(container, {
 				type: 'tarot',
 				emptyText: '暂无塔罗牌阵。洗牌抽牌后将自动写入牌阵库。',
-				viewBtn: '查看牌阵',
-				copyBtn: '复制牌阵',
 			});
 			return;
 		}
@@ -2651,8 +2645,6 @@ export class TianjiView extends ItemView {
 		opts: {
 			type: DivinationType;
 			emptyText: string;
-			viewBtn: string;
-			copyBtn: string;
 		},
 	): void {
 		const favoritesOnly = this.libraryFilter === 'favorites';
@@ -2661,8 +2653,6 @@ export class TianjiView extends ItemView {
 		renderLibraryGrid(container, list, {
 			emptyText: opts.emptyText,
 			favoritesEmptyText: '暂无收藏。点击星标即可收藏。',
-			viewBtn: opts.viewBtn,
-			copyBtn: opts.copyBtn,
 			filter: this.libraryFilter,
 			layout: this.plugin.settings.libraryLayout ?? 'table',
 			favoriteCount,

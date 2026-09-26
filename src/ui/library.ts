@@ -13,8 +13,6 @@ export type { LibraryLayout };
 export interface LibraryRenderOpts {
 	emptyText: string;
 	favoritesEmptyText?: string;
-	viewBtn: string;
-	copyBtn: string;
 	filter: LibraryFilter;
 	layout: LibraryLayout;
 	favoriteCount: number;
@@ -243,29 +241,35 @@ function renderLibraryCard(
 	});
 
 	const row = card.createDiv({ cls: 'tianji-history-actions' });
-	const viewBtn = row.createEl('button', {
+	const left = row.createDiv({ cls: 'tianji-history-actions-left' });
+	const right = row.createDiv({ cls: 'tianji-history-actions-right' });
+
+	const viewBtn = left.createEl('button', {
 		cls: 'tianji-btn tianji-btn-primary',
-		text: opts.viewBtn,
+		text: '查看',
 	});
 	viewBtn.addEventListener('click', () => opts.onRestore(rec));
 
-	const noteBtn = row.createEl('button', {
+	const noteBtn = left.createEl('button', {
 		cls: 'tianji-btn',
-		text: rec.noteMd.trim() ? '编辑笔记' : '添加笔记',
+		text: '笔记',
+		attr: {
+			title: rec.noteMd.trim() ? '编辑笔记' : '添加笔记',
+		},
 	});
 	noteBtn.addEventListener('click', () => opts.onEditNote(rec));
 
 	if (data.chartCopyText || data.chartSnippet) {
-		const copyChart = row.createEl('button', {
+		const copyChart = right.createEl('button', {
 			cls: 'tianji-btn',
-			text: opts.copyBtn,
+			text: '复制',
 		});
 		copyChart.addEventListener('click', () => {
 			opts.onCopy(data.chartCopyText || data.chartSnippet, '已复制');
 		});
 	}
 
-	const delBtn = row.createEl('button', {
+	const delBtn = right.createEl('button', {
 		cls: 'tianji-btn tianji-btn-danger',
 		text: '删除',
 	});
