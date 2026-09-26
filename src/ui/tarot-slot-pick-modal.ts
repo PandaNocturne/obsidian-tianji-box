@@ -1,7 +1,7 @@
-import { Modal, Notice, setIcon } from 'obsidian';
-import { TAROT_DECK, type Suit, type TarotCardDef } from '../tarot/cards';
-import { suitAccent } from '../tarot/decks';
+import { Modal } from 'obsidian';
+import { TAROT_DECK, type Suit } from '../tarot/cards';
 import type { TarotImageCache } from '../tarot/image-cache';
+import { renderTarotPickCardCell } from './tarot-pick-card';
 
 type FilterId = 'all' | 'major' | Suit;
 
@@ -10,7 +10,7 @@ export interface TarotSlotPick {
 	reversed: boolean;
 }
 
-/** 为牌阵某一位置选择 1 张牌 */
+/** 为牌阵某一位置选择 1 张牌（与手动选牌共用牌格：关键词 + 释义 + 详解） */
 export class TarotSlotPickModal extends Modal {
 	private positionLabel: string;
 	private allowReversed: boolean;
@@ -51,8 +51,8 @@ export class TarotSlotPickModal extends Modal {
 		contentEl.createEl('p', {
 			cls: 'tianji-pick-meta',
 			text: this.allowReversed
-				? '点选 1 张牌即可；卡片角上可切换正/逆位。'
-				: '点选 1 张牌即可，不会立刻进入牌阵。',
+				? '点选 1 张即可；点 info 看详解，角标切换正/逆位。'
+				: '点选 1 张即可；点 info 可查看牌意详解。',
 		});
 
 		this.bodyEl = contentEl.createDiv({ cls: 'tianji-pick-body' });
@@ -99,7 +99,7 @@ export class TarotSlotPickModal extends Modal {
 		const search = tools.createEl('input', {
 			cls: 'tianji-pick-search',
 			type: 'search',
-			attr: { placeholder: '搜索牌名…' },
+			attr: { placeholder: '搜索牌名 / 关键词…' },
 		});
 		search.value = this.query;
 		search.addEventListener('input', () => {
@@ -135,9 +135,18 @@ export class TarotSlotPickModal extends Modal {
 			if (!q) return true;
 			return (
 				card.name.toLowerCase().includes(q) ||
-				card.nameEn.toLowerCase().includes(q)
+				card.nameEn.toLowerCase().includes(q) ||
+				card.keywords.some((k) => k.toLowerCase().includes(q))
 			);
 		});
+
+		if (list.length === 0) {
+			grid.createDiv({
+				cls: 'tianji-empty',
+				text: '没有匹配的牌',
+			});
+			return;
+		}
 
 		for (const card of list) {
 			const taken = this.excludeIds.has(card.id);
@@ -145,100 +154,26 @@ export class TarotSlotPickModal extends Modal {
 				? (this.cardReversed.get(card.id) ?? false)
 				: false;
 
-			const cell = grid.createDiv({
-				cls: `tianji-pick-card${taken ? ' is-taken' : ''}${reversed ? ' is-reversed' : ''}`,
-			});
-
-			const media = cell.createDiv({ cls: 'tianji-pick-card-media' });
-			this.renderMiniFace(media, card, reversed);
-
-			if (this.allowReversed && !taken) {
-				const flip = media.createEl('button', {
-					cls: `tianji-pick-orient-btn${reversed ? ' is-reversed' : ''}`,
-					type: 'button',
-					attr: {
-						title: reversed ? '切换为正位' : '切换为逆位',
-						'aria-label': reversed ? '切换为正位' : '切换为逆位',
-					},
-				});
-				setIcon(flip, 'rotate-cw');
-				flip.addEventListener('click', (ev) => {
-					ev.preventDefault();
-					ev.stopPropagation();
-					const cur = this.cardReversed.get(card.id) ?? false;
-					const next = !cur;
+			renderTarotPickCardCell(grid, {
+				app: this.app,
+				images: this.images,
+				card,
+				reversed,
+				taken,
+				allowReversed: this.allowReversed,
+				onToggleReversed: (next) => {
 					this.cardReversed.set(card.id, next);
-					cell.toggleClass('is-reversed', next);
-					flip.toggleClass('is-reversed', next);
-					flip.setAttr('title', next ? '切换为正位' : '切换为逆位');
-					flip.setAttr(
-						'aria-label',
-						next ? '切换为正位' : '切换为逆位',
-					);
-					const face = media.querySelector('.tianji-pick-mini-face');
-					face?.toggleClass('is-reversed', next);
-				});
-			}
-
-			cell.createDiv({ cls: 'tianji-pick-card-name', text: card.name });
-			cell.createDiv({ cls: 'tianji-pick-card-en', text: card.nameEn });
-			if (taken) {
-				cell.createDiv({ cls: 'tianji-pick-taken-tag', text: '已选' });
-			}
-
-			cell.addEventListener('click', () => {
-				if (taken) {
-					new Notice('该牌已被其他位置选用');
-					return;
-				}
-				this.onPick({
-					cardId: card.id,
-					reversed: this.allowReversed
-						? (this.cardReversed.get(card.id) ?? false)
-						: false,
-				});
-				this.close();
+				},
+				onSelect: () => {
+					this.onPick({
+						cardId: card.id,
+						reversed: this.allowReversed
+							? (this.cardReversed.get(card.id) ?? false)
+							: false,
+					});
+					this.close();
+				},
 			});
 		}
-	}
-
-	private renderMiniFace(
-		parent: HTMLElement,
-		card: TarotCardDef,
-		reversed: boolean,
-	): void {
-		const face = parent.createDiv({
-			cls: `tianji-pick-mini-face${reversed ? ' is-reversed' : ''}`,
-		});
-		const img = face.createEl('img', {
-			attr: { alt: card.nameEn, loading: 'lazy' },
-		});
-		void this.images
-			.ensure(card)
-			.then((url) => {
-				img.src = url;
-			})
-			.catch(() => {
-				img.remove();
-				this.fillMiniText(face, card);
-			});
-		img.addEventListener('error', () => {
-			img.remove();
-			this.fillMiniText(face, card);
-		});
-	}
-
-	private fillMiniText(face: HTMLElement, card: TarotCardDef): void {
-		face.empty();
-		face.addClass('is-text');
-		face.style.setProperty('--tarot-accent', suitAccent(card.suit));
-		face.createSpan({
-			text:
-				card.arcana === 'major'
-					? String(card.number)
-					: card.number === 1
-						? 'A'
-						: String(card.number <= 10 ? card.number : card.name[0]),
-		});
 	}
 }

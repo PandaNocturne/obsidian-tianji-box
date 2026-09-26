@@ -1,14 +1,13 @@
-import { Modal, Notice, setIcon } from 'obsidian';
+import { Modal, Notice } from 'obsidian';
 import { TAROT_DECK, type Suit, type TarotCardDef } from '../tarot/cards';
 import {
 	getDeckInfo,
-	suitAccent,
 	type DeckId,
 } from '../tarot/decks';
 import type { TarotImageCache } from '../tarot/image-cache';
 import { getSpread } from '../tarot/spreads';
 import { buildManualTarot, type TarotReading } from '../tarot/draw';
-import { TarotCardDetailModal } from './tarot-card-modal';
+import { renderTarotPickCardCell } from './tarot-pick-card';
 
 type FilterId = 'all' | 'major' | Suit;
 
@@ -76,8 +75,8 @@ export class TarotPickModal extends Modal {
 		contentEl.createEl('p', {
 			cls: 'tianji-pick-meta',
 			text: this.allowReversed
-				? `${spread.name} · ${deck.name} · 共 ${spread.positions.length} 张 · 卡片角上可切换正/逆位`
-				: `${spread.name} · ${deck.name} · 共 ${spread.positions.length} 张`,
+				? `${spread.name} · ${deck.name} · 共 ${spread.positions.length} 张 · 点 info 看详解，角标切换正/逆位`
+				: `${spread.name} · ${deck.name} · 共 ${spread.positions.length} 张 · 点 info 看详解`,
 		});
 
 		this.bodyEl = contentEl.createDiv({ cls: 'tianji-pick-body' });
@@ -243,124 +242,19 @@ export class TarotPickModal extends Modal {
 				? (this.cardReversed.get(card.id) ?? false)
 				: false;
 
-			const cell = grid.createDiv({
-				cls: `tianji-pick-card${taken ? ' is-taken' : ''}${reversed ? ' is-reversed' : ''}`,
-			});
-
-			const media = cell.createDiv({ cls: 'tianji-pick-card-media' });
-			this.renderMiniFace(media, card, reversed);
-
-			if (this.allowReversed && !taken) {
-				const flip = media.createEl('button', {
-					cls: `tianji-pick-orient-btn${reversed ? ' is-reversed' : ''}`,
-					type: 'button',
-					attr: {
-						title: reversed ? '切换为正位' : '切换为逆位',
-						'aria-label': reversed ? '切换为正位' : '切换为逆位',
-					},
-				});
-				setIcon(flip, 'rotate-cw');
-				flip.addEventListener('click', (ev) => {
-					ev.preventDefault();
-					ev.stopPropagation();
-					const cur = this.cardReversed.get(card.id) ?? false;
-					const next = !cur;
+			renderTarotPickCardCell(grid, {
+				app: this.app,
+				images: this.images,
+				card,
+				reversed,
+				taken,
+				allowReversed: this.allowReversed,
+				onToggleReversed: (next) => {
 					this.cardReversed.set(card.id, next);
-					cell.toggleClass('is-reversed', next);
-					flip.toggleClass('is-reversed', next);
-					flip.setAttr('title', next ? '切换为正位' : '切换为逆位');
-					flip.setAttr(
-						'aria-label',
-						next ? '切换为正位' : '切换为逆位',
-					);
-					const face = media.querySelector('.tianji-pick-mini-face');
-					face?.toggleClass('is-reversed', next);
-				});
-			}
-
-			const infoBtn = media.createEl('button', {
-				cls: 'tianji-pick-info-btn',
-				type: 'button',
-				attr: {
-					title: '查看牌意详解',
-					'aria-label': '查看牌意详解',
 				},
-			});
-			setIcon(infoBtn, 'info');
-			infoBtn.addEventListener('click', (ev) => {
-				ev.preventDefault();
-				ev.stopPropagation();
-				new TarotCardDetailModal(this.app, this.images, {
-					card,
-					reversed,
-				}).open();
-			});
-
-			cell.createDiv({
-				cls: 'tianji-pick-card-name',
-				text: card.name,
-			});
-			cell.createDiv({
-				cls: 'tianji-pick-card-en',
-				text: card.nameEn,
-			});
-			if (taken) {
-				cell.createDiv({
-					cls: 'tianji-pick-taken-tag',
-					text: '已选',
-				});
-			}
-			cell.addEventListener('click', () => {
-				if (taken) {
-					new Notice('该牌已被其他位置选用');
-					return;
-				}
-				this.assignCard(card);
+				onSelect: () => this.assignCard(card),
 			});
 		}
-	}
-
-	private renderMiniFace(
-		parent: HTMLElement,
-		card: TarotCardDef,
-		reversed: boolean,
-	): void {
-		const face = parent.createDiv({
-			cls: `tianji-pick-mini-face${reversed ? ' is-reversed' : ''}`,
-		});
-		const img = face.createEl('img', {
-			attr: {
-				alt: card.nameEn,
-				loading: 'lazy',
-			},
-		});
-		void this.images
-			.ensure(card)
-			.then((url) => {
-				img.src = url;
-			})
-			.catch(() => {
-				img.remove();
-				this.fillMiniText(face, card);
-			});
-		img.addEventListener('error', () => {
-			img.remove();
-			this.fillMiniText(face, card);
-		});
-	}
-
-	private fillMiniText(face: HTMLElement, card: TarotCardDef): void {
-		face.empty();
-		face.addClass('is-text');
-		face.style.setProperty('--tarot-accent', suitAccent(card.suit));
-		face.createSpan({
-			text:
-				card.arcana === 'major'
-					? String(card.number)
-					: card.number === 1
-						? 'A'
-						: String(card.number <= 10 ? card.number : card.name[0]),
-		});
 	}
 
 	private assignCard(card: TarotCardDef): void {
