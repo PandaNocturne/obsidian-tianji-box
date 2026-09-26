@@ -1,7 +1,13 @@
 import { Notice, Plugin, WorkspaceLeaf } from 'obsidian';
 import { TianjiDatabase } from './db/database';
+import {
+	DIVINATION_TAB_META,
+	getEnabledTabIds,
+	isTabEnabled,
+	normalizeDivinationTabs,
+} from './divination-tabs';
 import { DEFAULT_SETTINGS, TianjiSettingTab } from './settings';
-import type { TianjiSettings } from './types';
+import type { DivinationType, TianjiSettings } from './types';
 import { TarotImageCache } from './tarot/image-cache';
 import { TIANJI_VIEW_TYPE, TianjiView, type TabId } from './ui/tianji-view';
 
@@ -73,6 +79,12 @@ export default class TianjiPlugin extends Plugin {
 	}
 
 	async activateView(tab?: TabId): Promise<void> {
+		if (tab && !isTabEnabled(this.settings, tab)) {
+			const label = DIVINATION_TAB_META[tab].label;
+			new Notice(`${label}已在设置中关闭`);
+			tab = undefined;
+		}
+
 		const { workspace } = this.app;
 		const leaves = workspace.getLeavesOfType(TIANJI_VIEW_TYPE);
 		let leaf: WorkspaceLeaf | null =
@@ -92,10 +104,23 @@ export default class TianjiPlugin extends Plugin {
 		}
 
 		workspace.revealLeaf(leaf);
-		if (tab) {
+		const view = leaf.view;
+		if (view instanceof TianjiView) {
+			if (tab) {
+				view.setTab(tab);
+			} else {
+				view.ensureValidTab();
+			}
+		}
+	}
+
+	/** 设置变更后重建已打开的天机视图标签栏 */
+	refreshOpenViews(): void {
+		const leaves = this.app.workspace.getLeavesOfType(TIANJI_VIEW_TYPE);
+		for (const leaf of leaves) {
 			const view = leaf.view;
 			if (view instanceof TianjiView) {
-				view.setTab(tab);
+				view.applyTabSettings();
 			}
 		}
 	}
@@ -130,14 +155,21 @@ export default class TianjiPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			(await this.loadData()) as Partial<TianjiSettings>,
+		const loaded = (await this.loadData()) as Partial<TianjiSettings> | null;
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, loaded ?? {});
+		this.settings.divinationTabs = normalizeDivinationTabs(
+			loaded?.divinationTabs ?? DEFAULT_SETTINGS.divinationTabs,
 		);
 	}
 
 	async saveSettings() {
+		this.settings.divinationTabs = normalizeDivinationTabs(
+			this.settings.divinationTabs,
+		);
 		await this.saveData(this.settings);
+	}
+
+	getEnabledTabs(): DivinationType[] {
+		return getEnabledTabIds(this.settings);
 	}
 }

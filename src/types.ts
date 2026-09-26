@@ -13,12 +13,23 @@ export type OpenLocation = 'sidebar-right' | 'sidebar-left' | 'tab';
 /** 卦例库布局 */
 export type LibraryLayout = 'table' | 'cards';
 
+/** 占卜标签页：顺序即显示顺序，enabled 控制是否出现 */
+export interface DivinationTabConfig {
+	id: DivinationType;
+	enabled: boolean;
+}
+
 /** 插件设置（排盘与存档不依赖外部服务） */
 export interface TianjiSettings {
 	/** 新建视图时的打开位置，默认右侧边栏 */
 	openLocation: OpenLocation;
 	/** 卦例库 / 命理库 / 牌阵库列表布局 */
 	libraryLayout: LibraryLayout;
+	/**
+	 * 占卜模块启用与排序。
+	 * 默认顺序：六爻 > 塔罗牌 > 八字。
+	 */
+	divinationTabs: DivinationTabConfig[];
 }
 
 export interface HexagramInfo {

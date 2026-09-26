@@ -1,5 +1,6 @@
 import { ItemView, MarkdownRenderer, Notice, WorkspaceLeaf, setIcon } from 'obsidian';
 import type TianjiPlugin from '../main';
+import { DIVINATION_TAB_META } from '../divination-tabs';
 import type {
 	DivinationType,
 	Gender,
@@ -146,12 +147,34 @@ export class TianjiView extends ItemView {
 
 	/** 供命令切换品类页签 */
 	setTab(tab: TabId): void {
+		if (!this.plugin.getEnabledTabs().includes(tab)) return;
 		if (this.activeTab === tab) return;
 		this.activeTab = tab;
+		this.syncTabs();
 		this.renderBody();
 	}
 
+	/** 当前页签被关闭时，落到第一个已启用模块 */
+	ensureValidTab(): void {
+		const enabled = this.plugin.getEnabledTabs();
+		if (enabled.length === 0) return;
+		if (!enabled.includes(this.activeTab)) {
+			this.activeTab = enabled[0]!;
+			if (this.bodyEl) {
+				this.syncTabs();
+				this.renderBody();
+			}
+		}
+	}
+
+	/** 设置里改完启用/排序后重建标签栏 */
+	applyTabSettings(): void {
+		this.ensureValidTab();
+		this.render(true);
+	}
+
 	async onOpen(): Promise<void> {
+		this.ensureValidTab();
 		this.render(true);
 	}
 
@@ -172,9 +195,7 @@ export class TianjiView extends ItemView {
 			this.shellEl = root.createDiv({ cls: 'tianji-shell' });
 			const header = this.shellEl.createDiv({ cls: 'tianji-header' });
 			this.tabsEl = header.createDiv({ cls: 'tianji-tabs' });
-			this.makeTab(this.tabsEl, 'liuyao', '六爻占卜');
-			this.makeTab(this.tabsEl, 'bazi', '八字分析');
-			this.makeTab(this.tabsEl, 'tarot', '塔罗牌');
+			this.buildTabs();
 			this.bodyEl = this.shellEl.createDiv({ cls: 'tianji-body' });
 		}
 
@@ -193,6 +214,17 @@ export class TianjiView extends ItemView {
 		else this.renderTarot(this.bodyEl);
 	}
 
+	private buildTabs(): void {
+		if (!this.tabsEl) return;
+		this.tabsEl.empty();
+		const enabled = this.plugin.getEnabledTabs();
+		for (const id of enabled) {
+			const meta = DIVINATION_TAB_META[id];
+			this.makeTab(this.tabsEl, id, meta.label, meta.icon);
+		}
+		this.tabsEl.toggleClass('is-single', enabled.length <= 1);
+	}
+
 	private syncTabs(): void {
 		if (!this.tabsEl) return;
 		const buttons = this.tabsEl.querySelectorAll('button.tianji-tab');
@@ -202,15 +234,18 @@ export class TianjiView extends ItemView {
 		});
 	}
 
-	private makeTab(parent: HTMLElement, id: TabId, label: string): void {
+	private makeTab(
+		parent: HTMLElement,
+		id: TabId,
+		label: string,
+		iconName: string,
+	): void {
 		const btn = parent.createEl('button', {
 			cls: `tianji-tab${this.activeTab === id ? ' is-active' : ''}`,
 			type: 'button',
 			attr: { 'data-tab': id },
 		});
 		const iconWrap = btn.createSpan({ cls: 'tianji-tab-icon' });
-		const iconName =
-			id === 'liuyao' ? 'hexagon' : id === 'bazi' ? 'calendar' : 'layout-grid';
 		setIcon(iconWrap, iconName);
 		btn.createSpan({ cls: 'tianji-tab-label', text: label });
 		btn.addEventListener('click', () => {

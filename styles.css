@@ -3064,3 +3064,70 @@
 	gap: 8px;
 	margin-top: 14px;
 }
+
+/* —— Settings: divination module order —— */
+.tianji-settings-tabs {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin: 8px 0 18px;
+}
+
+.tianji-settings-tab-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 10px 12px;
+	border-radius: var(--radius-m);
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+}
+
+.tianji-settings-tab-left {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	min-width: 0;
+}
+
+.tianji-settings-tab-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-muted);
+}
+
+.tianji-settings-tab-icon svg {
+	width: 1.1em;
+	height: 1.1em;
+}
+
+.tianji-settings-tab-label {
+	font-weight: 550;
+	color: var(--text-normal);
+}
+
+.tianji-settings-tab-actions {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	flex-shrink: 0;
+}
+
+.tianji-settings-tab-btn {
+	opacity: 0.75;
+}
+
+.tianji-settings-tab-btn:disabled {
+	opacity: 0.25;
+	cursor: not-allowed;
+}
+
+.tianji-settings-tab-toggle {
+	margin-left: 4px;
+}
+
+.tianji-tabs.is-single .tianji-tab {
+	cursor: default;
+}

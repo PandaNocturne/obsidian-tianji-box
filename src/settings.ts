@@ -1,10 +1,16 @@
-import { App, PluginSettingTab, Setting } from 'obsidian';
+import { App, PluginSettingTab, Setting, ToggleComponent, setIcon } from 'obsidian';
+import {
+	DEFAULT_DIVINATION_TABS,
+	DIVINATION_TAB_META,
+	moveTabInOrder,
+} from './divination-tabs';
 import type TianjiPlugin from './main';
-import type { OpenLocation, TianjiSettings } from './types';
+import type { DivinationType, OpenLocation, TianjiSettings } from './types';
 
 export const DEFAULT_SETTINGS: TianjiSettings = {
 	openLocation: 'sidebar-right',
 	libraryLayout: 'table',
+	divinationTabs: DEFAULT_DIVINATION_TABS.map((t) => ({ ...t })),
 };
 
 export class TianjiSettingTab extends PluginSettingTab {
@@ -43,5 +49,93 @@ export class TianjiSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					});
 			});
+
+		new Setting(containerEl)
+			.setName('占卜模块')
+			.setDesc('开关控制是否显示；上下箭头调整标签页顺序。至少保留一项启用。')
+			.setHeading();
+
+		const list = containerEl.createDiv({ cls: 'tianji-settings-tabs' });
+		const tabs = this.plugin.settings.divinationTabs;
+		const enabledCount = tabs.filter((t) => t.enabled).length;
+
+		tabs.forEach((tab, index) => {
+			const meta = DIVINATION_TAB_META[tab.id];
+			const row = list.createDiv({
+				cls: 'tianji-settings-tab-row',
+				attr: { 'data-tab': tab.id },
+			});
+
+			const left = row.createDiv({ cls: 'tianji-settings-tab-left' });
+			const iconWrap = left.createSpan({
+				cls: 'tianji-settings-tab-icon',
+			});
+			setIcon(iconWrap, meta.icon);
+			left.createSpan({
+				cls: 'tianji-settings-tab-label',
+				text: meta.label,
+			});
+
+			const actions = row.createDiv({
+				cls: 'tianji-settings-tab-actions',
+			});
+
+			const upBtn = actions.createEl('button', {
+				cls: 'clickable-icon tianji-settings-tab-btn',
+				type: 'button',
+				attr: { 'aria-label': '上移' },
+			});
+			setIcon(upBtn, 'chevron-up');
+			upBtn.disabled = index === 0;
+			upBtn.addEventListener('click', () => {
+				void this.moveTab(tab.id, -1);
+			});
+
+			const downBtn = actions.createEl('button', {
+				cls: 'clickable-icon tianji-settings-tab-btn',
+				type: 'button',
+				attr: { 'aria-label': '下移' },
+			});
+			setIcon(downBtn, 'chevron-down');
+			downBtn.disabled = index === tabs.length - 1;
+			downBtn.addEventListener('click', () => {
+				void this.moveTab(tab.id, 1);
+			});
+
+			const toggleHost = actions.createDiv({
+				cls: 'tianji-settings-tab-toggle',
+			});
+			new ToggleComponent(toggleHost)
+				.setValue(tab.enabled)
+				.setDisabled(!tab.enabled && enabledCount <= 1)
+				.onChange(async (value) => {
+					if (!value && enabledCount <= 1) {
+						this.display();
+						return;
+					}
+					const target = this.plugin.settings.divinationTabs.find(
+						(t) => t.id === tab.id,
+					);
+					if (!target) return;
+					target.enabled = value;
+					await this.plugin.saveSettings();
+					this.plugin.refreshOpenViews();
+					this.display();
+				});
+		});
+	}
+
+	private async moveTab(
+		id: DivinationType,
+		direction: -1 | 1,
+	): Promise<void> {
+		this.plugin.settings.divinationTabs = moveTabInOrder(
+			this.plugin.settings.divinationTabs,
+			id,
+			direction,
+		);
+		await this.plugin.saveSettings();
+		this.plugin.refreshOpenViews();
+		this.display();
 	}
 }
