@@ -29,18 +29,31 @@ function shuffle<T>(arr: T[]): T[] {
 	return a;
 }
 
+/** 排除已用牌后的剩余牌组 */
+export function remainingTarotDeck(excludeIds?: Iterable<string>): TarotCardDef[] {
+	const exclude = new Set(excludeIds ?? []);
+	if (exclude.size === 0) return [...TAROT_DECK];
+	return TAROT_DECK.filter((c) => !exclude.has(c.id));
+}
+
 export function drawTarot(params: {
 	spreadId: string;
 	deckId: DeckId;
 	question: string;
 	/** 是否允许逆位 */
 	allowReversed?: boolean;
+	/** 本局已用牌，从剩余牌组抽取 */
+	excludeIds?: Iterable<string>;
 }): TarotReading {
 	const spread: TarotSpread = getSpread(params.spreadId);
 	const allowReversed = params.allowReversed !== false;
-	const pool = shuffle(TAROT_DECK);
+	const pool = shuffle(remainingTarotDeck(params.excludeIds));
 	const need = spread.positions.length;
-	if (pool.length < need) throw new Error('牌组不足');
+	if (pool.length < need) {
+		throw new Error(
+			`剩余牌不足（需 ${need} 张，剩 ${pool.length} 张）`,
+		);
+	}
 
 	const cards: DrawnCard[] = spread.positions.map((pos, i) => {
 		const card = pool[i]!;

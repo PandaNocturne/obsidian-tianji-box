@@ -22,6 +22,7 @@ export class TarotPickModal extends Modal {
 	private allowReversed: boolean;
 	private question: string;
 	private images: TarotImageCache;
+	private excludeIds: Set<string>;
 	private onConfirm: (reading: TarotReading) => void;
 
 	private slots: PickSlot[] = [];
@@ -44,6 +45,8 @@ export class TarotPickModal extends Modal {
 			onConfirm: (reading: TarotReading) => void;
 			/** 打开时预选的牌位下标 */
 			initialPos?: number;
+			/** 本局已用牌，仅展示剩余牌 */
+			excludeIds?: Iterable<string>;
 		},
 	) {
 		super(app);
@@ -52,6 +55,7 @@ export class TarotPickModal extends Modal {
 		this.allowReversed = opts.allowReversed;
 		this.question = opts.question;
 		this.images = opts.images;
+		this.excludeIds = new Set(opts.excludeIds ?? []);
 		this.onConfirm = opts.onConfirm;
 
 		const spread = getSpread(this.spreadId);
@@ -70,13 +74,31 @@ export class TarotPickModal extends Modal {
 
 		const spread = getSpread(this.spreadId);
 		const deck = getDeckInfo(this.deckId);
+		const remain = TAROT_DECK.length - this.excludeIds.size;
+		const need = spread.positions.length;
+		if (remain < need) {
+			contentEl.createEl('h2', { text: '手动选牌' });
+			contentEl.createEl('p', {
+				cls: 'tianji-pick-meta',
+				text: `剩余牌不足：需 ${need} 张，仅剩 ${remain} 张。请换更少张的牌阵，或返回后「新开一局」。`,
+			});
+			const footer = contentEl.createDiv({ cls: 'tianji-pick-footer' });
+			const close = footer.createEl('button', {
+				cls: 'tianji-btn tianji-btn-primary',
+				text: '关闭',
+			});
+			close.addEventListener('click', () => this.close());
+			return;
+		}
 
 		contentEl.createEl('h2', { text: '手动选牌' });
+		const remainHint =
+			this.excludeIds.size > 0 ? ` · 剩余 ${remain} 张` : '';
 		contentEl.createEl('p', {
 			cls: 'tianji-pick-meta',
 			text: this.allowReversed
-				? `${spread.name} · ${deck.name} · 共 ${spread.positions.length} 张 · 点 info 看详解，角标切换正/逆位`
-				: `${spread.name} · ${deck.name} · 共 ${spread.positions.length} 张 · 点 info 看详解`,
+				? `${spread.name} · ${deck.name}${remainHint} · 共选 ${need} 张 · 点 info 看详解，角标切换正/逆位`
+				: `${spread.name} · ${deck.name}${remainHint} · 共选 ${need} 张 · 点 info 看详解`,
 		});
 
 		this.bodyEl = contentEl.createDiv({ cls: 'tianji-pick-body' });
@@ -212,6 +234,7 @@ export class TarotPickModal extends Modal {
 		const q = this.query.toLowerCase();
 
 		const list = TAROT_DECK.filter((c) => {
+			if (this.excludeIds.has(c.id)) return false;
 			if (this.filter === 'major' && c.arcana !== 'major') return false;
 			if (
 				this.filter !== 'all' &&

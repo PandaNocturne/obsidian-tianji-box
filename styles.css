@@ -231,6 +231,30 @@
 	margin-bottom: 14px;
 }
 
+.tianji-tarot-session-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px 12px;
+	margin-bottom: 14px;
+	padding: 10px 12px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s, 6px);
+	background: color-mix(in srgb, var(--interactive-accent) 8%, var(--background-primary));
+}
+
+.tianji-tarot-session-meta,
+.tianji-tarot-session-hint {
+	font-size: 0.86em;
+	color: var(--text-muted);
+	line-height: 1.4;
+}
+
+.tianji-tarot-session-hint {
+	margin: -6px 0 12px;
+}
+
 .tianji-notes {
 	padding: 10px 14px;
 	color: var(--text-muted);

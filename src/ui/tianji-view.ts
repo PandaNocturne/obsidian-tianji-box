@@ -38,6 +38,7 @@ import { getSpread, TAROT_SPREADS } from '../tarot/spreads';
 import {
 	buildManualTarot,
 	drawTarot,
+	remainingTarotDeck,
 	type DrawnCard,
 	type TarotReading,
 } from '../tarot/draw';
@@ -109,6 +110,8 @@ export class TianjiView extends ItemView {
 	private tarotShuffling = false;
 	/** 抽牌页草稿：选牌后不立刻进牌阵，点「开始排盘」再确认 */
 	private tarotDraft: (TarotSlotPick | null)[] = [];
+	/** 本局已用牌 id：继续提问时从剩余牌组抽取 */
+	private tarotSessionUsedIds: string[] = [];
 
 	private shellEl: HTMLElement | null = null;
 	private tabsEl: HTMLElement | null = null;
@@ -1610,6 +1613,25 @@ export class TianjiView extends ItemView {
 
 		const form = stage.createDiv({ cls: 'tianji-form tianji-cast-card' });
 
+		if (this.tarotSessionUsedIds.length > 0) {
+			const sessionBar = form.createDiv({ cls: 'tianji-tarot-session-bar' });
+			const remain = remainingTarotDeck(this.tarotSessionUsedIds).length;
+			sessionBar.createDiv({
+				cls: 'tianji-tarot-session-meta',
+				text: `本局已用 ${this.tarotSessionUsedIds.length} 张 · 剩余 ${remain} 张（续问从此牌组抽）`,
+			});
+			const newGame = sessionBar.createEl('button', {
+				cls: 'tianji-btn',
+				type: 'button',
+				text: '新开一局',
+			});
+			newGame.addEventListener('click', () => {
+				this.startFreshTarotSession();
+				new Notice('已整副重洗，开始新一局');
+				this.render();
+			});
+		}
+
 		this.field(form, '占测问题', (el) => {
 			const ta = el.createEl('textarea', {
 				cls: 'tianji-textarea',
@@ -1707,6 +1729,13 @@ export class TianjiView extends ItemView {
 		}
 
 		const toolbar = stage.createDiv({ cls: 'tianji-chart-toolbar' });
+		const continueBtn = toolbar.createEl('button', {
+			cls: 'tianji-btn tianji-btn-primary',
+			text: '继续提问',
+		});
+		continueBtn.addEventListener('click', () => {
+			this.continueTarotSession();
+		});
 		const backBtn = toolbar.createEl('button', {
 			cls: 'tianji-btn',
 			text: '返回抽牌',
@@ -1724,6 +1753,13 @@ export class TianjiView extends ItemView {
 			void this.copyText(this.tarotReading!.chartText, '牌阵已复制');
 		});
 
+		const remain = remainingTarotDeck(this.tarotSessionUsedIds).length;
+		if (this.tarotSessionUsedIds.length > 0) {
+			stage.createDiv({
+				cls: 'tianji-tarot-session-hint',
+				text: `本局已用 ${this.tarotSessionUsedIds.length} 张 · 剩余 ${remain} 张可继续提问`,
+			});
+		}
 		const board = stage.createDiv({ cls: 'tianji-tarot-board' });
 		board.createEl('h3', {
 			text: `${this.tarotReading.spreadName} · ${getDeckInfo(this.tarotReading.deckId).name}`,
@@ -1746,6 +1782,65 @@ export class TianjiView extends ItemView {
 	private resetTarotDraft(): void {
 		const n = getSpread(this.tarotSpreadId).positions.length;
 		this.tarotDraft = Array.from({ length: n }, () => null);
+	}
+
+	/** 本局剩余牌是否够当前牌阵 */
+	private ensureTarotRemainingForSpread(): boolean {
+		const need = getSpread(this.tarotSpreadId).positions.length;
+		const remain = remainingTarotDeck(this.tarotSessionUsedIds).length;
+		if (remain < need) {
+			new Notice(
+				`剩余牌不足：需 ${need} 张，仅剩 ${remain} 张。请换更少张的牌阵，或「新开一局」。`,
+			);
+			return false;
+		}
+		return true;
+	}
+
+	/** 牌阵页：继续提问，从剩余牌组再抽 */
+	private continueTarotSession(): void {
+		const remain = remainingTarotDeck(this.tarotSessionUsedIds).length;
+		if (remain <= 0) {
+			new Notice('本局牌已抽完，请返回抽牌后「新开一局」');
+			return;
+		}
+		this.tarotQuestion = '';
+		this.resetTarotDraft();
+		this.tarotPanel = 'cast';
+		new Notice(`继续提问 · 剩余 ${remain} 张`);
+		this.render();
+	}
+
+	/** 整副重洗，清空本局已用牌 */
+	private startFreshTarotSession(): void {
+		this.tarotSessionUsedIds = [];
+		this.tarotQuestion = '';
+		this.tarotReading = null;
+		this.tarotRecordId = null;
+		this.resetTarotDraft();
+		this.tarotPanel = 'cast';
+	}
+
+	/** 确认排盘后把本阵牌记入本局已用 */
+	private rememberTarotSessionCards(reading: TarotReading): void {
+		const used = new Set(this.tarotSessionUsedIds);
+		for (const c of reading.cards) {
+			used.add(c.card.id);
+		}
+		this.tarotSessionUsedIds = [...used];
+	}
+
+	private annotateTarotFollowUp(reading: TarotReading): TarotReading {
+		if (this.tarotSessionUsedIds.length === 0) return reading;
+		const remainAfter =
+			TAROT_DECK.length -
+			this.tarotSessionUsedIds.length -
+			reading.cards.length;
+		const prefix = `【续问】从剩余牌组抽取（抽前已用 ${this.tarotSessionUsedIds.length} 张，抽后约剩 ${Math.max(0, remainAfter)} 张）\n\n`;
+		return {
+			...reading,
+			chartText: prefix + reading.chartText,
+		};
 	}
 
 	private applyReadingToDraft(reading: TarotReading): void {
@@ -1879,9 +1974,12 @@ export class TianjiView extends ItemView {
 		const pos = spread.positions[posIndex];
 		if (!pos) return;
 
-		const excludeIds = this.tarotDraft
-			.map((p, i) => (i !== posIndex && p ? p.cardId : null))
-			.filter((id): id is string => !!id);
+		const excludeIds = [
+			...this.tarotSessionUsedIds,
+			...this.tarotDraft
+				.map((p, i) => (i !== posIndex && p ? p.cardId : null))
+				.filter((id): id is string => !!id),
+		];
 
 		new TarotSlotPickModal(this.app, {
 			positionLabel: pos.label,
@@ -1901,6 +1999,12 @@ export class TianjiView extends ItemView {
 		const missing = this.tarotDraft.findIndex((p) => !p);
 		if (missing >= 0) {
 			new Notice(`请先为第 ${missing + 1} 个位置选牌`);
+			return;
+		}
+		const used = new Set(this.tarotSessionUsedIds);
+		const overlap = this.tarotDraft.find((p) => p && used.has(p.cardId));
+		if (overlap) {
+			new Notice('草稿含本局已用牌，请从剩余牌组重新选牌');
 			return;
 		}
 		try {
@@ -2073,11 +2177,13 @@ export class TianjiView extends ItemView {
 	}
 
 	private openTarotShuffleModal(): void {
+		if (!this.ensureTarotRemainingForSpread()) return;
 		new TarotShuffleModal(this.app, {
 			deckId: this.tarotDeckId,
 			spreadId: this.tarotSpreadId,
 			allowReversed: this.tarotAllowReversed,
 			question: this.tarotQuestion,
+			excludeIds: this.tarotSessionUsedIds,
 			onConfirm: (reading) => {
 				this.applyReadingToDraft(reading);
 				new Notice(`已选好 ${reading.cards.length} 张，可点「开始排盘」`);
@@ -2086,12 +2192,14 @@ export class TianjiView extends ItemView {
 	}
 
 	private openTarotPickModal(initialPos = 0): void {
+		if (!this.ensureTarotRemainingForSpread()) return;
 		new TarotPickModal(this.app, {
 			deckId: this.tarotDeckId,
 			spreadId: this.tarotSpreadId,
 			allowReversed: this.tarotAllowReversed,
 			question: this.tarotQuestion,
 			images: this.plugin.tarotImages,
+			excludeIds: this.tarotSessionUsedIds,
 			initialPos,
 			onConfirm: (reading) => {
 				this.applyReadingToDraft(reading);
@@ -2102,6 +2210,7 @@ export class TianjiView extends ItemView {
 
 	private async runTarotDraw(): Promise<void> {
 		if (this.tarotShuffling) return;
+		if (!this.ensureTarotRemainingForSpread()) return;
 		this.tarotShuffling = true;
 		this.render();
 		await new Promise((r) => setTimeout(r, 420));
@@ -2112,6 +2221,7 @@ export class TianjiView extends ItemView {
 				deckId: this.tarotDeckId,
 				question: this.tarotQuestion,
 				allowReversed: this.tarotAllowReversed,
+				excludeIds: this.tarotSessionUsedIds,
 			});
 			this.applyReadingToDraft(reading);
 			new Notice(`已选好 ${reading.cards.length} 张，可点「开始排盘」`);
@@ -2127,11 +2237,14 @@ export class TianjiView extends ItemView {
 		reading: TarotReading,
 		methodLabel: string,
 	): Promise<void> {
-		this.tarotReading = reading;
+		const saved = this.annotateTarotFollowUp(reading);
+		this.rememberTarotSessionCards(saved);
+		this.tarotReading = saved;
 		this.tarotPanel = 'chart';
+		this.resetTarotDraft();
 		const title =
 			this.tarotQuestion.trim().slice(0, 24) ||
-			`${reading.spreadName}${methodLabel}`;
+			`${saved.spreadName}${methodLabel}`;
 		try {
 			this.tarotRecordId = await this.plugin.db.insertReading({
 				type: 'tarot',
@@ -2142,11 +2255,12 @@ export class TianjiView extends ItemView {
 					question: this.tarotQuestion,
 					allowReversed: this.tarotAllowReversed,
 					method: methodLabel,
+					sessionUsedIds: this.tarotSessionUsedIds,
 				}),
-				resultJson: JSON.stringify(reading),
+				resultJson: JSON.stringify(saved),
 			});
 			new Notice(
-				`已确认 ${reading.cards.length} 张 · ${reading.spreadName}（${methodLabel}）`,
+				`已确认 ${saved.cards.length} 张 · ${saved.spreadName}（${methodLabel}）· 剩余 ${remainingTarotDeck(this.tarotSessionUsedIds).length} 张`,
 			);
 		} catch (e) {
 			new Notice(`牌阵已出，存档失败：${String(e)}`);
@@ -2410,6 +2524,7 @@ export class TianjiView extends ItemView {
 			spreadId?: string;
 			question?: string;
 			allowReversed?: boolean;
+			sessionUsedIds?: string[];
 		} = {};
 		try {
 			input = JSON.parse(rec.inputJson) as typeof input;
@@ -2425,6 +2540,11 @@ export class TianjiView extends ItemView {
 		this.tarotReading = reading;
 		this.tarotRecordId = rec.id;
 		this.tarotShuffling = false;
+		this.tarotSessionUsedIds =
+			input.sessionUsedIds?.length
+				? [...input.sessionUsedIds]
+				: reading.cards.map((c) => c.card.id);
+		this.resetTarotDraft();
 		this.tarotPanel = 'chart';
 		this.activeTab = 'tarot';
 	}

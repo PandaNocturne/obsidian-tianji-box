@@ -12,8 +12,9 @@ interface BackSlot {
 
 type ShuffleLayout = 'grid' | 'stack';
 
-function shuffleDeck(): TarotCardDef[] {
-	const a = [...TAROT_DECK];
+function shuffleDeck(excludeIds?: Iterable<string>): TarotCardDef[] {
+	const exclude = new Set(excludeIds ?? []);
+	const a = TAROT_DECK.filter((c) => !exclude.has(c.id));
 	for (let i = a.length - 1; i > 0; i--) {
 		const j = Math.floor(Math.random() * (i + 1));
 		[a[i], a[j]] = [a[j]!, a[i]!];
@@ -27,6 +28,7 @@ export class TarotShuffleModal extends Modal {
 	private spreadId: string;
 	private allowReversed: boolean;
 	private question: string;
+	private excludeIds: Set<string>;
 	private onConfirm: (reading: TarotReading) => void;
 
 	private shuffled: TarotCardDef[] = [];
@@ -45,6 +47,8 @@ export class TarotShuffleModal extends Modal {
 			spreadId: string;
 			allowReversed: boolean;
 			question: string;
+			/** 本局已用牌，仅展示剩余牌背 */
+			excludeIds?: Iterable<string>;
 			onConfirm: (reading: TarotReading) => void;
 		},
 	) {
@@ -53,6 +57,7 @@ export class TarotShuffleModal extends Modal {
 		this.spreadId = opts.spreadId;
 		this.allowReversed = opts.allowReversed;
 		this.question = opts.question;
+		this.excludeIds = new Set(opts.excludeIds ?? []);
 		this.onConfirm = opts.onConfirm;
 
 		const spread = getSpread(this.spreadId);
@@ -60,7 +65,7 @@ export class TarotShuffleModal extends Modal {
 			deckIndex: null,
 			reversed: false,
 		}));
-		this.shuffled = shuffleDeck();
+		this.shuffled = shuffleDeck(this.excludeIds);
 	}
 
 	onOpen(): void {
@@ -71,13 +76,33 @@ export class TarotShuffleModal extends Modal {
 
 		const spread = getSpread(this.spreadId);
 		const deck = getDeckInfo(this.deckId);
+		const remain = this.shuffled.length;
+		const need = spread.positions.length;
+		if (remain < need) {
+			contentEl.createEl('h2', { text: '洗牌抽牌' });
+			contentEl.createEl('p', {
+				cls: 'tianji-pick-meta',
+				text: `剩余牌不足：需 ${need} 张，仅剩 ${remain} 张。请换更少张的牌阵，或返回后「新开一局」。`,
+			});
+			const footer = contentEl.createDiv({ cls: 'tianji-pick-footer' });
+			const close = footer.createEl('button', {
+				cls: 'tianji-btn tianji-btn-primary',
+				text: '关闭',
+			});
+			close.addEventListener('click', () => this.close());
+			return;
+		}
 
 		contentEl.createEl('h2', { text: '洗牌抽牌' });
+		const remainHint =
+			this.excludeIds.size > 0
+				? ` · 剩余 ${remain} 张`
+				: '';
 		contentEl.createEl('p', {
 			cls: 'tianji-pick-meta',
 			text: this.allowReversed
-				? `${spread.name} · ${deck.name} · 牌背已洗匀，凭直觉点选 ${spread.positions.length} 张（正/逆位随抽牌随机）`
-				: `${spread.name} · ${deck.name} · 牌背已洗匀，凭直觉点选 ${spread.positions.length} 张`,
+				? `${spread.name} · ${deck.name}${remainHint} · 牌背已洗匀，凭直觉点选 ${need} 张（正/逆位随抽牌随机）`
+				: `${spread.name} · ${deck.name}${remainHint} · 牌背已洗匀，凭直觉点选 ${need} 张`,
 		});
 
 		this.bodyEl = contentEl.createDiv({ cls: 'tianji-pick-body' });
