@@ -135,19 +135,19 @@ function renderLibraryTable(
 		});
 
 		const subjectTd = tr.createEl('td', { cls: 'tianji-lib-col-subject' });
-		const link = subjectTd.createEl('button', {
+		const link = subjectTd.createSpan({
 			cls: 'tianji-lib-link',
-			type: 'button',
 			text: data.subject,
+			attr: { role: 'button', tabindex: '0' },
 		});
-		link.addEventListener('click', () => opts.onRestore(rec));
-		if (rec.isFavorite) {
-			const mark = subjectTd.createSpan({
-				cls: 'tianji-lib-fav-mark',
-				attr: { 'aria-hidden': 'true' },
-			});
-			setIcon(mark, 'star');
-		}
+		const openRec = () => opts.onRestore(rec);
+		link.addEventListener('click', openRec);
+		link.addEventListener('keydown', (e) => {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				openRec();
+			}
+		});
 
 		tr.createEl('td', {
 			cls: 'tianji-lib-col-question',
@@ -167,14 +167,18 @@ function renderLibraryTable(
 		});
 
 		const noteTd = tr.createEl('td', { cls: 'tianji-lib-col-note' });
+		const hasNote = Boolean(rec.noteMd.trim());
 		const noteBtn = noteTd.createEl('button', {
-			cls: `tianji-lib-op tianji-lib-note-btn${
-				rec.noteMd.trim() ? ' has-note' : ''
+			cls: `tianji-lib-icon-btn tianji-lib-note-btn${
+				hasNote ? ' has-note' : ''
 			}`,
 			type: 'button',
-			text: rec.noteMd.trim() ? '有笔记' : '添加',
-			attr: { title: 'Markdown 笔记注释' },
+			attr: {
+				title: hasNote ? '编辑笔记' : '添加笔记',
+				'aria-label': hasNote ? '编辑笔记' : '添加笔记',
+			},
 		});
+		setIcon(noteBtn, hasNote ? 'file-text' : 'file-plus');
 		noteBtn.addEventListener('click', () => opts.onEditNote(rec));
 
 		const ops = tr.createEl('td', { cls: 'tianji-lib-col-ops' });
@@ -190,10 +194,14 @@ function renderLibraryTable(
 		favBtn.addEventListener('click', () => opts.onToggleFavorite(rec));
 
 		const delBtn = ops.createEl('button', {
-			cls: 'tianji-lib-op is-danger',
+			cls: 'tianji-lib-icon-btn is-danger',
 			type: 'button',
-			text: '删除',
+			attr: {
+				title: '删除',
+				'aria-label': '删除',
+			},
 		});
+		setIcon(delBtn, 'trash-2');
 		delBtn.addEventListener('click', () => opts.onDelete(rec.id));
 	}
 }

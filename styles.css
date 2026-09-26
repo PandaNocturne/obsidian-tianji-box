@@ -1515,11 +1515,12 @@
 }
 
 .tianji-lib-col-subject .tianji-lib-link {
-	display: inline-block;
+	display: inline;
 	max-width: 100%;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	vertical-align: bottom;
+	white-space: nowrap;
+	vertical-align: baseline;
 }
 
 .tianji-lib-col-question,
@@ -1543,37 +1544,66 @@
 	white-space: nowrap;
 }
 
-.tianji-lib-link {
-	appearance: none;
-	border: none;
-	background: transparent;
-	padding: 0;
-	margin: 0;
+.tianji-library-table .tianji-lib-link {
 	cursor: pointer;
-	color: var(--text-accent);
-	font: inherit;
-	font-weight: 600;
-	text-align: left;
+	color: var(--text-normal);
+	font-weight: 500;
 }
 
-.tianji-lib-link:hover {
+.tianji-library-table .tianji-lib-link:hover,
+.tianji-library-table .tianji-lib-link:focus-visible {
+	color: var(--interactive-accent);
 	text-decoration: underline;
+	outline: none;
 }
 
-.tianji-lib-fav-mark {
+.tianji-lib-icon-btn {
+	appearance: none;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	margin-left: 6px;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	margin: 0 2px 0 0;
+	border: 1px solid transparent;
+	border-radius: var(--tianji-radius-sm);
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	flex-shrink: 0;
 	vertical-align: middle;
-	color: var(--tianji-star);
+	transition:
+		background var(--tianji-ease),
+		color var(--tianji-ease),
+		border-color var(--tianji-ease),
+		transform var(--tianji-ease);
 }
 
-.tianji-lib-fav-mark svg {
-	width: 0.85em;
-	height: 0.85em;
-	fill: currentColor;
-	stroke: currentColor;
+.tianji-lib-icon-btn svg {
+	width: 15px;
+	height: 15px;
+	stroke-width: 1.75;
+}
+
+.tianji-lib-icon-btn:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+	border-color: var(--tianji-border);
+}
+
+.tianji-lib-icon-btn:active {
+	transform: scale(0.94);
+}
+
+.tianji-lib-icon-btn.is-danger {
+	color: var(--text-error, #c0392b);
+}
+
+.tianji-lib-icon-btn.is-danger:hover {
+	background: color-mix(in srgb, var(--text-error, #c0392b) 12%, transparent);
+	border-color: color-mix(in srgb, var(--text-error, #c0392b) 28%, transparent);
+	color: var(--text-error, #c0392b);
 }
 
 .tianji-lib-op {
@@ -3924,7 +3954,6 @@
 
 .tianji-lib-note-btn.has-note {
 	color: var(--text-accent);
-	font-weight: 600;
 }
 
 .tianji-reading-note {
