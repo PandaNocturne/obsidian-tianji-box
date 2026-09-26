@@ -1806,9 +1806,12 @@
 	flex-direction: column;
 	align-items: center;
 	gap: 14px;
-	overflow: visible;
+	overflow-x: auto;
+	overflow-y: visible;
 	position: relative;
 	isolation: isolate;
+	width: 100%;
+	box-sizing: border-box;
 }
 
 .tianji-spread-preview-head {
@@ -1923,11 +1926,12 @@
 .tianji-spread-preview-label {
 	font-size: 0.78em;
 	font-weight: 600;
-	line-height: 1.2;
+	line-height: 1.25;
 	width: 100%;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+	overflow: visible;
+	text-overflow: unset;
+	white-space: normal;
+	word-break: break-word;
 }
 
 .tianji-spread-preview-hint {
@@ -2253,14 +2257,18 @@
 .tianji-spread-preview-hexagram-seven [data-pos="result"] { grid-area: result; }
 
 .tianji-spread-preview-celtic-cross {
-	grid-template-columns: 76px 88px 76px 76px;
+	grid-template-columns: 76px minmax(120px, 140px) 76px 76px;
 	grid-template-areas:
 		".    p5   .    p10"
 		"p4   mid  p6   p9"
 		".    p3   .    p8"
 		".    .    .    p7";
-	gap: 10px 12px;
-	align-items: center;
+	gap: 10px 14px;
+	align-items: start;
+	justify-content: center;
+	width: max-content;
+	max-width: none;
+	flex-shrink: 0;
 }
 .tianji-spread-preview-celtic-cross [data-pos="p3"] { grid-area: p3; }
 .tianji-spread-preview-celtic-cross [data-pos="p4"] { grid-area: p4; }
@@ -2270,64 +2278,64 @@
 .tianji-spread-preview-celtic-cross [data-pos="p8"] { grid-area: p8; }
 .tianji-spread-preview-celtic-cross [data-pos="p9"] { grid-area: p9; }
 .tianji-spread-preview-celtic-cross [data-pos="p10"] { grid-area: p10; }
-.tianji-spread-preview-celtic-cross .tianji-spread-preview-slot {
+.tianji-spread-preview-celtic-cross > .tianji-spread-preview-slot {
 	width: 76px;
 }
+
+/* 抽牌预览十字：1、2 标题与牌面绑定；2 号整块（含标题）旋转 90° */
 .tianji-spread-preview-celtic-cross .tianji-celtic-mid {
 	grid-area: mid;
 	position: relative;
-	width: 88px;
-	min-height: 112px;
-	display: grid;
-	grid-template-columns: 1fr;
-	grid-template-rows: auto auto 88px;
-	grid-template-areas:
-		"lab1"
-		"lab2"
-		"stack";
-	justify-items: center;
-	align-items: start;
-	gap: 2px;
+	width: 100%;
+	max-width: 140px;
+	min-height: 150px;
+	justify-self: center;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	overflow: visible;
 }
 .tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p1"],
 .tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"] {
-	display: contents;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	width: 56px;
+	max-width: 56px;
+	box-sizing: border-box;
 }
-.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p1"] .tianji-spread-preview-label {
-	grid-area: lab1;
-	max-width: 88px;
-}
-.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-spread-preview-label {
-	grid-area: lab2;
-	max-width: 88px;
-}
-.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p1"] .tianji-spread-preview-hint,
-.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-spread-preview-hint {
-	display: none;
-}
-.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p1"] .tianji-spread-preview-face,
-.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-spread-preview-face {
-	grid-area: stack;
-	width: 52px;
-	height: 88px;
-	flex: none;
-	align-self: center;
-	justify-self: center;
-}
-.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p1"] .tianji-spread-preview-face {
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p1"] {
+	position: relative;
 	z-index: 1;
-	position: relative;
 }
-.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-spread-preview-face {
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"] {
+	position: absolute;
+	left: 50%;
+	top: 50%;
 	z-index: 2;
-	position: relative;
-	transform: rotate(90deg);
+	transform: translate(-50%, -50%) rotate(90deg);
 	transform-origin: center center;
-	margin: 0;
+}
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"]:active {
+	transform: translate(-50%, -50%) rotate(90deg) scale(0.97);
+}
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid .tianji-spread-preview-label {
+	width: 100%;
+	max-width: 100%;
+	white-space: normal;
+	line-height: 1.2;
+	font-size: 0.7em;
+	text-align: center;
+}
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid .tianji-spread-preview-face {
+	width: 48px;
+	height: 80px;
+	/* 逆位只转牌面；整块已由 slot rotate(90deg) */
+	transform: none;
 }
 .tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-spread-preview-face.is-reversed {
-	transform: rotate(90deg) rotate(180deg);
+	transform: rotate(180deg);
 }
 
 .tianji-tarot-board {
@@ -2949,7 +2957,7 @@
 		min-width: 108px;
 	}
 
-	/* 窄屏：取消十字叠放与整块旋转，p1/p2 与其它位同款 flex 卡片 */
+	/* 窄屏：排盘结果凯尔特十字取消叠放；抽牌预览十字保持几何布局不变 */
 	.tianji-spread-celtic-cross > .tianji-celtic-mid {
 		display: contents;
 	}

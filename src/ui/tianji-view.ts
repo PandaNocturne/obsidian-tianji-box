@@ -2045,10 +2045,15 @@ export class TianjiView extends ItemView {
 					'data-pos': posKey,
 					role: 'button',
 					tabindex: '0',
-					title: pick
-						? `更换「${posLabel}」`
-						: `为「${posLabel}」选牌`,
+					title: pick && card
+						? `更换「${posLabel}」· ${card.name}${pick.reversed ? ' · 逆' : ''}`
+						: `为「${posLabel}」选牌 · ${posHint}`,
 				},
+			});
+
+			slot.createDiv({
+				cls: 'tianji-spread-preview-label',
+				text: posLabel,
 			});
 
 			const face = slot.createDiv({
@@ -2071,17 +2076,6 @@ export class TianjiView extends ItemView {
 			} else {
 				face.setText(String(i + 1));
 			}
-
-			slot.createDiv({
-				cls: 'tianji-spread-preview-label',
-				text: posLabel,
-			});
-			slot.createDiv({
-				cls: 'tianji-spread-preview-hint',
-				text: card
-					? `${card.name}${pick?.reversed ? ' · 逆' : ''}`
-					: posHint,
-			});
 
 			if (opts?.removable && pick) {
 				const remove = slot.createEl('button', {
@@ -2136,18 +2130,14 @@ export class TianjiView extends ItemView {
 					'aria-label': '添加一张牌',
 				},
 			});
-			const addFace = addSlot.createDiv({
-				cls: 'tianji-spread-preview-face tianji-spread-preview-add-face',
-			});
-			setIcon(addFace, 'plus');
 			addSlot.createDiv({
 				cls: 'tianji-spread-preview-label',
 				text: '添加',
 			});
-			addSlot.createDiv({
-				cls: 'tianji-spread-preview-hint',
-				text: canAdd ? '点此选牌' : '牌组已空',
+			const addFace = addSlot.createDiv({
+				cls: 'tianji-spread-preview-face tianji-spread-preview-add-face',
 			});
+			setIcon(addFace, 'plus');
 			const addCard = () => {
 				if (!canAdd) {
 					new Notice('剩余牌不足，无法继续添加');
