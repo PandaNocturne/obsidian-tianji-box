@@ -34,6 +34,9 @@ export class TarotShuffleModal extends Modal {
 	private activePos = 0;
 	private layoutMode: ShuffleLayout = 'stack';
 	private bodyEl!: HTMLElement;
+	private shuffling = false;
+	private settleAfterPaint = false;
+	private shuffleTimer: number | null = null;
 
 	constructor(
 		app: ConstructorParameters<typeof Modal>[0],
@@ -82,21 +85,6 @@ export class TarotShuffleModal extends Modal {
 
 		const footer = contentEl.createDiv({ cls: 'tianji-pick-footer' });
 
-		const reshuffle = footer.createEl('button', {
-			cls: 'tianji-btn',
-			text: '重新洗牌',
-		});
-		reshuffle.addEventListener('click', () => {
-			this.shuffled = shuffleDeck();
-			this.slots = this.slots.map(() => ({
-				deckIndex: null,
-				reversed: false,
-			}));
-			this.activePos = 0;
-			this.paint();
-			new Notice('已重新洗牌');
-		});
-
 		const cancel = footer.createEl('button', {
 			cls: 'tianji-btn',
 			text: '取消',
@@ -105,12 +93,17 @@ export class TarotShuffleModal extends Modal {
 
 		const ok = footer.createEl('button', {
 			cls: 'tianji-btn tianji-btn-primary',
-			text: '翻开确认',
+			text: '确认',
 		});
 		ok.addEventListener('click', () => this.submit());
 	}
 
 	onClose(): void {
+		if (this.shuffleTimer != null) {
+			window.clearTimeout(this.shuffleTimer);
+			this.shuffleTimer = null;
+		}
+		this.shuffling = false;
 		this.contentEl.empty();
 	}
 
@@ -182,6 +175,7 @@ export class TarotShuffleModal extends Modal {
 				});
 			}
 			cell.addEventListener('click', () => {
+				if (this.shuffling) return;
 				if (taken) {
 					new Notice('这张牌背已被选过');
 					return;
@@ -189,6 +183,22 @@ export class TarotShuffleModal extends Modal {
 				this.assignBack(i);
 			});
 		});
+
+		if (this.settleAfterPaint) {
+			this.settleAfterPaint = false;
+			backs.addClass('is-settling');
+			window.setTimeout(() => {
+				backs.removeClass('is-settling');
+			}, 720);
+		}
+
+		const reshuffle = picker.createEl('button', {
+			cls: 'tianji-btn tianji-shuffle-reshuffle-btn',
+			type: 'button',
+			text: '重新洗牌',
+		});
+		reshuffle.disabled = this.shuffling;
+		reshuffle.addEventListener('click', () => this.reshuffle());
 
 		const side = layout.createDiv({
 			cls: 'tianji-pick-slots tianji-shuffle-slots',
@@ -244,6 +254,55 @@ export class TarotShuffleModal extends Modal {
 					this.paint();
 				});
 			}
+		});
+	}
+
+	private reshuffle(): void {
+		if (this.shuffling) return;
+		this.shuffling = true;
+
+		const backs = this.bodyEl.querySelector(
+			'.tianji-shuffle-stack, .tianji-shuffle-grid',
+		);
+		const btn = this.bodyEl.querySelector(
+			'.tianji-shuffle-reshuffle-btn',
+		) as HTMLButtonElement | null;
+		if (btn) btn.disabled = true;
+		backs?.addClass('is-shuffling');
+
+		if (this.shuffleTimer != null) {
+			window.clearTimeout(this.shuffleTimer);
+		}
+		this.shuffleTimer = window.setTimeout(() => {
+			this.shuffleTimer = null;
+			this.reshuffleUnusedBacks();
+			this.shuffling = false;
+			this.settleAfterPaint = true;
+			this.paint();
+			new Notice('已重新洗牌');
+		}, 720);
+	}
+
+	/** 只打乱未选牌背，保留已选位置与正/逆位 */
+	private reshuffleUnusedBacks(): void {
+		const taken = new Set(
+			this.slots
+				.map((s) => s.deckIndex)
+				.filter((v): v is number => v != null),
+		);
+		const freeIdx: number[] = [];
+		const freeCards: TarotCardDef[] = [];
+		for (let i = 0; i < this.shuffled.length; i++) {
+			if (taken.has(i)) continue;
+			freeIdx.push(i);
+			freeCards.push(this.shuffled[i]!);
+		}
+		for (let i = freeCards.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[freeCards[i], freeCards[j]] = [freeCards[j]!, freeCards[i]!];
+		}
+		freeIdx.forEach((idx, n) => {
+			this.shuffled[idx] = freeCards[n]!;
 		});
 	}
 
