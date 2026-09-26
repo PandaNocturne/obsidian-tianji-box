@@ -15,6 +15,7 @@
 	);
 	--tianji-card-pad: 14px 16px;
 	--tianji-shadow: none;
+	--tianji-star: #c9a227;
 	height: 100%;
 	overflow-y: auto;
 	box-sizing: border-box;
@@ -638,6 +639,10 @@
 }
 
 .tianji-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
 	padding: 7px 14px;
 	border-radius: var(--tianji-radius-sm);
 	border: 1px solid var(--tianji-border);
@@ -646,7 +651,25 @@
 	cursor: pointer;
 	font-size: 0.88em;
 	font-weight: 500;
-	transition: background var(--tianji-ease), border-color var(--tianji-ease), color var(--tianji-ease);
+	line-height: 1.2;
+	transition:
+		background var(--tianji-ease),
+		border-color var(--tianji-ease),
+		color var(--tianji-ease),
+		box-shadow var(--tianji-ease),
+		transform var(--tianji-ease);
+}
+
+.tianji-btn .tianji-btn-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.tianji-btn .tianji-btn-icon svg {
+	width: 0.95em;
+	height: 0.95em;
 }
 
 .tianji-btn:hover:not(:disabled) {
@@ -656,6 +679,7 @@
 
 .tianji-btn:active:not(:disabled) {
 	background: var(--background-modifier-active-hover, var(--background-modifier-hover));
+	transform: translateY(0.5px);
 }
 
 .tianji-btn:disabled {
@@ -667,6 +691,11 @@
 	background: color-mix(in srgb, var(--interactive-accent) 14%, var(--background-secondary));
 	border-color: color-mix(in srgb, var(--interactive-accent) 35%, var(--background-modifier-border));
 	color: var(--text-accent);
+}
+
+.tianji-btn-primary:hover:not(:disabled) {
+	background: color-mix(in srgb, var(--interactive-accent) 22%, var(--background-secondary));
+	border-color: color-mix(in srgb, var(--interactive-accent) 50%, var(--background-modifier-border));
 }
 
 .tianji-btn-accent {
@@ -684,6 +713,11 @@
 	color: var(--text-error);
 	border-color: color-mix(in srgb, var(--text-error) 30%, var(--background-modifier-border));
 	background: color-mix(in srgb, var(--text-error) 8%, var(--background-primary));
+}
+
+.tianji-btn-danger:hover:not(:disabled) {
+	background: color-mix(in srgb, var(--text-error) 14%, var(--background-primary));
+	border-color: color-mix(in srgb, var(--text-error) 45%, var(--background-modifier-border));
 }
 
 .tianji-tip {
@@ -1370,7 +1404,7 @@
 }
 
 .tianji-library-table tr.is-favorite td:first-child {
-	box-shadow: inset 3px 0 0 color-mix(in srgb, #c9a227 80%, transparent);
+	box-shadow: inset 3px 0 0 color-mix(in srgb, var(--tianji-star) 80%, transparent);
 }
 
 .tianji-lib-col-subject {
@@ -1404,6 +1438,7 @@
 
 .tianji-lib-col-ops {
 	width: 1%;
+	white-space: nowrap;
 }
 
 .tianji-lib-link {
@@ -1424,31 +1459,47 @@
 }
 
 .tianji-lib-fav-mark {
-	margin-left: 4px;
-	color: #c9a227;
-	font-size: 0.9em;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	margin-left: 6px;
+	vertical-align: middle;
+	color: var(--tianji-star);
+}
+
+.tianji-lib-fav-mark svg {
+	width: 0.85em;
+	height: 0.85em;
+	fill: currentColor;
+	stroke: currentColor;
 }
 
 .tianji-lib-op {
 	appearance: none;
-	border: none;
+	border: 1px solid transparent;
 	background: transparent;
-	padding: 2px 6px;
+	padding: 4px 8px;
 	margin: 0 2px 0 0;
 	cursor: pointer;
 	font: inherit;
-	font-size: 0.95em;
+	font-size: 0.82em;
+	font-weight: 500;
 	color: var(--text-muted);
-	border-radius: 4px;
+	border-radius: var(--tianji-radius-sm);
+	transition:
+		background var(--tianji-ease),
+		color var(--tianji-ease),
+		border-color var(--tianji-ease);
 }
 
 .tianji-lib-op:hover {
 	background: var(--background-modifier-hover);
 	color: var(--text-normal);
+	border-color: var(--tianji-border);
 }
 
 .tianji-lib-op.is-fav {
-	color: #c9a227;
+	color: var(--tianji-star);
 }
 
 .tianji-lib-op.is-danger {
@@ -1457,6 +1508,8 @@
 
 .tianji-lib-op.is-danger:hover {
 	background: color-mix(in srgb, var(--text-error, #c0392b) 12%, transparent);
+	border-color: color-mix(in srgb, var(--text-error, #c0392b) 28%, transparent);
+	color: var(--text-error, #c0392b);
 }
 
 .tianji-history-top {
@@ -1469,35 +1522,71 @@
 
 .tianji-fav-btn {
 	appearance: none;
-	border: none;
-	background: transparent;
-	padding: 0 2px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
 	margin: 0;
+	border: 1px solid transparent;
+	border-radius: var(--tianji-radius-sm);
+	background: transparent;
+	color: var(--text-muted);
 	cursor: pointer;
-	font-size: 1.15em;
-	line-height: 1;
-	color: var(--text-faint);
-	transition: color 0.15s ease, transform 0.15s ease;
+	flex-shrink: 0;
+	vertical-align: middle;
+	transition:
+		background var(--tianji-ease),
+		color var(--tianji-ease),
+		border-color var(--tianji-ease),
+		transform var(--tianji-ease);
+}
+
+.tianji-fav-btn svg {
+	width: 15px;
+	height: 15px;
+	stroke-width: 1.75;
 }
 
 .tianji-fav-btn:hover {
-	color: #c9a227;
-	transform: scale(1.08);
+	background: color-mix(in srgb, var(--tianji-star) 12%, transparent);
+	color: var(--tianji-star);
+	border-color: color-mix(in srgb, var(--tianji-star) 28%, transparent);
+}
+
+.tianji-fav-btn:active {
+	transform: scale(0.94);
 }
 
 .tianji-fav-btn.is-active {
-	color: #c9a227;
+	color: var(--tianji-star);
+	background: color-mix(in srgb, var(--tianji-star) 14%, transparent);
+	border-color: color-mix(in srgb, var(--tianji-star) 35%, transparent);
+}
+
+.tianji-fav-btn.is-active svg {
+	fill: currentColor;
+}
+
+.tianji-fav-toolbar {
+	gap: 6px;
 }
 
 .tianji-fav-toolbar.is-active {
-	color: #c9a227;
-	border-color: color-mix(in srgb, #c9a227 55%, var(--tianji-border));
+	color: var(--tianji-star);
+	border-color: color-mix(in srgb, var(--tianji-star) 45%, var(--tianji-border));
+	background: color-mix(in srgb, var(--tianji-star) 10%, var(--background-primary));
+}
+
+.tianji-fav-toolbar.is-active .tianji-btn-icon svg {
+	fill: currentColor;
 }
 
 .tianji-history-card.is-favorite {
-	border-color: color-mix(in srgb, #c9a227 55%, var(--tianji-border));
+	border-color: color-mix(in srgb, var(--tianji-star) 55%, var(--tianji-border));
 	box-shadow: none;
-	background: color-mix(in srgb, #c9a227 6%, var(--tianji-surface-soft));
+	background: color-mix(in srgb, var(--tianji-star) 6%, var(--tianji-surface-soft));
 }
 
 .tianji-badge {

@@ -2145,7 +2145,7 @@ export class TianjiView extends ItemView {
 		const favoriteCount = this.plugin.db.countReadings(opts.type, true);
 		renderLibraryGrid(container, list, {
 			emptyText: opts.emptyText,
-			favoritesEmptyText: '暂无收藏。点击 ★ 即可收藏。',
+			favoritesEmptyText: '暂无收藏。点击星标即可收藏。',
 			viewBtn: opts.viewBtn,
 			copyBtn: opts.copyBtn,
 			filter: this.libraryFilter,
@@ -2251,7 +2251,16 @@ export class TianjiView extends ItemView {
 		const btn = toolbar.createEl('button', {
 			cls: `tianji-btn tianji-fav-toolbar${rec.isFavorite ? ' is-active' : ''}`,
 			type: 'button',
-			text: rec.isFavorite ? '★ 已收藏' : '☆ 收藏',
+			attr: {
+				title: rec.isFavorite ? '取消收藏' : '收藏',
+				'aria-label': rec.isFavorite ? '取消收藏' : '收藏',
+			},
+		});
+		const icon = btn.createSpan({ cls: 'tianji-btn-icon' });
+		setIcon(icon, 'star');
+		btn.createSpan({
+			cls: 'tianji-btn-label',
+			text: rec.isFavorite ? '已收藏' : '收藏',
 		});
 		btn.addEventListener('click', () => {
 			void this.toggleFavorite(rec.id, !rec.isFavorite);

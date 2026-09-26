@@ -1,3 +1,4 @@
+import { setIcon } from 'obsidian';
 import type {
 	DivinationType,
 	LibraryLayout,
@@ -84,7 +85,7 @@ export function renderLibraryGrid(
 		const emptyText =
 			opts.filter === 'favorites'
 				? (opts.favoritesEmptyText ??
-					'暂无收藏。点击 ★ 即可收藏。')
+					'暂无收藏。点击星标即可收藏。')
 				: opts.emptyText;
 		const hint =
 			opts.filter === 'favorites'
@@ -140,7 +141,11 @@ function renderLibraryTable(
 		});
 		link.addEventListener('click', () => opts.onRestore(rec));
 		if (rec.isFavorite) {
-			subjectTd.createSpan({ cls: 'tianji-lib-fav-mark', text: '★' });
+			const mark = subjectTd.createSpan({
+				cls: 'tianji-lib-fav-mark',
+				attr: { 'aria-hidden': 'true' },
+			});
+			setIcon(mark, 'star');
 		}
 
 		tr.createEl('td', {
@@ -173,14 +178,14 @@ function renderLibraryTable(
 
 		const ops = tr.createEl('td', { cls: 'tianji-lib-col-ops' });
 		const favBtn = ops.createEl('button', {
-			cls: `tianji-lib-op${rec.isFavorite ? ' is-fav' : ''}`,
+			cls: `tianji-fav-btn${rec.isFavorite ? ' is-active' : ''}`,
 			type: 'button',
-			text: rec.isFavorite ? '★' : '☆',
 			attr: {
 				title: rec.isFavorite ? '取消收藏' : '收藏',
 				'aria-label': rec.isFavorite ? '取消收藏' : '收藏',
 			},
 		});
+		setIcon(favBtn, 'star');
 		favBtn.addEventListener('click', () => opts.onToggleFavorite(rec));
 
 		const delBtn = ops.createEl('button', {
@@ -210,8 +215,8 @@ function renderLibraryCard(
 			'aria-label': rec.isFavorite ? '取消收藏' : '收藏',
 			title: rec.isFavorite ? '取消收藏' : '收藏',
 		},
-		text: rec.isFavorite ? '★' : '☆',
 	});
+	setIcon(favBtn, 'star');
 	favBtn.addEventListener('click', (e) => {
 		e.stopPropagation();
 		opts.onToggleFavorite(rec);
