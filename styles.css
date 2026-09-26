@@ -1,0 +1,3066 @@
+/* 天机 · 扁平卡片（跟随 Obsidian 主题，轻边框无重阴影） */
+
+.tianji-view {
+	--tianji-radius: 10px;
+	--tianji-radius-sm: 8px;
+	--tianji-gap: 14px;
+	--tianji-ease: 160ms ease;
+	--tianji-aside: minmax(300px, 400px);
+	--tianji-border: var(--background-modifier-border);
+	--tianji-surface: var(--background-secondary);
+	--tianji-surface-soft: color-mix(
+		in srgb,
+		var(--background-secondary) 72%,
+		var(--background-primary)
+	);
+	--tianji-card-pad: 14px 16px;
+	--tianji-shadow: none;
+	height: 100%;
+	overflow-y: auto;
+	box-sizing: border-box;
+	background: var(--background-primary);
+	container-type: inline-size;
+	container-name: tianji;
+}
+
+.tianji-shell {
+	width: 100%;
+	max-width: none;
+	margin: 0;
+	/* padding: 16px 20px 36px; */
+	box-sizing: border-box;
+}
+
+/* 统一卡片底：细边框 + 柔和底色，无投影 */
+.tianji-card,
+.tianji-form,
+.tianji-result-card,
+.tianji-history-card,
+.tianji-yao-board,
+.tianji-coin-panel,
+.tianji-tarot-board,
+.tianji-spread-preview,
+.tianji-zhouyi-card,
+.tianji-reading-note,
+.tianji-bazi-info,
+.tianji-notes,
+.tianji-library-table-wrap,
+.tianji-chart-text {
+	border: 1px solid var(--tianji-border);
+	border-radius: var(--tianji-radius);
+	background: var(--tianji-surface-soft);
+	box-shadow: none;
+}
+
+/* —— Header —— */
+.tianji-header {
+	display: flex;
+	align-items: center;
+	justify-content: stretch;
+	gap: 12px;
+	flex-wrap: wrap;
+	margin-bottom: 14px;
+	padding: 0;
+	border: none;
+	background: transparent;
+	box-shadow: none;
+	position: sticky;
+	top: 0;
+	z-index: 5;
+}
+
+/* —— Tabs —— */
+.tianji-tabs {
+	display: flex;
+	gap: 4px;
+	margin: 0;
+	padding: 4px;
+	border-radius: var(--tianji-radius);
+	background: var(--tianji-surface-soft);
+	border: 1px solid var(--tianji-border);
+	width: 100%;
+	max-width: 100%;
+	flex-wrap: wrap;
+	box-shadow: none;
+	backdrop-filter: none;
+}
+
+.tianji-tab {
+	flex: 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	text-align: center;
+	padding: 7px 12px;
+	border-radius: calc(var(--tianji-radius-sm) - 1px);
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	color: var(--text-muted);
+	font-size: 0.9em;
+	font-weight: 500;
+	transition: background var(--tianji-ease), color var(--tianji-ease);
+}
+
+.tianji-tab-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.1em;
+	height: 1.1em;
+	flex-shrink: 0;
+}
+
+.tianji-tab-icon svg {
+	width: 1.05em;
+	height: 1.05em;
+}
+
+.tianji-tab-label {
+	line-height: 1.2;
+}
+
+.tianji-tab:hover {
+	color: var(--text-normal);
+	background: var(--background-modifier-hover);
+}
+
+.tianji-tab.is-active {
+	background: var(--background-primary);
+	color: var(--text-normal);
+	box-shadow: none;
+	border: 1px solid var(--tianji-border);
+	font-weight: 650;
+}
+
+/* —— Panel switch (work / library) —— */
+.tianji-panel-switch {
+	display: flex;
+	gap: 4px;
+	margin-bottom: 14px;
+	padding: 3px;
+	border-radius: var(--tianji-radius-sm);
+	background: var(--tianji-surface-soft);
+	border: 1px solid var(--tianji-border);
+	width: fit-content;
+	max-width: 100%;
+}
+
+.tianji-panel-btn {
+	padding: 6px 14px;
+	border-radius: calc(var(--tianji-radius-sm) - 1px);
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	color: var(--text-muted);
+	font-size: 0.86em;
+	font-weight: 500;
+	transition: background var(--tianji-ease), color var(--tianji-ease);
+}
+
+.tianji-panel-btn:hover {
+	color: var(--text-normal);
+	background: var(--background-modifier-hover);
+}
+
+.tianji-panel-btn.is-active {
+	background: var(--background-primary);
+	color: var(--text-normal);
+	box-shadow: none;
+	font-weight: 650;
+	border: 1px solid var(--tianji-border);
+}
+
+/* —— Body / Work layout —— */
+.tianji-body {
+	width: 100%;
+}
+
+/* —— 起卦 / 排盘 分屏 —— */
+.tianji-stage {
+	width: 100%;
+	max-width: 920px;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	gap: var(--tianji-gap);
+}
+
+.tianji-chart-stage {
+	max-width: none;
+}
+
+/* —— Form —— */
+.tianji-form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--tianji-gap);
+	margin-bottom: 0;
+	padding: var(--tianji-card-pad);
+}
+
+.tianji-cast-row {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 14px;
+}
+
+.tianji-cast-row.is-2 {
+	grid-template-columns: minmax(0, 1.4fr) minmax(7em, 0.8fr);
+}
+
+.tianji-cast-ganzhi {
+	margin-top: 6px;
+	font-size: 0.78em;
+	color: var(--text-muted);
+	line-height: 1.4;
+}
+
+.tianji-cast-actions {
+	justify-content: center;
+	padding-top: 4px;
+}
+
+.tianji-chart-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin-bottom: 14px;
+}
+
+.tianji-notes {
+	padding: 10px 14px;
+	color: var(--text-muted);
+}
+
+.tianji-notes summary {
+	cursor: pointer;
+	font-weight: 650;
+	font-size: 0.9em;
+	list-style: none;
+}
+
+.tianji-notes summary::-webkit-details-marker {
+	display: none;
+}
+
+.tianji-notes ul {
+	margin: 8px 0 2px;
+	padding-left: 1.2em;
+	font-size: 0.84em;
+	line-height: 1.65;
+}
+
+/* —— Form —— */
+.tianji-field {
+	display: flex;
+	flex-direction: column;
+	gap: 7px;
+}
+
+.tianji-label {
+	font-size: 0.78em;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: none;
+	color: var(--text-muted);
+}
+
+.tianji-input,
+.tianji-textarea,
+.tianji-select {
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+	appearance: none;
+	-webkit-appearance: none;
+	min-height: 2.75em;
+	padding: 8px 2.4em 8px 12px;
+	border-radius: var(--tianji-radius-sm);
+	border: 1px solid var(--tianji-border);
+	background-color: var(--background-modifier-form-field, var(--background-primary));
+	color: var(--text-normal);
+	font: inherit;
+	font-size: 0.95em;
+	line-height: 1.5;
+	cursor: pointer;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 10px center;
+	background-size: 12px;
+	transition: border-color var(--tianji-ease), box-shadow var(--tianji-ease);
+}
+
+.tianji-select option {
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 14px;
+	line-height: 1.6;
+	padding: 6px 10px;
+}
+
+.tianji-input:focus,
+.tianji-textarea:focus,
+.tianji-select:focus {
+	outline: none;
+	border-color: color-mix(in srgb, var(--interactive-accent) 55%, var(--background-modifier-border));
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--interactive-accent) 18%, transparent);
+}
+
+.tianji-textarea {
+	resize: vertical;
+	min-height: 72px;
+	font-family: inherit;
+	line-height: 1.5;
+}
+
+.tianji-control {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+}
+
+.tianji-control .tianji-input,
+.tianji-control .tianji-select {
+	flex: 1;
+	min-width: 0;
+}
+
+.tianji-radio-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.tianji-chip {
+	padding: 5px 13px;
+	border-radius: 999px;
+	border: 1px solid var(--tianji-border);
+	background: var(--background-primary);
+	cursor: pointer;
+	color: var(--text-normal);
+	font-size: 0.86em;
+	transition: all var(--tianji-ease);
+}
+
+.tianji-chip:hover {
+	border-color: color-mix(in srgb, var(--interactive-accent) 40%, var(--background-modifier-border));
+}
+
+.tianji-chip.is-active {
+	background: color-mix(in srgb, var(--interactive-accent) 16%, var(--background-primary));
+	color: var(--text-accent);
+	border-color: color-mix(in srgb, var(--interactive-accent) 45%, transparent);
+	font-weight: 600;
+}
+
+/* —— Yao board —— */
+.tianji-yao-board {
+	padding: var(--tianji-card-pad);
+	margin-bottom: 0;
+}
+
+.tianji-yao-board h3 {
+	margin: 0 0 12px;
+	font-size: 0.95em;
+	font-weight: 650;
+}
+
+.tianji-yao-row {
+	display: grid;
+	grid-template-columns: 48px minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 6px;
+	border-radius: 6px;
+	transition: background var(--tianji-ease);
+	justify-items: start;
+}
+
+.tianji-yao-row .tianji-yao-select {
+	width: max-content;
+	max-width: 100%;
+	min-width: 0;
+	field-sizing: content;
+	font-size: 0.86em;
+	padding-top: 6px;
+	padding-bottom: 6px;
+}
+
+.tianji-yao-row:hover {
+	background: color-mix(in srgb, var(--background-modifier-hover) 70%, transparent);
+}
+
+.tianji-yao-pos {
+	color: var(--text-muted);
+	font-size: 0.8em;
+}
+
+.tianji-yao-row .tianji-yao-visual,
+.tianji-yao-bar-wrap .tianji-yao-visual {
+	width: 100%;
+	min-width: 0;
+	max-width: none;
+	height: 12px;
+	gap: 8px;
+	justify-self: stretch;
+}
+
+.tianji-yao-row .tianji-yao-visual .tianji-yao-seg,
+.tianji-yao-bar-wrap .tianji-yao-visual .tianji-yao-seg {
+	min-width: 0;
+}
+
+.tianji-yao-row .tianji-yao-visual.is-moving,
+.tianji-coin-yao-row .tianji-yao-visual.is-moving {
+	color: #c0392b;
+}
+
+.tianji-yao-visual.is-empty {
+	color: var(--text-faint);
+	opacity: 0.45;
+}
+
+.tianji-yao-visual.is-empty .tianji-yao-seg {
+	background: transparent;
+	border: 1px dashed currentColor;
+	height: 7px;
+}
+
+.tianji-yao-name {
+	font-size: 0.82em;
+	color: var(--text-muted);
+}
+
+/* —— Coin cast (sidebar-friendly) —— */
+.tianji-coin-panel {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	padding: var(--tianji-card-pad);
+}
+
+.tianji-coins {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 14px;
+	padding: 8px 0 4px;
+	flex-wrap: wrap;
+}
+
+.tianji-coin {
+	position: relative;
+	width: 72px;
+	height: 72px;
+	border-radius: 50%;
+	background: #c9a24a;
+	border: 1px solid rgba(90, 50, 0, 0.35);
+	box-shadow: none;
+	flex-shrink: 0;
+}
+
+.tianji-coin-ring {
+	position: absolute;
+	inset: 5px;
+	border-radius: 50%;
+	border: 1.5px solid rgba(90, 50, 0, 0.35);
+	pointer-events: none;
+}
+
+.tianji-coin-hole {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 16px;
+	height: 16px;
+	transform: translate(-50%, -50%);
+	background: var(--background-secondary);
+	border: 1px solid rgba(90, 50, 0, 0.4);
+	box-shadow: none;
+	z-index: 2;
+}
+
+.tianji-coin-face {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-template-rows: 1fr 1fr;
+	place-items: center;
+	font-size: 11px;
+	font-weight: 700;
+	color: #5a3200;
+	line-height: 1;
+	padding: 4px;
+}
+
+.tianji-coin-face span:nth-child(1) { grid-area: 1 / 1; transform: rotate(-90deg); }
+.tianji-coin-face span:nth-child(2) { grid-area: 1 / 2; }
+.tianji-coin-face span:nth-child(3) { grid-area: 2 / 1; transform: rotate(180deg); }
+.tianji-coin-face span:nth-child(4) { grid-area: 2 / 2; transform: rotate(90deg); }
+
+.tianji-coin-manchu {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	font-size: 13px;
+	font-weight: 700;
+	color: #5a3200;
+	letter-spacing: 0.08em;
+	padding-top: 2px;
+}
+
+.tianji-coin-yao-board {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 4px 6px;
+}
+
+.tianji-coin-yao-row {
+	display: grid;
+	grid-template-columns: 40px minmax(0, 1fr) 40px;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 4px;
+	border-radius: 6px;
+}
+
+.tianji-coin-yao-row.is-current {
+	background: color-mix(in srgb, var(--interactive-accent) 12%, transparent);
+}
+
+.tianji-coin-yao-row .tianji-yao-name {
+	text-align: right;
+	font-size: 0.84em;
+	color: var(--text-normal);
+}
+
+.tianji-yao-bar-wrap {
+	min-width: 0;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: stretch;
+}
+
+.tianji-coin-tip {
+	text-align: center;
+	font-size: 0.8em;
+	color: var(--text-muted);
+}
+
+.tianji-coin-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 2px 8px;
+}
+
+.tianji-icon-btn {
+	appearance: none;
+	border: 1px solid var(--tianji-border);
+	background: var(--background-primary);
+	color: var(--text-muted);
+	width: 34px;
+	height: 34px;
+	border-radius: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	flex-shrink: 0;
+	padding: 0;
+}
+
+.tianji-icon-btn:hover {
+	color: var(--text-normal);
+	background: var(--background-modifier-hover);
+}
+
+.tianji-icon-btn svg {
+	width: 16px;
+	height: 16px;
+}
+
+.tianji-btn-coin-quick,
+.tianji-btn-coin-shake {
+	flex: 1;
+	justify-content: center;
+	border: none;
+	color: #fff;
+	font-weight: 650;
+	padding: 10px 12px;
+	border-radius: 8px;
+}
+
+.tianji-btn-coin-quick {
+	background: #e8a0a8;
+}
+
+.tianji-btn-coin-quick:hover {
+	background: #de8e97;
+	filter: none;
+}
+
+.tianji-btn-coin-shake {
+	background: #e74c3c;
+}
+
+.tianji-btn-coin-shake:hover {
+	background: #d44334;
+	filter: none;
+}
+
+.tianji-coin-confirm {
+	display: flex;
+	justify-content: center;
+	padding-bottom: 4px;
+}
+
+.tianji-coin-confirm .tianji-btn {
+	width: 100%;
+	justify-content: center;
+}
+
+/* —— Actions / Buttons —— */
+.tianji-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 0;
+	align-items: center;
+}
+
+.tianji-btn {
+	padding: 7px 14px;
+	border-radius: var(--tianji-radius-sm);
+	border: 1px solid var(--tianji-border);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	cursor: pointer;
+	font-size: 0.88em;
+	font-weight: 500;
+	transition: background var(--tianji-ease), border-color var(--tianji-ease), color var(--tianji-ease);
+}
+
+.tianji-btn:hover:not(:disabled) {
+	background: var(--background-modifier-hover);
+	border-color: color-mix(in srgb, var(--interactive-accent) 40%, var(--tianji-border));
+}
+
+.tianji-btn:active:not(:disabled) {
+	background: var(--background-modifier-active-hover, var(--background-modifier-hover));
+}
+
+.tianji-btn:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.tianji-btn-primary {
+	background: color-mix(in srgb, var(--interactive-accent) 14%, var(--background-secondary));
+	border-color: color-mix(in srgb, var(--interactive-accent) 35%, var(--background-modifier-border));
+	color: var(--text-accent);
+}
+
+.tianji-btn-accent {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: transparent;
+}
+
+.tianji-btn-accent:hover:not(:disabled) {
+	filter: brightness(1.05);
+	background: var(--interactive-accent);
+}
+
+.tianji-btn-danger {
+	color: var(--text-error);
+	border-color: color-mix(in srgb, var(--text-error) 30%, var(--background-modifier-border));
+	background: color-mix(in srgb, var(--text-error) 8%, var(--background-primary));
+}
+
+.tianji-tip {
+	width: 100%;
+	font-size: 0.8em;
+	color: var(--text-muted);
+	margin-bottom: 2px;
+	line-height: 1.4;
+}
+
+/* —— Results / history —— */
+.tianji-result-card,
+.tianji-history-card {
+	padding: var(--tianji-card-pad);
+	margin-bottom: 0;
+}
+
+.tianji-library-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+	gap: 14px;
+	width: 100%;
+}
+
+.tianji-result-title-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin-bottom: 12px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid var(--tianji-border);
+}
+
+.tianji-result-title-row h3 {
+	margin: 0;
+	font-size: 1em;
+	font-weight: 650;
+}
+
+.tianji-chart-text {
+	white-space: pre;
+	overflow-x: auto;
+	word-break: normal;
+	font-family: 'Sarasa Mono SC', 'Noto Sans Mono CJK SC', 'Microsoft YaHei Mono',
+		'Cascadia Mono', 'Consolas', var(--font-monospace), monospace;
+	font-size: 0.82em;
+	line-height: 1.75;
+	tab-size: 4;
+	margin: 12px 0 0;
+	padding: 12px 14px;
+	user-select: text;
+}
+
+/* —— Liuyao professional chart —— */
+.tianji-liuyao-result {
+	padding: 14px 16px 18px;
+}
+
+.tianji-liuyao-info h4 {
+	margin: 0 0 10px;
+	font-size: 0.95em;
+	font-weight: 650;
+}
+
+.tianji-liuyao-info-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px 16px;
+	padding-bottom: 14px;
+	margin-bottom: 14px;
+	border-bottom: 1px solid var(--tianji-border);
+}
+
+.tianji-liuyao-info-cell {
+	font-size: 0.86em;
+	line-height: 1.55;
+	min-width: 0;
+}
+
+.tianji-liuyao-info-label {
+	color: var(--text-muted);
+}
+
+.tianji-liuyao-info-value {
+	color: var(--text-normal);
+	word-break: break-word;
+}
+
+.tianji-liuyao-boards {
+	display: grid;
+	grid-template-columns: 1.15fr 1fr;
+	gap: 12px 16px;
+	align-items: start;
+}
+
+.tianji-liuyao-boards.is-static {
+	grid-template-columns: 1fr;
+}
+
+.tianji-liuyao-board-title {
+	font-size: 0.95em;
+	font-weight: 700;
+	margin-bottom: 10px;
+	letter-spacing: 0.02em;
+}
+
+.tianji-liuyao-line {
+	display: grid;
+	grid-template-columns: 32px 36px minmax(52px, auto) minmax(80px, 1fr) 36px;
+	align-items: center;
+	gap: 6px;
+	padding: 5px 0;
+	font-size: 0.84em;
+}
+
+.tianji-liuyao-line:not(.has-liushen) {
+	grid-template-columns: 36px minmax(52px, auto) minmax(80px, 1fr) 8px;
+}
+
+.tianji-ll-liushen,
+.tianji-ll-liuqin {
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+
+.tianji-ll-ganzhi {
+	color: var(--text-normal);
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+}
+
+.tianji-yao-visual {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-width: 88px;
+	width: 100%;
+	max-width: 160px;
+	height: 14px;
+	color: var(--text-normal);
+}
+
+.tianji-yao-visual.is-moving {
+	color: var(--text-normal);
+}
+
+.tianji-yao-seg {
+	flex: 1 1 0;
+	height: 9px;
+	border-radius: 1px;
+	background: currentColor;
+	min-width: 28px;
+}
+
+.tianji-yao-visual.is-yang .tianji-yao-seg {
+	min-width: 72px;
+}
+
+.tianji-ll-marks {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 2px;
+	min-height: 1em;
+	color: #c0392b;
+	font-weight: 700;
+	font-size: 0.95em;
+}
+
+.tianji-ll-move,
+.tianji-ll-role {
+	color: #c0392b;
+}
+
+/* —— Simple analysis（简易分析） —— */
+.tianji-simple-analysis {
+	margin-top: 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.tianji-simple-analysis-title {
+	margin: 0;
+	text-align: center;
+	font-size: 1.15em;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+}
+
+.tianji-zhouyi-card {
+	padding: 4px 14px 12px;
+	color: var(--text-normal);
+}
+
+.tianji-zhouyi-card > summary {
+	cursor: pointer;
+	list-style: none;
+	padding: 10px 4px 8px;
+	font-weight: 650;
+	font-size: 0.95em;
+	color: var(--text-normal);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.tianji-zhouyi-card > summary::-webkit-details-marker {
+	display: none;
+}
+
+.tianji-zhouyi-card > summary::after {
+	content: '';
+	width: 0.45em;
+	height: 0.45em;
+	border-right: 2px solid currentColor;
+	border-bottom: 2px solid currentColor;
+	transform: rotate(45deg);
+	opacity: 0.7;
+	transition: transform var(--tianji-ease);
+	flex-shrink: 0;
+}
+
+.tianji-zhouyi-card[open] > summary::after {
+	transform: rotate(-135deg);
+	margin-top: 0.2em;
+}
+
+.tianji-zhouyi-body {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 2px 2px 4px;
+}
+
+.tianji-zhouyi-h {
+	margin: 0 0 6px;
+	font-size: 0.92em;
+	font-weight: 700;
+	color: #c0392b;
+}
+
+.tianji-zhouyi-p {
+	margin: 0 0 4px;
+	font-size: 0.86em;
+	line-height: 1.7;
+}
+
+.tianji-zhouyi-p.is-xiang {
+	color: var(--text-muted);
+}
+
+.tianji-zhouyi-yao {
+	padding: 8px 0;
+	border-bottom: 1px solid color-mix(in srgb, var(--background-modifier-border) 70%, transparent);
+}
+
+.tianji-zhouyi-yao:last-child {
+	border-bottom: none;
+	padding-bottom: 0;
+}
+
+.tianji-zhouyi-yao.is-moving {
+	background: color-mix(in srgb, #c0392b 8%, transparent);
+	margin: 0 -6px;
+	padding-left: 6px;
+	padding-right: 6px;
+	border-radius: 4px;
+}
+
+.tianji-zhouyi-yao.is-moving .tianji-zhouyi-p:first-child {
+	color: #c0392b;
+	font-weight: 650;
+}
+
+.tianji-analysis-block {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 2px 2px 4px;
+}
+
+.tianji-analysis-block-title {
+	font-size: 0.95em;
+	font-weight: 700;
+	padding-left: 10px;
+	border-left: 3px solid #c0392b;
+	line-height: 1.3;
+}
+
+.tianji-analysis-block-body {
+	font-size: 0.88em;
+	line-height: 1.7;
+	color: var(--text-normal);
+	padding-left: 13px;
+}
+
+/* —— Gua compare (legacy keep for other uses) —— */
+.tianji-gua-compare {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	align-items: stretch;
+	gap: 8px;
+	margin-bottom: 4px;
+	width: 100%;
+}
+
+.tianji-gua-card {
+	flex: 1 1 0;
+	min-width: 0;
+	padding: 12px 10px;
+	border-radius: var(--tianji-radius-sm);
+	background: var(--background-primary);
+	border: 1px solid var(--tianji-border);
+	transition: border-color var(--tianji-ease);
+}
+
+.tianji-gua-tag {
+	display: inline-block;
+	font-size: 0.72em;
+	padding: 2px 9px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--interactive-accent) 18%, transparent);
+	color: var(--text-accent);
+	font-weight: 600;
+	margin-bottom: 8px;
+	letter-spacing: 0.04em;
+}
+
+.tianji-gua-alias {
+	font-size: 1.05em;
+	font-weight: 700;
+	margin-bottom: 2px;
+	letter-spacing: 0.03em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.tianji-gua-meta {
+	font-size: 0.72em;
+	color: var(--text-muted);
+	margin-bottom: 10px;
+	line-height: 1.35;
+}
+
+.tianji-gua-lines {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.tianji-gua-line {
+	display: grid;
+	grid-template-columns: 32px minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 4px;
+	font-size: 0.82em;
+	padding: 1px 0;
+}
+
+.tianji-gua-pos {
+	color: var(--text-muted);
+	font-size: 0.78em;
+}
+
+.tianji-gua-sym {
+	font-family: var(--font-monospace), 'Segoe UI Symbol', 'Noto Sans Symbols', sans-serif;
+	letter-spacing: 0.02em;
+	white-space: pre;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.tianji-gua-sym.is-moving {
+	color: #c0392b;
+	font-weight: 700;
+}
+
+.tianji-gua-role {
+	font-size: 0.78em;
+	color: var(--text-accent);
+	font-weight: 600;
+}
+
+.tianji-gua-arrow {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.1em;
+	font-weight: 700;
+	color: var(--text-accent);
+	padding: 0;
+	align-self: center;
+	opacity: 0.85;
+	flex: 0 0 auto;
+}
+
+.tianji-gua-static-tip {
+	display: flex;
+	align-items: center;
+	color: var(--text-muted);
+	font-size: 0.82em;
+	padding: 8px;
+	flex: 1 1 0;
+	min-width: 0;
+}
+
+/* —— Bazi —— */
+.tianji-bazi-info {
+	font-size: 0.88em;
+	line-height: 1.7;
+	margin-bottom: 14px;
+	padding: var(--tianji-card-pad);
+	color: var(--text-normal);
+}
+
+.tianji-bazi-name-line {
+	font-size: 1.05em;
+	font-weight: 650;
+	margin-bottom: 4px;
+}
+
+.tianji-bazi-section {
+	margin: 18px 0 10px;
+	font-size: 0.92em;
+	font-weight: 650;
+	letter-spacing: 0.02em;
+}
+
+.tianji-bazi-table {
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 0;
+	font-size: 0.84em;
+	margin-bottom: 8px;
+	overflow: hidden;
+	border-radius: var(--tianji-radius-sm);
+	border: 1px solid var(--tianji-border);
+}
+
+.tianji-bazi-table th,
+.tianji-bazi-table td {
+	border-bottom: 1px solid var(--tianji-border);
+	border-right: 1px solid var(--tianji-border);
+	padding: 8px 6px;
+	text-align: center;
+	vertical-align: top;
+	word-break: break-word;
+}
+
+.tianji-bazi-table th:last-child,
+.tianji-bazi-table td:last-child {
+	border-right: none;
+}
+
+.tianji-bazi-table tr:last-child th,
+.tianji-bazi-table tr:last-child td {
+	border-bottom: none;
+}
+
+.tianji-bazi-table thead th {
+	background: color-mix(in srgb, var(--interactive-accent) 10%, var(--background-secondary));
+	font-weight: 650;
+}
+
+.tianji-bazi-table tbody th {
+	background: var(--background-secondary);
+	font-weight: 600;
+	width: 3.2em;
+	white-space: nowrap;
+}
+
+.tianji-bazi-gan,
+.tianji-bazi-zhi {
+	font-size: 1.28em;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+}
+
+.tianji-bazi-star {
+	color: var(--text-accent);
+	font-size: 0.88em;
+	font-weight: 600;
+}
+
+/* 天干地支 / 五行配色 */
+.tianji-wx {
+	font-weight: inherit;
+}
+
+.tianji-wx-木 {
+	color: #2f9e44;
+}
+
+.tianji-wx-火 {
+	color: #e03131;
+}
+
+.tianji-wx-土 {
+	color: #c4922a;
+}
+
+.tianji-wx-金 {
+	color: #868e96;
+}
+
+.tianji-wx-水 {
+	color: #1c7ed6;
+}
+
+.theme-dark .tianji-wx-木 {
+	color: #69db7c;
+}
+
+.theme-dark .tianji-wx-火 {
+	color: #ff6b6b;
+}
+
+.theme-dark .tianji-wx-土 {
+	color: #fcc419;
+}
+
+.theme-dark .tianji-wx-金 {
+	color: #dee2e6;
+}
+
+.theme-dark .tianji-wx-水 {
+	color: #74c0fc;
+}
+
+.tianji-dayun-row {
+	display: flex;
+	flex-wrap: nowrap;
+	gap: 8px;
+	overflow-x: auto;
+	padding: 2px 2px 10px;
+	margin-bottom: 8px;
+	scrollbar-width: thin;
+}
+
+.tianji-dayun-cell {
+	flex: 0 0 auto;
+	min-width: 76px;
+	padding: 10px 8px;
+	border-radius: var(--tianji-radius-sm);
+	background: var(--background-secondary);
+	text-align: center;
+	border: 1px solid var(--tianji-border);
+	cursor: pointer;
+	transition: border-color var(--tianji-ease), transform var(--tianji-ease), background var(--tianji-ease);
+}
+
+.tianji-dayun-cell:hover {
+	border-color: color-mix(in srgb, var(--interactive-accent) 40%, var(--background-modifier-border));
+	transform: translateY(-1px);
+}
+
+.tianji-dayun-cell.is-active {
+	border-color: var(--interactive-accent);
+	background: color-mix(in srgb, var(--interactive-accent) 12%, var(--background-secondary));
+	box-shadow: 0 0 0 1px color-mix(in srgb, var(--interactive-accent) 35%, transparent);
+}
+
+.tianji-dayun-age {
+	font-size: 0.72em;
+	color: var(--text-muted);
+}
+
+.tianji-dayun-gz {
+	font-size: 1.12em;
+	font-weight: 700;
+	margin: 3px 0;
+	letter-spacing: 0.04em;
+}
+
+.tianji-dayun-star {
+	font-size: 0.78em;
+	color: var(--text-accent);
+	font-weight: 600;
+}
+
+.tianji-dayun-year {
+	font-size: 0.68em;
+	color: var(--text-muted);
+	margin-top: 3px;
+}
+
+.tianji-liuyue-grid {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	gap: 7px;
+	margin-bottom: 10px;
+}
+
+.tianji-liuyue-cell {
+	text-align: center;
+	padding: 8px 4px;
+	border-radius: var(--tianji-radius-sm);
+	background: var(--background-secondary);
+	border: 1px solid var(--tianji-border);
+	font-size: 0.8em;
+	transition: border-color var(--tianji-ease);
+}
+
+.tianji-liuyue-cell:hover {
+	border-color: color-mix(in srgb, var(--interactive-accent) 35%, var(--background-modifier-border));
+}
+
+.tianji-liuyue-m {
+	color: var(--text-muted);
+	font-size: 0.82em;
+}
+
+.tianji-liuyue-gz {
+	font-weight: 700;
+	font-size: 1.05em;
+	letter-spacing: 0.03em;
+	margin: 2px 0;
+}
+
+.tianji-liuyue-star {
+	color: var(--text-accent);
+	font-size: 0.82em;
+}
+
+/* —— History —— */
+.tianji-library-filter {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin-bottom: 14px;
+}
+
+.tianji-library-filter-left,
+.tianji-library-filter-right {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.tianji-library-table-wrap {
+	width: 100%;
+	overflow-x: auto;
+}
+
+.tianji-library-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.86em;
+	min-width: 640px;
+}
+
+.tianji-library-table th,
+.tianji-library-table td {
+	padding: 8px 12px;
+	text-align: left;
+	vertical-align: middle;
+	border-bottom: 1px solid var(--background-modifier-border);
+	line-height: 1.4;
+	white-space: nowrap;
+}
+
+.tianji-library-table th {
+	font-weight: 650;
+	color: var(--text-muted);
+	background: color-mix(in srgb, var(--background-secondary) 88%, transparent);
+	position: sticky;
+	top: 0;
+	z-index: 1;
+}
+
+.tianji-library-table tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.tianji-library-table tbody tr:hover {
+	background: color-mix(in srgb, var(--background-modifier-hover) 65%, transparent);
+}
+
+.tianji-library-table tr.is-favorite td:first-child {
+	box-shadow: inset 3px 0 0 color-mix(in srgb, #c9a227 80%, transparent);
+}
+
+.tianji-lib-col-subject {
+	min-width: 72px;
+	max-width: 120px;
+}
+
+.tianji-lib-col-subject .tianji-lib-link {
+	display: inline-block;
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	vertical-align: bottom;
+}
+
+.tianji-lib-col-question,
+.tianji-lib-col-chart {
+	max-width: 220px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.tianji-lib-col-method {
+	color: var(--text-muted);
+}
+
+.tianji-lib-col-time {
+	font-variant-numeric: tabular-nums;
+	color: var(--text-muted);
+}
+
+.tianji-lib-col-ops {
+	width: 1%;
+}
+
+.tianji-lib-link {
+	appearance: none;
+	border: none;
+	background: transparent;
+	padding: 0;
+	margin: 0;
+	cursor: pointer;
+	color: var(--text-accent);
+	font: inherit;
+	font-weight: 600;
+	text-align: left;
+}
+
+.tianji-lib-link:hover {
+	text-decoration: underline;
+}
+
+.tianji-lib-fav-mark {
+	margin-left: 4px;
+	color: #c9a227;
+	font-size: 0.9em;
+}
+
+.tianji-lib-op {
+	appearance: none;
+	border: none;
+	background: transparent;
+	padding: 2px 6px;
+	margin: 0 2px 0 0;
+	cursor: pointer;
+	font: inherit;
+	font-size: 0.95em;
+	color: var(--text-muted);
+	border-radius: 4px;
+}
+
+.tianji-lib-op:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.tianji-lib-op.is-fav {
+	color: #c9a227;
+}
+
+.tianji-lib-op.is-danger {
+	color: var(--text-error, #c0392b);
+}
+
+.tianji-lib-op.is-danger:hover {
+	background: color-mix(in srgb, var(--text-error, #c0392b) 12%, transparent);
+}
+
+.tianji-history-top {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 10px;
+}
+
+.tianji-fav-btn {
+	appearance: none;
+	border: none;
+	background: transparent;
+	padding: 0 2px;
+	margin: 0;
+	cursor: pointer;
+	font-size: 1.15em;
+	line-height: 1;
+	color: var(--text-faint);
+	transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.tianji-fav-btn:hover {
+	color: #c9a227;
+	transform: scale(1.08);
+}
+
+.tianji-fav-btn.is-active {
+	color: #c9a227;
+}
+
+.tianji-fav-toolbar.is-active {
+	color: #c9a227;
+	border-color: color-mix(in srgb, #c9a227 55%, var(--tianji-border));
+}
+
+.tianji-history-card.is-favorite {
+	border-color: color-mix(in srgb, #c9a227 55%, var(--tianji-border));
+	box-shadow: none;
+	background: color-mix(in srgb, #c9a227 6%, var(--tianji-surface-soft));
+}
+
+.tianji-badge {
+	font-size: 0.72em;
+	padding: 2px 9px;
+	border-radius: 999px;
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	font-weight: 600;
+	letter-spacing: 0.03em;
+}
+
+.tianji-history-title {
+	font-weight: 650;
+	flex: 1;
+	min-width: 120px;
+}
+
+.tianji-history-time {
+	font-size: 0.78em;
+	color: var(--text-muted);
+}
+
+.tianji-history-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 10px;
+	padding-top: 10px;
+	border-top: 1px solid var(--tianji-border);
+}
+
+.tianji-history-preview {
+	padding: 10px 12px;
+	border-radius: var(--tianji-radius-sm);
+	background: var(--background-primary);
+	border: 1px solid var(--tianji-border);
+	max-height: 220px;
+	overflow-y: auto;
+	white-space: pre-wrap;
+	word-break: break-word;
+	font-family: inherit;
+	font-size: 0.92em;
+	line-height: 1.65;
+	margin: 0;
+}
+
+.tianji-empty {
+	color: var(--text-muted);
+	padding: 40px 16px;
+	text-align: center;
+	border: 1px dashed var(--tianji-border);
+	border-radius: var(--tianji-radius);
+	background: var(--tianji-surface-soft);
+}
+
+.tianji-empty-cta {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 14px;
+	padding: 56px 20px;
+	min-height: 180px;
+	justify-content: center;
+}
+
+.tianji-empty-title {
+	font-size: 0.95em;
+	font-weight: 600;
+	color: var(--text-muted);
+	line-height: 1.5;
+	max-width: 28em;
+}
+
+.tianji-empty-hint {
+	font-size: 0.82em;
+	color: var(--text-faint);
+	line-height: 1.45;
+}
+
+/* —— Tarot —— */
+.tianji-deck-grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 10px;
+}
+
+.tianji-deck-option {
+	cursor: pointer;
+	padding: 10px 12px;
+	border-radius: var(--tianji-radius-sm);
+	border: 1px solid var(--tianji-border);
+	background: var(--background-primary);
+	transition: border-color var(--tianji-ease), background var(--tianji-ease);
+}
+
+.tianji-deck-option:hover {
+	transform: none;
+	border-color: var(--interactive-accent);
+}
+
+.tianji-deck-option.is-active {
+	border-color: var(--interactive-accent);
+	box-shadow: none;
+	font-weight: 650;
+	background: color-mix(in srgb, var(--interactive-accent) 8%, var(--background-primary));
+}
+
+.tianji-deck-preview {
+	height: 56px;
+	border-radius: 8px;
+	display: grid;
+	place-items: center;
+	color: rgba(255, 255, 255, 0.85);
+	font-size: 0.72em;
+	letter-spacing: 0.18em;
+	font-weight: 600;
+	margin-bottom: 8px;
+}
+
+.tianji-deck-name {
+	font-weight: 600;
+	font-size: 0.92em;
+}
+
+.tianji-deck-desc {
+	margin-top: 2px;
+	font-size: 0.75em;
+	color: var(--text-muted);
+	line-height: 1.35;
+}
+
+.tianji-spread-grid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+}
+
+.tianji-spread-chip {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: fit-content;
+	max-width: 100%;
+	margin: 0;
+	padding: 6px 12px;
+	border-radius: 999px;
+	border: 1px solid var(--tianji-border);
+	background: var(--background-primary);
+	cursor: pointer;
+	color: var(--text-normal);
+	font: inherit;
+	font-weight: 600;
+	font-size: 0.88em;
+	line-height: 1.25;
+	white-space: nowrap;
+	transition: background var(--tianji-ease), border-color var(--tianji-ease);
+}
+
+.tianji-spread-chip.is-active {
+	border-color: var(--interactive-accent);
+	background: color-mix(in srgb, var(--interactive-accent) 18%, var(--background-primary));
+}
+
+/* 抽牌页底部：牌阵布局预览（居中，与牌阵页网格隔离） */
+.tianji-spread-preview {
+	padding: var(--tianji-card-pad);
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 14px;
+	overflow: visible;
+	position: relative;
+	isolation: isolate;
+}
+
+.tianji-spread-preview-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: center;
+	gap: 6px 12px;
+	text-align: center;
+	width: 100%;
+	flex: 0 0 auto;
+	position: relative;
+	z-index: 1;
+}
+
+.tianji-spread-preview-title {
+	margin: 0;
+	font-size: 1em;
+	font-weight: 600;
+	line-height: 1.3;
+}
+
+.tianji-spread-preview-meta {
+	font-size: 0.82em;
+	color: var(--text-muted);
+	line-height: 1.3;
+}
+
+.tianji-spread-preview-grid {
+	display: grid;
+	gap: 12px 14px;
+	width: max-content;
+	max-width: 100%;
+	margin: 0 auto;
+	justify-content: center;
+	justify-items: center;
+	align-items: start;
+	position: relative;
+	z-index: 0;
+	box-sizing: border-box;
+}
+
+.tianji-spread-preview-slot {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	width: 76px;
+	margin: 0;
+	padding: 0;
+	text-align: center;
+	box-sizing: border-box;
+	background: transparent;
+	border: none;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+	border-radius: var(--tianji-radius-sm);
+	position: relative;
+}
+
+.tianji-spread-preview-slot:hover .tianji-spread-preview-face,
+.tianji-spread-preview-slot:focus-visible .tianji-spread-preview-face {
+	border-style: solid;
+	border-color: var(--interactive-accent);
+	background: color-mix(in srgb, var(--interactive-accent) 16%, var(--background-primary));
+}
+
+.tianji-spread-preview-slot:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+}
+
+.tianji-spread-preview-slot:active {
+	transform: scale(0.97);
+}
+
+.tianji-spread-preview-face {
+	width: 52px;
+	height: 88px;
+	flex: 0 0 auto;
+	border-radius: var(--tianji-radius-sm);
+	border: 1px dashed color-mix(in srgb, var(--interactive-accent) 45%, var(--tianji-border));
+	background: color-mix(in srgb, var(--interactive-accent) 8%, var(--background-primary));
+	color: var(--interactive-accent);
+	font-weight: 700;
+	font-size: 0.95em;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	overflow: hidden;
+	position: relative;
+}
+
+.tianji-spread-preview-face.is-reversed {
+	transform: rotate(180deg);
+}
+
+.tianji-spread-preview-slot.is-filled .tianji-spread-preview-face {
+	border-style: solid;
+	padding: 0;
+}
+
+.tianji-spread-preview-img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.tianji-spread-preview-label {
+	font-size: 0.78em;
+	font-weight: 600;
+	line-height: 1.2;
+	width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.tianji-spread-preview-hint {
+	font-size: 0.68em;
+	color: var(--text-muted);
+	line-height: 1.25;
+	width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.tianji-spread-preview-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 8px;
+	width: 100%;
+	flex: 0 0 auto;
+}
+
+/* 预览区各牌阵几何（固定列宽，不与牌阵页共享） */
+.tianji-spread-preview-single {
+	grid-template-columns: 76px;
+}
+
+.tianji-spread-preview-three-time {
+	grid-template-columns: repeat(3, 76px);
+}
+
+.tianji-spread-preview-holy-triangle {
+	grid-template-columns: repeat(3, 76px);
+	grid-template-areas:
+		".    cause  ."
+		"now  .      result";
+}
+.tianji-spread-preview-holy-triangle [data-pos="cause"] { grid-area: cause; }
+.tianji-spread-preview-holy-triangle [data-pos="now"] { grid-area: now; }
+.tianji-spread-preview-holy-triangle [data-pos="result"] { grid-area: result; }
+
+/* 二选一：Y 形分叉 */
+.tianji-spread-preview-two-choice {
+	grid-template-columns: repeat(3, 76px);
+	grid-template-areas:
+		"aOut  .     bOut"
+		"aNear .     bNear"
+		".     now   .";
+}
+.tianji-spread-preview-two-choice [data-pos="now"] { grid-area: now; }
+.tianji-spread-preview-two-choice [data-pos="aNear"] { grid-area: aNear; }
+.tianji-spread-preview-two-choice [data-pos="bNear"] { grid-area: bNear; }
+.tianji-spread-preview-two-choice [data-pos="aOut"] { grid-area: aOut; }
+.tianji-spread-preview-two-choice [data-pos="bOut"] { grid-area: bOut; }
+
+/* 恋人金字塔：顶 4，底 2-1-3 */
+.tianji-spread-preview-lovers-pyramid {
+	grid-template-columns: repeat(3, 76px);
+	grid-template-areas:
+		".    path  ."
+		"other you  relation";
+}
+.tianji-spread-preview-lovers-pyramid [data-pos="you"] { grid-area: you; }
+.tianji-spread-preview-lovers-pyramid [data-pos="other"] { grid-area: other; }
+.tianji-spread-preview-lovers-pyramid [data-pos="relation"] { grid-area: relation; }
+.tianji-spread-preview-lovers-pyramid [data-pos="path"] { grid-area: path; }
+
+/* 爱情十字 */
+.tianji-spread-preview-love-cross {
+	grid-template-columns: repeat(3, 76px);
+	grid-template-areas:
+		".    now    ."
+		"you  result other"
+		".    path   .";
+}
+.tianji-spread-preview-love-cross [data-pos="you"] { grid-area: you; }
+.tianji-spread-preview-love-cross [data-pos="other"] { grid-area: other; }
+.tianji-spread-preview-love-cross [data-pos="now"] { grid-area: now; }
+.tianji-spread-preview-love-cross [data-pos="path"] { grid-area: path; }
+.tianji-spread-preview-love-cross [data-pos="result"] { grid-area: result; }
+
+/* 关系发展：上 1 3 5 / 下 2 4 6 */
+.tianji-spread-preview-relation-six {
+	grid-template-columns: repeat(3, 76px);
+	grid-template-areas:
+		"youView youRel youHope"
+		"otherView otherRel otherHope";
+}
+.tianji-spread-preview-relation-six [data-pos="youView"] { grid-area: youView; }
+.tianji-spread-preview-relation-six [data-pos="otherView"] { grid-area: otherView; }
+.tianji-spread-preview-relation-six [data-pos="youRel"] { grid-area: youRel; }
+.tianji-spread-preview-relation-six [data-pos="otherRel"] { grid-area: otherRel; }
+.tianji-spread-preview-relation-six [data-pos="youHope"] { grid-area: youHope; }
+.tianji-spread-preview-relation-six [data-pos="otherHope"] { grid-area: otherHope; }
+
+.tianji-spread-preview-career-five {
+	grid-template-columns: repeat(3, 76px);
+	grid-template-areas:
+		"c1 c2 ."
+		"c4 c3 c5";
+}
+.tianji-spread-preview-career-five [data-pos="now"] { grid-area: c1; }
+.tianji-spread-preview-career-five [data-pos="strength"] { grid-area: c2; }
+.tianji-spread-preview-career-five [data-pos="block"] { grid-area: c3; }
+.tianji-spread-preview-career-five [data-pos="action"] { grid-area: c4; }
+.tianji-spread-preview-career-five [data-pos="result"] { grid-area: c5; }
+
+/* 六芒星：1顶 2左上 6右上 7中 3左下 5右下 4底 */
+.tianji-spread-preview-hexagram-seven {
+	grid-template-columns: repeat(3, 76px);
+	grid-template-areas:
+		".      past   ."
+		"now    result hope"
+		"future guide  env";
+}
+.tianji-spread-preview-hexagram-seven [data-pos="past"] { grid-area: past; }
+.tianji-spread-preview-hexagram-seven [data-pos="now"] { grid-area: now; }
+.tianji-spread-preview-hexagram-seven [data-pos="future"] { grid-area: future; }
+.tianji-spread-preview-hexagram-seven [data-pos="guide"] { grid-area: guide; }
+.tianji-spread-preview-hexagram-seven [data-pos="env"] { grid-area: env; }
+.tianji-spread-preview-hexagram-seven [data-pos="hope"] { grid-area: hope; }
+.tianji-spread-preview-hexagram-seven [data-pos="result"] { grid-area: result; }
+
+.tianji-spread-preview-celtic-cross {
+	grid-template-columns: repeat(5, 68px);
+	grid-template-areas:
+		".    p5   .    p10  ."
+		"p3   p1   p2   p9   ."
+		".    p4   .    p8   ."
+		".    p6   .    p7   .";
+	gap: 8px 10px;
+}
+.tianji-spread-preview-celtic-cross [data-pos="p1"] { grid-area: p1; }
+.tianji-spread-preview-celtic-cross [data-pos="p2"] { grid-area: p2; }
+.tianji-spread-preview-celtic-cross [data-pos="p3"] { grid-area: p3; }
+.tianji-spread-preview-celtic-cross [data-pos="p4"] { grid-area: p4; }
+.tianji-spread-preview-celtic-cross [data-pos="p5"] { grid-area: p5; }
+.tianji-spread-preview-celtic-cross [data-pos="p6"] { grid-area: p6; }
+.tianji-spread-preview-celtic-cross [data-pos="p7"] { grid-area: p7; }
+.tianji-spread-preview-celtic-cross [data-pos="p8"] { grid-area: p8; }
+.tianji-spread-preview-celtic-cross [data-pos="p9"] { grid-area: p9; }
+.tianji-spread-preview-celtic-cross [data-pos="p10"] { grid-area: p10; }
+.tianji-spread-preview-celtic-cross .tianji-spread-preview-slot {
+	width: 68px;
+}
+.tianji-spread-preview-celtic-cross [data-pos="p2"] .tianji-spread-preview-face {
+	transform: rotate(90deg);
+	margin: 8px 0;
+}
+.tianji-spread-preview-celtic-cross [data-pos="p2"] .tianji-spread-preview-face.is-reversed {
+	transform: rotate(90deg) rotate(180deg);
+}
+
+.tianji-tarot-board {
+	margin-top: 0;
+	padding: var(--tianji-card-pad);
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.tianji-tarot-board h3 {
+	margin: 0 0 14px;
+}
+
+.tianji-tarot-spread {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(148px, 200px));
+	gap: 14px;
+	margin-bottom: 16px;
+	justify-content: center;
+}
+
+/* —— 各牌阵几何布局（牌阵页） —— */
+.tianji-spread-single {
+	grid-template-columns: minmax(0, 200px);
+	justify-content: center;
+}
+
+.tianji-spread-three-time,
+.tianji-spread-holy-triangle {
+	grid-template-columns: repeat(3, minmax(0, 200px));
+	justify-content: center;
+}
+
+.tianji-spread-holy-triangle {
+	grid-template-areas:
+		".    cause  ."
+		"now  .      result";
+}
+
+.tianji-spread-holy-triangle [data-pos="cause"] { grid-area: cause; }
+.tianji-spread-holy-triangle [data-pos="now"] { grid-area: now; }
+.tianji-spread-holy-triangle [data-pos="result"] { grid-area: result; }
+
+.tianji-spread-two-choice {
+	grid-template-columns: repeat(3, minmax(0, 200px));
+	justify-content: center;
+	grid-template-areas:
+		"aOut  .     bOut"
+		"aNear .     bNear"
+		".     now   .";
+}
+
+.tianji-spread-two-choice [data-pos="now"] { grid-area: now; }
+.tianji-spread-two-choice [data-pos="aNear"] { grid-area: aNear; }
+.tianji-spread-two-choice [data-pos="bNear"] { grid-area: bNear; }
+.tianji-spread-two-choice [data-pos="aOut"] { grid-area: aOut; }
+.tianji-spread-two-choice [data-pos="bOut"] { grid-area: bOut; }
+
+.tianji-spread-lovers-pyramid {
+	grid-template-columns: repeat(3, minmax(0, 200px));
+	justify-content: center;
+	grid-template-areas:
+		".    path  ."
+		"other you  relation";
+}
+
+.tianji-spread-lovers-pyramid [data-pos="you"] { grid-area: you; }
+.tianji-spread-lovers-pyramid [data-pos="other"] { grid-area: other; }
+.tianji-spread-lovers-pyramid [data-pos="relation"] { grid-area: relation; }
+.tianji-spread-lovers-pyramid [data-pos="path"] { grid-area: path; }
+
+.tianji-spread-love-cross {
+	grid-template-columns: repeat(3, minmax(0, 200px));
+	justify-content: center;
+	grid-template-areas:
+		".    now    ."
+		"you  result other"
+		".    path   .";
+}
+
+.tianji-spread-love-cross [data-pos="you"] { grid-area: you; }
+.tianji-spread-love-cross [data-pos="other"] { grid-area: other; }
+.tianji-spread-love-cross [data-pos="now"] { grid-area: now; }
+.tianji-spread-love-cross [data-pos="path"] { grid-area: path; }
+.tianji-spread-love-cross [data-pos="result"] { grid-area: result; }
+
+.tianji-spread-relation-six {
+	grid-template-columns: repeat(3, minmax(0, 200px));
+	justify-content: center;
+	grid-template-areas:
+		"youView youRel youHope"
+		"otherView otherRel otherHope";
+}
+
+.tianji-spread-relation-six [data-pos="youView"] { grid-area: youView; }
+.tianji-spread-relation-six [data-pos="otherView"] { grid-area: otherView; }
+.tianji-spread-relation-six [data-pos="youRel"] { grid-area: youRel; }
+.tianji-spread-relation-six [data-pos="otherRel"] { grid-area: otherRel; }
+.tianji-spread-relation-six [data-pos="youHope"] { grid-area: youHope; }
+.tianji-spread-relation-six [data-pos="otherHope"] { grid-area: otherHope; }
+
+.tianji-spread-career-five {
+	grid-template-columns: repeat(3, minmax(0, 200px));
+	justify-content: center;
+	grid-template-areas:
+		"c1 c2 ."
+		"c4 c3 c5";
+	justify-items: center;
+}
+
+.tianji-spread-career-five [data-pos="now"] { grid-area: c1; }
+.tianji-spread-career-five [data-pos="strength"] { grid-area: c2; }
+.tianji-spread-career-five [data-pos="block"] { grid-area: c3; }
+.tianji-spread-career-five [data-pos="action"] { grid-area: c4; }
+.tianji-spread-career-five [data-pos="result"] { grid-area: c5; }
+
+.tianji-spread-hexagram-seven {
+	grid-template-columns: repeat(3, minmax(0, 200px));
+	justify-content: center;
+	grid-template-areas:
+		".      past   ."
+		"now    result hope"
+		"future guide  env";
+}
+
+.tianji-spread-hexagram-seven [data-pos="past"] { grid-area: past; }
+.tianji-spread-hexagram-seven [data-pos="now"] { grid-area: now; }
+.tianji-spread-hexagram-seven [data-pos="future"] { grid-area: future; }
+.tianji-spread-hexagram-seven [data-pos="guide"] { grid-area: guide; }
+.tianji-spread-hexagram-seven [data-pos="env"] { grid-area: env; }
+.tianji-spread-hexagram-seven [data-pos="hope"] { grid-area: hope; }
+.tianji-spread-hexagram-seven [data-pos="result"] { grid-area: result; }
+
+.tianji-spread-celtic-cross {
+	grid-template-columns: repeat(5, minmax(0, 200px));
+	justify-content: center;
+	grid-template-areas:
+		".    p5   .    p10  ."
+		"p3   p1   p2   p9   ."
+		".    p4   .    p8   ."
+		".    p6   .    p7   .";
+}
+
+.tianji-spread-celtic-cross [data-pos="p1"] { grid-area: p1; }
+.tianji-spread-celtic-cross [data-pos="p2"] { grid-area: p2; }
+.tianji-spread-celtic-cross [data-pos="p3"] { grid-area: p3; }
+.tianji-spread-celtic-cross [data-pos="p4"] { grid-area: p4; }
+.tianji-spread-celtic-cross [data-pos="p5"] { grid-area: p5; }
+.tianji-spread-celtic-cross [data-pos="p6"] { grid-area: p6; }
+.tianji-spread-celtic-cross [data-pos="p7"] { grid-area: p7; }
+.tianji-spread-celtic-cross [data-pos="p8"] { grid-area: p8; }
+.tianji-spread-celtic-cross [data-pos="p9"] { grid-area: p9; }
+.tianji-spread-celtic-cross [data-pos="p10"] { grid-area: p10; }
+
+.tianji-spread-celtic-cross .tianji-tarot-slot[data-pos="p2"] .tianji-tarot-card {
+	transform: rotate(90deg);
+	transform-origin: center;
+	margin: 18px 0;
+}
+
+.tianji-spread-celtic-cross .tianji-tarot-slot[data-pos="p2"] .tianji-tarot-card.is-reversed {
+	transform: rotate(90deg) rotate(180deg);
+}
+
+.tianji-tarot-slot {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+	max-width: 200px;
+	width: 100%;
+}
+
+.tianji-tarot-pos {
+	font-weight: 600;
+	font-size: 0.86em;
+}
+
+.tianji-tarot-hint {
+	font-size: 0.72em;
+	color: var(--text-muted);
+}
+
+.tianji-tarot-card {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	max-width: 200px;
+	width: 100%;
+}
+
+.tianji-tarot-face {
+	aspect-ratio: 2 / 3.4;
+	max-width: 200px;
+	width: 100%;
+	border-radius: var(--tianji-radius-sm);
+	overflow: hidden;
+	border: 1px solid var(--tianji-border);
+	background: var(--background-primary);
+	box-shadow: none;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 10px 8px;
+	text-align: center;
+	transition: transform 420ms ease;
+}
+
+.tianji-tarot-card.is-reversed .tianji-tarot-face {
+	transform: rotate(180deg);
+}
+
+.tianji-tarot-img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.tianji-tarot-face.is-fallback,
+.tianji-tarot-face.is-marseille,
+.tianji-tarot-face.is-minimal {
+	background:
+		radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--tarot-accent, #c45c26) 35%, transparent), transparent 55%),
+		linear-gradient(160deg, #f7efe3, #e8d5b5);
+	color: #3b1d12;
+	border-color: color-mix(in srgb, var(--tarot-accent, #8b4513) 55%, #3b1d12);
+}
+
+.tianji-tarot-face-num {
+	font-size: 1.4em;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	color: var(--tarot-accent, var(--interactive-accent));
+}
+
+.tianji-tarot-face-title {
+	margin-top: 6px;
+	font-weight: 700;
+	font-size: 0.95em;
+}
+
+.tianji-tarot-face-en {
+	margin-top: 2px;
+	font-size: 0.68em;
+	opacity: 0.75;
+}
+
+.tianji-tarot-face-suit {
+	margin-top: 10px;
+	font-size: 0.72em;
+	padding: 2px 8px;
+	border-radius: 999px;
+	border: 1px solid color-mix(in srgb, var(--tarot-accent, var(--interactive-accent)) 45%, transparent);
+}
+
+.tianji-tarot-caption {
+	font-size: 0.78em;
+	line-height: 1.4;
+}
+
+.tianji-tarot-card-name {
+	font-weight: 600;
+}
+
+.tianji-tarot-orient {
+	display: inline-block;
+	margin-top: 2px;
+	padding: 1px 7px;
+	border-radius: 999px;
+	font-size: 0.85em;
+	background: color-mix(in srgb, var(--interactive-accent) 16%, transparent);
+}
+
+.tianji-tarot-card.is-reversed .tianji-tarot-orient {
+	background: color-mix(in srgb, #c0392b 22%, transparent);
+}
+
+.tianji-tarot-keywords {
+	margin-top: 4px;
+	color: var(--text-muted);
+}
+
+.tianji-tarot-meaning {
+	margin-top: 2px;
+	color: var(--text-muted);
+}
+
+/* —— Container-width responsive（按界面宽度，不按侧边栏位置） —— */
+@container tianji (max-width: 720px) {
+	.tianji-shell {
+		/* padding: 12px 12px 28px; */
+	}
+
+	.tianji-header {
+		position: static;
+	}
+
+	.tianji-tabs {
+		width: 100%;
+		border-radius: var(--tianji-radius-sm);
+	}
+
+	.tianji-tab {
+		padding: 6px 8px;
+		font-size: 0.82em;
+		border-radius: 6px;
+	}
+
+	.tianji-panel-switch {
+		width: 100%;
+		flex-wrap: wrap;
+	}
+
+	.tianji-panel-btn {
+		flex: 1 1 auto;
+		text-align: center;
+		padding: 6px 8px;
+		font-size: 0.8em;
+	}
+
+	.tianji-cast-row {
+		grid-template-columns: 1fr;
+	}
+
+	.tianji-cast-row.is-2 {
+		grid-template-columns: 1fr;
+	}
+
+	.tianji-form {
+		padding: 12px;
+	}
+
+	.tianji-chart-toolbar {
+		gap: 6px;
+	}
+
+	.tianji-chart-toolbar .tianji-btn {
+		flex: 1 1 auto;
+		justify-content: center;
+	}
+
+	.tianji-library-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.tianji-liuyao-info-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.tianji-liuyao-boards {
+		grid-template-columns: 1fr;
+		gap: 18px;
+	}
+
+	.tianji-yao-visual {
+		max-width: none;
+		min-width: 100px;
+	}
+
+	.tianji-liuyao-line.has-liushen {
+		grid-template-columns: 28px 32px minmax(48px, auto) minmax(72px, 1fr) 32px;
+		font-size: 0.78em;
+		gap: 4px;
+	}
+
+	.tianji-yao-row {
+		grid-template-columns: 40px minmax(0, 1fr) auto;
+	}
+
+	.tianji-select {
+		font-size: 0.88em;
+	}
+
+	.tianji-coin {
+		width: 64px;
+		height: 64px;
+	}
+
+	.tianji-coin-face {
+		font-size: 10px;
+		padding: 12px;
+	}
+
+	.tianji-gua-compare {
+		gap: 6px;
+	}
+
+	.tianji-gua-card {
+		padding: 10px 8px;
+	}
+
+	.tianji-gua-line {
+		grid-template-columns: 28px minmax(0, 1fr) auto;
+		font-size: 0.76em;
+	}
+
+	.tianji-bazi-table {
+		font-size: 0.72em;
+		display: block;
+		overflow-x: auto;
+		max-width: 100%;
+	}
+
+	.tianji-tarot-spread {
+		grid-template-columns: 1fr;
+		gap: 10px;
+	}
+
+	.tianji-spread-holy-triangle,
+	.tianji-spread-two-choice,
+	.tianji-spread-lovers-pyramid,
+	.tianji-spread-love-cross,
+	.tianji-spread-relation-six,
+	.tianji-spread-career-five,
+	.tianji-spread-hexagram-seven,
+	.tianji-spread-celtic-cross {
+		grid-template-columns: 1fr;
+		grid-template-areas: none;
+	}
+
+	.tianji-spread-holy-triangle [data-pos],
+	.tianji-spread-two-choice [data-pos],
+	.tianji-spread-lovers-pyramid [data-pos],
+	.tianji-spread-love-cross [data-pos],
+	.tianji-spread-relation-six [data-pos],
+	.tianji-spread-career-five [data-pos],
+	.tianji-spread-hexagram-seven [data-pos],
+	.tianji-spread-celtic-cross [data-pos] {
+		grid-area: auto;
+		justify-self: stretch;
+		max-width: none;
+	}
+
+	.tianji-history-actions {
+		gap: 6px;
+	}
+
+	.tianji-history-actions .tianji-btn {
+		flex: 1 1 auto;
+	}
+
+	.tianji-chart-text {
+		font-size: 0.82em;
+		max-height: 50vh;
+		overflow: auto;
+	}
+
+	.tianji-deck-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.tianji-liuyue-grid {
+		grid-template-columns: repeat(4, 1fr);
+	}
+}
+
+@container tianji (max-width: 480px) {
+	.tianji-shell {
+		/* padding: 10px 10px 24px; */
+	}
+
+	.tianji-tab {
+		padding: 6px 6px;
+		font-size: 0.78em;
+	}
+
+	.tianji-coins {
+		gap: 10px;
+	}
+
+	.tianji-coin {
+		width: 56px;
+		height: 56px;
+	}
+}
+
+/* —— Modal / viewport fallbacks —— */
+@media (max-width: 960px) {
+	.tianji-deck-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
+/* —— Tarot pick modal —— */
+.modal.tianji-tarot-pick-modal {
+	width: min(920px, 96vw);
+	max-width: 96vw;
+}
+
+.tianji-tarot-pick-modal .modal-content {
+	max-height: 85vh;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+.tianji-pick-meta {
+	margin: 0 0 12px;
+	color: var(--text-muted);
+	font-size: 0.88em;
+}
+
+.tianji-pick-body {
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.tianji-pick-layout {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	height: min(68vh, 620px);
+	min-height: 0;
+}
+
+.tianji-pick-slots {
+	flex: 0 0 auto;
+	overflow: visible;
+	padding-right: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	border-top: 1px solid var(--background-modifier-border);
+	padding-top: 10px;
+}
+
+.tianji-pick-slots .tianji-pick-section-title {
+	text-align: center;
+}
+
+.tianji-pick-slot-row {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: stretch;
+	gap: 8px;
+	overflow-x: auto;
+	padding-bottom: 4px;
+}
+
+.tianji-pick-slot-row .tianji-pick-slot {
+	flex: 0 0 auto;
+	min-width: 148px;
+	max-width: 200px;
+	grid-template-columns: 28px 1fr;
+	grid-template-rows: auto auto;
+}
+
+.tianji-pick-slot-actions {
+	grid-column: 1 / -1;
+	display: flex;
+	gap: 6px;
+	margin-top: 4px;
+}
+
+.tianji-pick-layout .tianji-pick-picker {
+	flex: 1;
+	min-height: 0;
+}
+
+.tianji-pick-section-title {
+	font-weight: 600;
+	font-size: 0.9em;
+	margin-bottom: 4px;
+}
+
+.tianji-pick-slot {
+	display: grid;
+	grid-template-columns: 28px 1fr auto;
+	gap: 8px;
+	align-items: start;
+	padding: 10px;
+	border-radius: var(--tianji-radius-sm);
+	border: 1px solid var(--tianji-border);
+	background: var(--background-primary);
+	cursor: pointer;
+}
+
+.tianji-pick-slot.is-active {
+	border-color: var(--interactive-accent);
+	box-shadow: none;
+	background: color-mix(in srgb, var(--interactive-accent) 10%, var(--background-primary));
+}
+
+.tianji-pick-slot.is-filled .tianji-pick-slot-card {
+	color: var(--text-normal);
+	font-weight: 600;
+}
+
+.tianji-pick-slot-idx {
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	display: grid;
+	place-items: center;
+	font-size: 0.78em;
+	font-weight: 700;
+	background: color-mix(in srgb, var(--interactive-accent) 20%, transparent);
+}
+
+.tianji-pick-slot-label {
+	font-weight: 600;
+	font-size: 0.88em;
+}
+
+.tianji-pick-slot-hint,
+.tianji-pick-slot-card {
+	font-size: 0.75em;
+	color: var(--text-muted);
+	margin-top: 2px;
+}
+
+.tianji-pick-flip {
+	padding: 4px 8px !important;
+	font-size: 0.75em !important;
+}
+
+.tianji-pick-picker {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.tianji-pick-tools {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-bottom: 10px;
+}
+
+.tianji-pick-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.tianji-pick-filter {
+	padding: 4px 10px;
+	border-radius: 999px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	cursor: pointer;
+	font-size: 0.78em;
+	color: var(--text-muted);
+}
+
+.tianji-pick-filter.is-active {
+	border-color: var(--interactive-accent);
+	color: var(--text-normal);
+	background: color-mix(in srgb, var(--interactive-accent) 16%, var(--background-primary));
+}
+
+.tianji-pick-search {
+	width: 100%;
+}
+
+.tianji-pick-grid {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+	gap: 10px;
+	padding: 2px 4px 8px 0;
+	align-content: start;
+}
+
+.tianji-pick-card {
+	position: relative;
+	cursor: pointer;
+	padding: 6px;
+	border-radius: var(--tianji-radius-sm);
+	border: 1px solid var(--tianji-border);
+	background: var(--background-primary);
+	transition: border-color 120ms ease, background 120ms ease;
+	text-align: center;
+}
+
+.tianji-pick-card:hover {
+	transform: none;
+	border-color: var(--interactive-accent);
+	background: color-mix(in srgb, var(--interactive-accent) 6%, var(--background-primary));
+}
+
+.tianji-pick-card.is-taken {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.tianji-pick-card-media {
+	position: relative;
+	margin-bottom: 6px;
+}
+
+.tianji-pick-orient-btn {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	z-index: 2;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	margin: 0;
+	border: 1px solid var(--tianji-border);
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--background-primary) 88%, transparent);
+	color: var(--text-muted);
+	cursor: pointer;
+	box-shadow: 0 1px 2px color-mix(in srgb, black 12%, transparent);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 120ms ease, background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.tianji-pick-card:hover .tianji-pick-orient-btn,
+.tianji-pick-orient-btn:focus-visible,
+.tianji-pick-orient-btn.is-reversed {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.tianji-pick-orient-btn:hover,
+.tianji-pick-orient-btn:focus-visible {
+	border-color: var(--interactive-accent);
+	color: var(--interactive-accent);
+	background: var(--background-primary);
+	outline: none;
+}
+
+.tianji-pick-orient-btn.is-reversed {
+	border-color: color-mix(in srgb, #c0392b 55%, var(--tianji-border));
+	color: #c0392b;
+	background: color-mix(in srgb, #c0392b 12%, var(--background-primary));
+}
+
+.tianji-pick-orient-btn svg {
+	width: 14px;
+	height: 14px;
+}
+
+.tianji-pick-mini-face {
+	aspect-ratio: 2 / 3.2;
+	border-radius: 6px;
+	overflow: hidden;
+	background: var(--background-secondary);
+	display: grid;
+	place-items: center;
+	margin-bottom: 0;
+	transition: transform 220ms ease;
+}
+
+.tianji-pick-mini-face.is-reversed {
+	transform: rotate(180deg);
+}
+
+.tianji-pick-mini-face img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.tianji-pick-mini-face.is-text {
+	font-weight: 700;
+	font-size: 1.1em;
+	color: var(--tarot-accent, var(--interactive-accent));
+	background: linear-gradient(
+		160deg,
+		color-mix(in srgb, var(--tarot-accent, var(--interactive-accent)) 18%, transparent),
+		var(--background-secondary)
+	);
+}
+
+.tianji-pick-card-name {
+	font-size: 0.78em;
+	font-weight: 600;
+	line-height: 1.25;
+	text-align: center;
+}
+
+.tianji-pick-card-en {
+	font-size: 0.65em;
+	color: var(--text-muted);
+	line-height: 1.2;
+	text-align: center;
+}
+
+.tianji-pick-taken-tag {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	padding: 1px 6px;
+	border-radius: 999px;
+	font-size: 0.65em;
+	background: var(--background-modifier-cover);
+	color: var(--text-on-accent, #fff);
+}
+
+.tianji-pick-footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 14px;
+	padding-top: 12px;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+@media (max-width: 720px) {
+	.tianji-pick-layout,
+	.tianji-shuffle-layout {
+		height: min(72vh, 640px);
+	}
+
+	.tianji-pick-grid {
+		max-height: none;
+	}
+}
+
+/* —— Shuffle back pick —— */
+.tianji-shuffle-layout {
+	display: flex;
+	flex-direction: column;
+	grid-template-columns: none;
+	height: min(68vh, 620px);
+	gap: 12px;
+}
+
+.tianji-shuffle-layout .tianji-pick-picker {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.tianji-shuffle-picker-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px 12px;
+	flex: 0 0 auto;
+}
+
+.tianji-shuffle-picker-head .tianji-pick-section-title {
+	margin: 0;
+	flex: 1 1 auto;
+}
+
+.tianji-shuffle-layout-switch {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	flex: 0 0 auto;
+}
+
+.tianji-shuffle-slots {
+	flex: 0 0 auto;
+	overflow: visible;
+	padding-right: 0;
+	border-top: 1px solid var(--background-modifier-border);
+	padding-top: 10px;
+	max-height: none;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.tianji-shuffle-slots .tianji-pick-section-title {
+	align-self: stretch;
+	text-align: center;
+}
+
+.tianji-shuffle-slot-row {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: stretch;
+	gap: 8px;
+	overflow-x: auto;
+	padding-bottom: 4px;
+}
+
+.tianji-shuffle-slot-row .tianji-pick-slot {
+	flex: 0 0 auto;
+	min-width: 148px;
+	max-width: 200px;
+	grid-template-columns: 28px 1fr;
+	position: relative;
+}
+
+.tianji-shuffle-reselect-btn {
+	position: absolute;
+	top: 6px;
+	right: 6px;
+	z-index: 2;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	margin: 0;
+	border: 1px solid var(--tianji-border);
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--background-primary) 88%, transparent);
+	color: var(--text-muted);
+	cursor: pointer;
+	box-shadow: 0 1px 2px color-mix(in srgb, black 12%, transparent);
+	opacity: 1;
+	transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.tianji-shuffle-reselect-btn:hover,
+.tianji-shuffle-reselect-btn:focus-visible {
+	border-color: var(--interactive-accent);
+	color: var(--interactive-accent);
+	background: var(--background-primary);
+	outline: none;
+}
+
+.tianji-shuffle-reselect-btn svg {
+	width: 14px;
+	height: 14px;
+}
+
+.tianji-shuffle-grid {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+	gap: 8px;
+	padding: 2px 4px 8px 0;
+	align-content: start;
+}
+
+/* 堆叠：重叠折行，整体与每排居中 */
+.tianji-shuffle-stack {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-content: center;
+	align-items: flex-end;
+	column-gap: 0;
+	row-gap: 16px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	padding: 28px 40px 24px 12px;
+	scrollbar-width: thin;
+}
+
+.tianji-shuffle-stack .tianji-shuffle-back {
+	/* 布局只占步进宽，牌面溢出形成重叠，便于每排 justify-content:center */
+	flex: 0 0 26px;
+	width: 26px;
+	height: 100px;
+	margin: 0;
+	position: relative;
+	z-index: 1;
+	transition:
+		transform 160ms ease,
+		opacity 120ms ease,
+		filter 120ms ease,
+		z-index 0s;
+}
+
+.tianji-shuffle-stack .tianji-shuffle-back-face {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	width: 58px;
+	height: auto;
+	aspect-ratio: 2 / 3.2;
+}
+
+.tianji-shuffle-stack .tianji-shuffle-back:hover:not(.is-taken) {
+	transform: translateY(-14px) scale(1.04);
+	z-index: 20;
+	opacity: 1;
+	filter: none;
+}
+
+.tianji-shuffle-stack .tianji-shuffle-back.is-taken {
+	z-index: 0;
+}
+
+.tianji-shuffle-back {
+	position: relative;
+	cursor: pointer;
+	border-radius: 4px;
+	transition: opacity 120ms ease, border-color 120ms ease;
+}
+
+.tianji-shuffle-grid .tianji-shuffle-back:hover:not(.is-taken) {
+	transform: none;
+	box-shadow: none;
+	opacity: 0.92;
+	z-index: 1;
+}
+
+.tianji-shuffle-back.is-taken {
+	opacity: 0.4;
+	cursor: not-allowed;
+	filter: grayscale(0.3);
+}
+
+.tianji-shuffle-back-face {
+	aspect-ratio: 2 / 3.2;
+	border-radius: 4px;
+	border: 1px solid color-mix(in srgb, white 18%, transparent);
+	display: grid;
+	place-items: center;
+	color: rgba(255, 255, 255, 0.72);
+	font-size: 0.55em;
+	letter-spacing: 0.12em;
+	font-weight: 700;
+	box-shadow: 0 1px 3px color-mix(in srgb, black 22%, transparent);
+}
+
+.tianji-shuffle-stack .tianji-shuffle-back-face {
+	box-shadow:
+		1px 0 0 color-mix(in srgb, black 18%, transparent),
+		0 2px 6px color-mix(in srgb, black 20%, transparent);
+}
+
+.tianji-shuffle-stack .tianji-pick-taken-tag {
+	top: 6px;
+	right: 4px;
+	font-size: 0.6em;
+}
+
+
+/* —— Reading notes（Markdown 笔记注释） —— */
+.tianji-lib-col-note {
+	white-space: nowrap;
+}
+
+.tianji-lib-note-btn.has-note {
+	color: var(--text-accent);
+	font-weight: 600;
+}
+
+.tianji-reading-note {
+	margin-top: 18px;
+	padding: var(--tianji-card-pad);
+}
+
+.tianji-reading-note-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	margin-bottom: 10px;
+}
+
+.tianji-reading-note-body {
+	font-size: 0.92em;
+	line-height: 1.7;
+	padding: 4px 2px;
+	min-height: 1.5em;
+}
+
+.tianji-reading-note-body p {
+	margin: 0.4em 0;
+}
+
+.modal.tianji-note-modal {
+	width: min(640px, 94vw);
+}
+
+.tianji-note-meta {
+	margin: 0 0 12px;
+	color: var(--text-muted);
+	font-size: 0.88em;
+}
+
+.tianji-note-tabs {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 10px;
+}
+
+.tianji-note-body {
+	min-height: 280px;
+}
+
+.tianji-note-textarea {
+	width: 100%;
+	min-height: 280px;
+	resize: vertical;
+	font-family: var(--font-text);
+	line-height: 1.6;
+}
+
+.tianji-note-preview {
+	min-height: 280px;
+	max-height: 55vh;
+	overflow-y: auto;
+	padding: 12px 14px;
+	border-radius: var(--tianji-radius-sm);
+	border: 1px solid var(--tianji-border);
+	background: var(--tianji-surface-soft);
+	font-size: 0.92em;
+	line-height: 1.7;
+}
+
+.tianji-note-footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 14px;
+}

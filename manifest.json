@@ -1,0 +1,10 @@
+{
+	"id": "obsidian-tianji",
+	"name": "天机占卜",
+	"version": "0.1.0",
+	"minAppVersion": "1.5.0",
+	"description": "本地六爻、八字、塔罗排盘与存档。解读请自行复制到其他 AI 服务。",
+	"author": "PandaNocturne",
+	"authorUrl": "https://github.com/PandaNocturne",
+	"isDesktopOnly": false
+}

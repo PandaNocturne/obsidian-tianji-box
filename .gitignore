@@ -1,0 +1,29 @@
+# vscode
+.vscode 
+
+# Intellij
+*.iml
+.idea
+
+# npm
+node_modules
+
+# Don't include the compiled main.js file in the repo.
+# They should be uploaded to GitHub releases instead.
+main.js
+
+# Exclude sourcemaps
+*.map
+
+# obsidian
+data.json
+tianji.db
+
+# sql.js wasm (copied on build)
+sql-wasm.wasm
+
+# 塔罗牌面本地缓存（运行时自动下载）
+assets/tarot/
+
+# Exclude macOS Finder (System Explorer) View States
+.DS_Store
