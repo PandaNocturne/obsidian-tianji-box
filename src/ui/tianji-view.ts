@@ -137,7 +137,7 @@ export class TianjiView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return '天机占卜';
+		return '天机匣';
 	}
 
 	getIcon(): string {

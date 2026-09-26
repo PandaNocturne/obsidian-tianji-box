@@ -19,7 +19,7 @@ export class TianjiSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		new Setting(containerEl).setName('天机占卜').setHeading();
+		new Setting(containerEl).setName('天机匣').setHeading();
 
 		containerEl.createEl('p', {
 			cls: 'setting-item-description',

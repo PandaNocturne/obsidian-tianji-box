@@ -29,13 +29,13 @@ export default class TianjiPlugin extends Plugin {
 			(leaf) => new TianjiView(leaf, this),
 		);
 
-		this.addRibbonIcon('dices', '打开天机占卜', () => {
+		this.addRibbonIcon('dices', '打开天机匣', () => {
 			void this.activateView();
 		});
 
 		this.addCommand({
 			id: 'open-tianji',
-			name: '打开天机占卜',
+			name: '打开天机匣',
 			callback: () => {
 				void this.activateView();
 			},
