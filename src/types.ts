@@ -16,9 +16,6 @@ export type LibraryLayout = 'table' | 'cards';
 /** 笔记打开方式 */
 export type NoteOpenMode = 'tab' | 'modal';
 
-/** 笔记文件名模式：Moment 时间戳 / UID */
-export type NoteFilenameMode = 'timestamp' | 'uid';
-
 /** 占卜标签页：顺序即显示顺序，enabled 控制是否出现 */
 export interface DivinationTabConfig {
 	id: DivinationType;
@@ -40,20 +37,23 @@ export interface TianjiSettings {
 	lastActiveTab: DivinationType | null;
 	/** 笔记 Markdown 所在文件夹（库内相对路径） */
 	noteFolder: string;
-	/** 文件名模式：时间戳（Moment）或 UID */
-	noteFilenameMode: NoteFilenameMode;
 	/**
 	 * 文件名模板（不含 .md）。
-	 * 支持 Moment 语法与 {{uid}}；可用 / 创建嵌套目录。
-	 * 例：YYYY/MM/DD-HHmmss、{{uid}}、YYYY/MM/{{uid}}
+	 * 支持 {{uid}} {{title}} {{type}} {{date}} / {{date:FORMAT}}，以及 Moment 片段；可用 / 嵌套目录。
+	 * {{date}} 为起卦时间（非创建笔记时刻）。默认 {{type}}/{{date:YYMMDD}}_{{title}}。
 	 */
 	noteFilenameTemplate: string;
-	/** 新建笔记正文模板，默认为空；可用 {{title}} {{uid}} {{type}} {{date}} {{time}} */
-	noteContentTemplate: string;
+	/**
+	 * 新建笔记时引用的库内模板文件路径（可配合核心 Templates / Templater）。
+	 * 为空则正文为空；不解析自定义变量，按文件原文写入。
+	 */
+	noteTemplateFile: string;
 	/** frontmatter 中的 UID 字段名，用于查找笔记 */
 	noteUidKey: string;
 	/** 添加/打开笔记：标签页或弹窗 */
 	noteOpenMode: NoteOpenMode;
+	/** 无笔记时自动创建，不再弹出确认 */
+	noteAutoCreate: boolean;
 }
 
 export interface HexagramInfo {

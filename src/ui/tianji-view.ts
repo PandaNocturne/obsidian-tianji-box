@@ -2716,7 +2716,7 @@ export class TianjiView extends ItemView {
 		void this.openReadingNoteWithConfirm(rec);
 	}
 
-	/** 已绑定且文件存在 → 直接打开；否则先确认再创建/重新关联 */
+	/** 已绑定且文件存在 → 直接打开；否则确认创建（可开自动创建） */
 	private async openReadingNoteWithConfirm(
 		rec: ReadingRecord,
 	): Promise<void> {
@@ -2725,6 +2725,7 @@ export class TianjiView extends ItemView {
 			const latest = this.plugin.db.getReading(rec.id) ?? rec;
 			const existing = await resolveReadingNoteFile(this.plugin, latest);
 			const linked = Boolean(latest.noteUid?.trim());
+			const autoCreate = this.plugin.settings.noteAutoCreate;
 
 			if (existing && linked) {
 				if (latest.noteUid !== existing.uid) {
@@ -2734,15 +2735,23 @@ export class TianjiView extends ItemView {
 				return;
 			}
 
-			const pathHint = buildNoteVaultPathForReading(
+			const notePath = buildNoteVaultPathForReading(
 				this.plugin.settings,
 				latest,
 			);
+			const noteName = notePath.includes('/')
+				? notePath.slice(notePath.lastIndexOf('/') + 1)
+				: notePath;
 
 			if (existing && !linked) {
+				if (autoCreate) {
+					await this.plugin.db.updateNoteUid(latest.id, existing.uid);
+					await this.openNoteFile(existing.file, latest);
+					return;
+				}
 				new ConfirmModal(this.app, {
 					title: '打开笔记',
-					message: `发现未关联的笔记文件，是否重新打开？\n\n${existing.file.path}`,
+					message: `发现未关联的笔记「${existing.file.basename}」，是否重新打开？`,
 					confirmText: '打开',
 					onConfirm: async () => {
 						await this.plugin.db.updateNoteUid(
@@ -2755,9 +2764,14 @@ export class TianjiView extends ItemView {
 				return;
 			}
 
+			if (autoCreate) {
+				void this.openReadingNoteAsync(latest);
+				return;
+			}
+
 			new ConfirmModal(this.app, {
 				title: '创建笔记',
-				message: `「${latest.title}」还没有笔记文件，是否创建？\n\n${pathHint}`,
+				message: `「${latest.title}」还没有笔记，是否创建「${noteName}」？`,
 				confirmText: '创建',
 				onConfirm: () => {
 					void this.openReadingNoteAsync(latest);

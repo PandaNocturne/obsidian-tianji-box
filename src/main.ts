@@ -173,18 +173,14 @@ export default class TianjiPlugin extends Plugin {
 			this.settings.noteFolder = DEFAULT_SETTINGS.noteFolder;
 		}
 		if (
-			this.settings.noteFilenameMode !== 'timestamp' &&
-			this.settings.noteFilenameMode !== 'uid'
+			!this.settings.noteFilenameTemplate?.trim() ||
+			this.settings.noteFilenameTemplate.trim() === '{{uid}}'
 		) {
-			this.settings.noteFilenameMode = DEFAULT_SETTINGS.noteFilenameMode;
-		}
-		if (!this.settings.noteFilenameTemplate?.trim()) {
 			this.settings.noteFilenameTemplate =
 				DEFAULT_SETTINGS.noteFilenameTemplate;
 		}
-		if (typeof this.settings.noteContentTemplate !== 'string') {
-			this.settings.noteContentTemplate =
-				DEFAULT_SETTINGS.noteContentTemplate;
+		if (typeof this.settings.noteTemplateFile !== 'string') {
+			this.settings.noteTemplateFile = DEFAULT_SETTINGS.noteTemplateFile;
 		}
 		if (!this.settings.noteUidKey?.trim()) {
 			this.settings.noteUidKey = DEFAULT_SETTINGS.noteUidKey;
@@ -194,6 +190,9 @@ export default class TianjiPlugin extends Plugin {
 			this.settings.noteOpenMode !== 'modal'
 		) {
 			this.settings.noteOpenMode = DEFAULT_SETTINGS.noteOpenMode;
+		}
+		if (typeof this.settings.noteAutoCreate !== 'boolean') {
+			this.settings.noteAutoCreate = DEFAULT_SETTINGS.noteAutoCreate;
 		}
 	}
 

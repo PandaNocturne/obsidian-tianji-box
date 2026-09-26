@@ -7,26 +7,73 @@ import {
 	parseYaml,
 } from 'obsidian';
 import type TianjiPlugin from '../main';
-import type { NoteFilenameMode, ReadingRecord, TianjiSettings } from '../types';
+import type { DivinationType, ReadingRecord, TianjiSettings } from '../types';
 
 /** Obsidian 将 moment 导出为 namespace；运行时可调用 */
 const mom = moment as unknown as (inp?: Date | string | number) => {
 	format: (fmt: string) => string;
 };
 
-const DEFAULT_TIMESTAMP_TEMPLATE = 'YYYYMMDDHHmmss';
-const DEFAULT_UID_TEMPLATE = '{{uid}}';
+/** 默认文件名：类型/日期_事由 */
+export const DEFAULT_NOTE_FILENAME_TEMPLATE = '{{type}}/{{date:YYMMDD}}_{{title}}';
 
-export function defaultFilenameTemplate(mode: NoteFilenameMode): string {
-	return mode === 'uid' ? DEFAULT_UID_TEMPLATE : DEFAULT_TIMESTAMP_TEMPLATE;
+/** {{date}} 默认格式（起卦时间） */
+const DEFAULT_DATE_FORMAT = 'YYYYMMDDHHmmss';
+
+export interface NoteFilenameContext {
+	uid: string;
+	title: string;
+	type: DivinationType;
+	/** 起卦 / 排盘时间 */
+	when: Date;
+}
+
+export function noteTypeLabel(type: DivinationType): string {
+	switch (type) {
+		case 'liuyao':
+			return '六爻';
+		case 'tarot':
+			return '塔罗牌';
+		case 'bazi':
+			return '八字';
+	}
 }
 
 /**
- * 卦例唯一笔记 UID：固定为记录 id，不在「创建笔记」时生成。
+ * 将卦例数字 id 编码为笔记 UID（非明文自增号）。
+ * 格式：base64url(`tj:{id}`)
+ */
+export function encodeNoteUid(id: number): string {
+	const raw = `tj:${id}`;
+	return btoa(raw)
+		.replace(/\+/g, '-')
+		.replace(/\//g, '_')
+		.replace(/=+$/g, '');
+}
+
+/** 解码笔记 UID；非法则返回 null */
+export function decodeNoteUid(uid: string): number | null {
+	const s = uid.trim();
+	if (!s) return null;
+	try {
+		const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
+		const pad = b64.length % 4 === 0 ? '' : '='.repeat(4 - (b64.length % 4));
+		const raw = atob(b64 + pad);
+		const m = /^tj:(\d+)$/.exec(raw);
+		if (!m) return null;
+		const n = Number(m[1]);
+		return Number.isFinite(n) ? n : null;
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * 卦例唯一笔记 UID：由记录 id 编码得到，创建时不随机生成。
  * 保证一卦一例、路径可复现。
  */
 export function readingNoteUid(rec: ReadingRecord): string {
-	return String(rec.id);
+	return encodeNoteUid(rec.id);
 }
 
 /** 用于文件名时间戳：起卦/排盘时间，否则存档时间 */
@@ -63,46 +110,67 @@ export function readingHasNote(rec: ReadingRecord): boolean {
 }
 
 /**
- * 解析文件名模板：Moment 语法 + {{uid}}，可用 / 嵌套目录。
- * when 应为卦例时间，而非「点击创建」的当前时刻。
+ * 解析文件名模板。
+ * 支持 {{uid}} {{title}} {{type}} {{date}} / {{date:FORMAT}}，
+ * 以及剩余 Moment 片段；可用 / 嵌套目录。
+ * {{date}} 使用起卦时间，默认 YYYYMMDDHHmmss。
  */
 export function resolveNoteFilename(
 	template: string,
-	uid: string,
-	when: Date = new Date(),
+	ctx: NoteFilenameContext,
 ): string {
-	const raw = template.trim() || DEFAULT_TIMESTAMP_TEMPLATE;
-	const parts = raw.split(/\{\{uid\}\}/i);
-	const joined = parts
-		.map((part) => (part ? mom(when).format(part) : ''))
-		.join(uid);
-	const cleaned = joined
+	let raw = template.trim() || DEFAULT_NOTE_FILENAME_TEMPLATE;
+
+	raw = raw.replace(/\{\{date:([^}]+)\}\}/gi, (_m, fmt: string) =>
+		mom(ctx.when).format(String(fmt).trim() || DEFAULT_DATE_FORMAT),
+	);
+	raw = raw.replace(
+		/\{\{date\}\}/gi,
+		mom(ctx.when).format(DEFAULT_DATE_FORMAT),
+	);
+	raw = raw.replace(/\{\{uid\}\}/gi, ctx.uid);
+	raw = raw.replace(
+		/\{\{title\}\}/gi,
+		sanitizePathSegment(ctx.title) || '未命名',
+	);
+	raw = raw.replace(/\{\{type\}\}/gi, noteTypeLabel(ctx.type));
+
+	const cleaned = raw
 		.replace(/\\/g, '/')
 		.split('/')
-		.map((seg) => sanitizePathSegment(seg))
+		.map((seg) => {
+			const s = seg.trim();
+			if (!s) return '';
+			// 剩余 Moment 片段（不含中文，含日期格式字符）
+			if (
+				/[Yy]{2}|M{1,4}|[Dd]{1,4}|H{1,2}|h{1,2}|mm|ss/.test(s) &&
+				!/[\u4e00-\u9fff]/.test(s)
+			) {
+				return sanitizePathSegment(mom(ctx.when).format(s));
+			}
+			return sanitizePathSegment(s);
+		})
 		.filter(Boolean)
 		.join('/');
-	return cleaned || uid;
+	return cleaned || ctx.uid;
 }
 
 function sanitizePathSegment(seg: string): string {
 	return seg
 		.replace(/[<>:"|?*\u0000-\u001f]/g, '_')
+		.replace(/[/\\]/g, '_')
 		.replace(/\.+$/g, '')
 		.trim();
 }
 
 export function buildNoteVaultPath(
 	settings: TianjiSettings,
-	uid: string,
-	when?: Date,
+	ctx: NoteFilenameContext,
 ): string {
 	const folder = normalizePath(settings.noteFolder.trim() || '天机匣/笔记');
 	const name = resolveNoteFilename(
-		settings.noteFilenameTemplate ||
-			defaultFilenameTemplate(settings.noteFilenameMode),
-		uid,
-		when,
+		settings.noteFilenameTemplate || DEFAULT_NOTE_FILENAME_TEMPLATE,
+		ctx,
 	);
 	const withExt = name.toLowerCase().endsWith('.md') ? name : `${name}.md`;
 	return normalizePath(`${folder}/${withExt}`);
@@ -113,40 +181,55 @@ export function buildNoteVaultPathForReading(
 	settings: TianjiSettings,
 	rec: ReadingRecord,
 ): string {
-	return buildNoteVaultPath(
-		settings,
-		readingNoteUid(rec),
-		readingNoteTime(rec),
-	);
+	return buildNoteVaultPath(settings, {
+		uid: readingNoteUid(rec),
+		title: rec.title,
+		type: rec.type,
+		when: readingNoteTime(rec),
+	});
 }
 
-export function buildNoteFileContent(
+export async function buildNoteFileContent(
+	app: App,
 	settings: TianjiSettings,
 	rec: ReadingRecord,
 	uid: string,
-): string {
+): Promise<string> {
 	const uidKey = settings.noteUidKey.trim() || 'tianji_uid';
-	const when = readingNoteTime(rec);
 	const fm: Record<string, string> = {
 		[uidKey]: uid,
 		title: rec.title,
 		type: rec.type,
-		tianji_id: String(rec.id),
 	};
 	const fmLines = Object.entries(fm)
 		.map(([k, v]) => `${k}: ${yamlScalar(v)}`)
 		.join('\n');
 
-	const body = applyContentTemplate(
-		settings.noteContentTemplate ?? '',
-		rec,
-		uid,
-		when,
+	const fromTemplate = await readNoteTemplateBody(
+		app,
+		settings.noteTemplateFile,
 	);
 	const legacy = rec.noteMd?.trim() ?? '';
-	const parts = [body, legacy].filter(Boolean);
+	const parts = [fromTemplate, legacy].filter(Boolean);
 	const text = parts.join(parts.length > 1 ? '\n\n' : '');
 	return `---\n${fmLines}\n---\n${text ? `\n${text}\n` : '\n'}`;
+}
+
+/** 读取库内模板文件正文（去掉 frontmatter），不做变量替换 */
+export async function readNoteTemplateBody(
+	app: App,
+	templatePath: string,
+): Promise<string> {
+	const path = normalizePath(templatePath.trim());
+	if (!path) return '';
+	const file = app.vault.getAbstractFileByPath(path);
+	if (!(file instanceof TFile)) return '';
+	try {
+		const raw = await app.vault.cachedRead(file);
+		return stripFrontmatter(raw).replace(/^\n+/, '').replace(/\n+$/, '');
+	} catch {
+		return '';
+	}
 }
 
 function yamlScalar(v: string): string {
@@ -154,23 +237,6 @@ function yamlScalar(v: string): string {
 		return JSON.stringify(v);
 	}
 	return v;
-}
-
-function applyContentTemplate(
-	template: string,
-	rec: ReadingRecord,
-	uid: string,
-	when: Date,
-): string {
-	if (!template) return '';
-	const m = mom(when);
-	return template
-		.replace(/\{\{title\}\}/gi, rec.title)
-		.replace(/\{\{uid\}\}/gi, uid)
-		.replace(/\{\{type\}\}/gi, rec.type)
-		.replace(/\{\{date\}\}/gi, m.format('YYYY-MM-DD'))
-		.replace(/\{\{time\}\}/gi, m.format('HH:mm'))
-		.replace(/\{\{created\}\}/gi, rec.createdAt);
 }
 
 /** 按 frontmatter UID 在库中查找笔记 */
@@ -195,10 +261,6 @@ export function findNoteFileByUid(
 		const fm = cache?.frontmatter;
 		if (!fm) continue;
 		if (fm[uidKey] != null && String(fm[uidKey]) === uid) {
-			return file;
-		}
-		// 兼容：用 tianji_id 对齐卦例 id
-		if (fm.tianji_id != null && String(fm.tianji_id) === uid) {
 			return file;
 		}
 	}
@@ -231,9 +293,6 @@ export async function findReadingNoteFile(
 			const data = parseFrontmatter(raw);
 			if (!data) continue;
 			if (data[uidKey] != null && String(data[uidKey]) === uid) {
-				return file;
-			}
-			if (data.tianji_id != null && String(data.tianji_id) === uid) {
 				return file;
 			}
 		} catch {
@@ -282,7 +341,7 @@ export async function ensureFolderPath(
 
 /**
  * 仅查找卦例对应笔记（不创建）。
- * 顺序：UID / tianji_id → 稳定路径 → 旧版 noteUid。
+ * 顺序：编码 UID → 稳定路径 → 旧版 noteUid。
  */
 export async function resolveReadingNoteFile(
 	plugin: TianjiPlugin,
@@ -329,7 +388,12 @@ export async function ensureReadingNoteFile(
 	}
 
 	await ensureFolderPath(plugin.app, path);
-	const content = buildNoteFileContent(settings, rec, uid);
+	const content = await buildNoteFileContent(
+		plugin.app,
+		settings,
+		rec,
+		uid,
+	);
 	const file = await plugin.app.vault.create(path, content);
 	await plugin.db.updateNoteUid(rec.id, uid);
 	if (rec.noteMd.trim()) {

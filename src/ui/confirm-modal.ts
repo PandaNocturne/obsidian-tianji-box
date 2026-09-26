@@ -30,10 +30,11 @@ export class ConfirmModal extends Modal {
 
 	onOpen(): void {
 		this.modalEl.addClass('tianji-confirm-modal');
+		this.setTitle(this.titleText);
+
 		const { contentEl } = this;
 		contentEl.empty();
 
-		contentEl.createEl('h2', { text: this.titleText });
 		contentEl.createEl('p', {
 			cls: 'tianji-confirm-message',
 			text: this.message,

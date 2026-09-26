@@ -171,7 +171,7 @@ export class FileNoteModal extends Modal {
 	private confirmDeleteNote(): void {
 		new ConfirmModal(this.app, {
 			title: '删除笔记',
-			message: `确定删除笔记文件？\n\n${this.file.path}\n\n此操作不可撤销。`,
+			message: `确定删除笔记「${this.file.basename}」？此操作不可撤销。`,
 			confirmText: '删除',
 			danger: true,
 			onConfirm: async () => {

@@ -1,14 +1,13 @@
-import { App, PluginSettingTab, Setting, ToggleComponent, setIcon } from 'obsidian';
+import { App, PluginSettingTab, Setting, TextComponent, ToggleComponent, setIcon } from 'obsidian';
 import {
 	DEFAULT_DIVINATION_TABS,
 	DIVINATION_TAB_META,
 	moveTabInOrder,
 } from './divination-tabs';
 import type TianjiPlugin from './main';
-import { defaultFilenameTemplate } from './notes/reading-note';
+import { DEFAULT_NOTE_FILENAME_TEMPLATE } from './notes/reading-note';
 import type {
 	DivinationType,
-	NoteFilenameMode,
 	NoteOpenMode,
 	OpenLocation,
 	TianjiSettings,
@@ -20,11 +19,11 @@ export const DEFAULT_SETTINGS: TianjiSettings = {
 	divinationTabs: DEFAULT_DIVINATION_TABS.map((t) => ({ ...t })),
 	lastActiveTab: null,
 	noteFolder: '天机匣/笔记',
-	noteFilenameMode: 'timestamp',
-	noteFilenameTemplate: 'YYYYMMDDHHmmss',
-	noteContentTemplate: '',
+	noteFilenameTemplate: DEFAULT_NOTE_FILENAME_TEMPLATE,
+	noteTemplateFile: '',
 	noteUidKey: 'tianji_uid',
 	noteOpenMode: 'modal',
+	noteAutoCreate: false,
 };
 
 export class TianjiSettingTab extends PluginSettingTab {
@@ -145,97 +144,85 @@ export class TianjiSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('笔记')
 			.setDesc(
-				'每条卦例对应唯一一篇 Markdown 笔记；文件名由卦例 id 或起卦时间决定，不随「创建」时刻变化。',
+				'每条卦例对应唯一一篇 Markdown 笔记；默认以编码后的 {{uid}} 命名。',
 			)
 			.setHeading();
+
+		const bindNoteInput = (
+			text: TextComponent,
+			opts: {
+				placeholder: string;
+				value: string;
+				onChange: (value: string) => void | Promise<void>;
+			},
+		) => {
+			text.inputEl.addClass('tianji-settings-input');
+			text.inputEl.setAttribute('spellcheck', 'false');
+			text.setPlaceholder(opts.placeholder).setValue(opts.value);
+			text.onChange((value) => {
+				void opts.onChange(value);
+			});
+		};
 
 		new Setting(containerEl)
 			.setName('笔记文件夹')
 			.setDesc('库内相对路径，例如 天机匣/笔记。')
 			.addText((text) => {
-				text
-					.setPlaceholder('天机匣/笔记')
-					.setValue(this.plugin.settings.noteFolder)
-					.onChange(async (value) => {
-						this.plugin.settings.noteFolder = value.trim() || '天机匣/笔记';
+				bindNoteInput(text, {
+					placeholder: '天机匣/笔记',
+					value: this.plugin.settings.noteFolder,
+					onChange: async (value) => {
+						this.plugin.settings.noteFolder =
+							value.trim() || '天机匣/笔记';
 						await this.plugin.saveSettings();
-					});
-			});
-
-		new Setting(containerEl)
-			.setName('文件名模式')
-			.setDesc(
-				'时间戳：按该卦起卦/存档时间套用 Moment；UID：使用卦例数据库 id。同一卦始终对应同一文件名。',
-			)
-			.addDropdown((dropdown) => {
-				dropdown
-					.addOption('timestamp', '时间戳（卦例时间）')
-					.addOption('uid', 'UID（卦例 id）')
-					.setValue(this.plugin.settings.noteFilenameMode)
-					.onChange(async (value) => {
-						const mode = value as NoteFilenameMode;
-						this.plugin.settings.noteFilenameMode = mode;
-						this.plugin.settings.noteFilenameTemplate =
-							defaultFilenameTemplate(mode);
-						await this.plugin.saveSettings();
-						this.display();
-					});
+					},
+				});
 			});
 
 		new Setting(containerEl)
 			.setName('文件名模板')
 			.setDesc(
-				'不含 .md。支持 Moment（相对卦例时间）与 {{uid}}（卦例 id）；用 / 可建嵌套目录。例：YYYY/MM/DD-HHmmss、{{uid}}、YYYY/MM/{{uid}}',
+				'可用 {{uid}} {{title}} {{type}} {{date}}（起卦时间，可写 {{date:YYYY-MM-DD}}）；支持 / 嵌套。',
 			)
 			.addText((text) => {
-				text
-					.setPlaceholder(
-						defaultFilenameTemplate(
-							this.plugin.settings.noteFilenameMode,
-						),
-					)
-					.setValue(this.plugin.settings.noteFilenameTemplate)
-					.onChange(async (value) => {
+				bindNoteInput(text, {
+					placeholder: DEFAULT_NOTE_FILENAME_TEMPLATE,
+					value: this.plugin.settings.noteFilenameTemplate,
+					onChange: async (value) => {
 						this.plugin.settings.noteFilenameTemplate =
-							value.trim() ||
-							defaultFilenameTemplate(
-								this.plugin.settings.noteFilenameMode,
-							);
+							value.trim() || DEFAULT_NOTE_FILENAME_TEMPLATE;
 						await this.plugin.saveSettings();
-					});
+					},
+				});
 			});
 
 		new Setting(containerEl)
-			.setName('笔记正文模板')
-			.setDesc(
-				'新建笔记时的正文，默认为空。可用 {{title}}、{{uid}}、{{type}}、{{date}}、{{time}}。',
-			)
-			.addTextArea((area) => {
-				area
-					.setPlaceholder('（空）')
-					.setValue(this.plugin.settings.noteContentTemplate)
-					.onChange(async (value) => {
-						this.plugin.settings.noteContentTemplate = value;
+			.setName('笔记模板文件')
+			.setDesc('库内模板路径，按原文复制正文；可配合 Templates / Templater。')
+			.addText((text) => {
+				bindNoteInput(text, {
+					placeholder: 'Templates/天机笔记.md',
+					value: this.plugin.settings.noteTemplateFile,
+					onChange: async (value) => {
+						this.plugin.settings.noteTemplateFile = value.trim();
 						await this.plugin.saveSettings();
-					});
-				area.inputEl.rows = 4;
-				area.inputEl.addClass('tianji-settings-template');
+					},
+				});
 			});
 
 		new Setting(containerEl)
 			.setName('UID 属性名')
-			.setDesc(
-				'写入笔记 frontmatter 的字段，值为卦例数据库 id，用于唯一查找。默认 tianji_uid。',
-			)
+			.setDesc('frontmatter 字段名，值为卦例 id 编码。默认 tianji_uid。')
 			.addText((text) => {
-				text
-					.setPlaceholder('tianji_uid')
-					.setValue(this.plugin.settings.noteUidKey)
-					.onChange(async (value) => {
+				bindNoteInput(text, {
+					placeholder: 'tianji_uid',
+					value: this.plugin.settings.noteUidKey,
+					onChange: async (value) => {
 						this.plugin.settings.noteUidKey =
 							value.trim() || 'tianji_uid';
 						await this.plugin.saveSettings();
-					});
+					},
+				});
 			});
 
 		new Setting(containerEl)
@@ -251,6 +238,18 @@ export class TianjiSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.noteOpenMode =
 							value as NoteOpenMode;
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('自动创建笔记')
+			.setDesc('开启后，若卦例尚无笔记将直接创建并打开，不再询问。')
+			.addToggle((toggle) => {
+				toggle
+					.setValue(this.plugin.settings.noteAutoCreate)
+					.onChange(async (value) => {
+						this.plugin.settings.noteAutoCreate = value;
 						await this.plugin.saveSettings();
 					});
 			});

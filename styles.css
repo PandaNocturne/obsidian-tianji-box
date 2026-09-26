@@ -4451,11 +4451,18 @@
 	margin-left: 4px;
 }
 
-.tianji-settings-template {
-	width: 100%;
-	min-height: 5em;
-	font-family: var(--font-monospace);
-	font-size: 0.85em;
+/* 设置页笔记相关输入：强制单行 */
+input.tianji-settings-input[type='text'] {
+	width: 16rem;
+	max-width: min(16rem, 42vw);
+	height: var(--input-height);
+	min-height: var(--input-height);
+	white-space: nowrap;
+	overflow-x: auto;
+	text-overflow: ellipsis;
+	field-sizing: fixed;
+	resize: none;
+	line-height: normal;
 }
 
 .tianji-tabs.is-single .tianji-tab {
