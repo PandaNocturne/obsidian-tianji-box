@@ -120,7 +120,8 @@ export class TianjiSettingTab extends PluginSettingTab {
 			});
 			new ToggleComponent(toggleHost)
 				.setValue(tab.enabled)
-				.setDisabled(!tab.enabled && enabledCount <= 1)
+				// 仅禁止关掉「最后一个已启用」模块；已关闭的仍可随时重新打开
+				.setDisabled(tab.enabled && enabledCount <= 1)
 				.onChange(async (value) => {
 					if (!value && enabledCount <= 1) {
 						this.display();
