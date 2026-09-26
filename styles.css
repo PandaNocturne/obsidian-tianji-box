@@ -1466,6 +1466,51 @@
 	gap: 8px;
 }
 
+.tianji-library-search {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 14px;
+}
+
+.tianji-library-search-input {
+	flex: 1;
+	min-width: 0;
+	min-height: 2.4em;
+	padding: 6px 12px;
+}
+
+.tianji-library-search-clear {
+	appearance: none;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	margin: 0;
+	border: 1px solid transparent;
+	border-radius: var(--tianji-radius-sm);
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
+.tianji-library-search-clear.is-visible {
+	display: inline-flex;
+}
+
+.tianji-library-search-clear svg {
+	width: 14px;
+	height: 14px;
+}
+
+.tianji-library-search-clear:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
 .tianji-library-table-wrap {
 	width: 100%;
 	overflow-x: auto;

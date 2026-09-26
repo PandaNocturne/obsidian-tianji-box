@@ -69,6 +69,8 @@ export class TianjiView extends ItemView {
 	private tarotPanel: PanelMode = 'cast';
 	/** 历史库筛选：全部 / 仅收藏 */
 	private libraryFilter: LibraryFilter = 'all';
+	/** 历史库搜索关键词 */
+	private libraryQuery = '';
 
 	// 六爻 state
 	private liuyaoSubject = '问事';
@@ -2648,7 +2650,7 @@ export class TianjiView extends ItemView {
 		},
 	): void {
 		const favoritesOnly = this.libraryFilter === 'favorites';
-		const list = this.plugin.db.listReadings(opts.type, 100, favoritesOnly);
+		const list = this.plugin.db.listReadings(opts.type, 300, favoritesOnly);
 		const favoriteCount = this.plugin.db.countReadings(opts.type, true);
 		renderLibraryGrid(container, list, {
 			emptyText: opts.emptyText,
@@ -2656,6 +2658,7 @@ export class TianjiView extends ItemView {
 			filter: this.libraryFilter,
 			layout: this.plugin.settings.libraryLayout ?? 'table',
 			favoriteCount,
+			query: this.libraryQuery,
 			onFilterChange: (f) => {
 				this.libraryFilter = f;
 				this.render();
@@ -2664,6 +2667,9 @@ export class TianjiView extends ItemView {
 				this.plugin.settings.libraryLayout = layout;
 				void this.plugin.saveSettings();
 				this.render();
+			},
+			onQueryChange: (q) => {
+				this.libraryQuery = q;
 			},
 			onRestore: (rec) => this.restoreReading(rec),
 			onToggleFavorite: (rec) => {

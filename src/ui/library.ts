@@ -16,8 +16,10 @@ export interface LibraryRenderOpts {
 	filter: LibraryFilter;
 	layout: LibraryLayout;
 	favoriteCount: number;
+	query: string;
 	onFilterChange: (filter: LibraryFilter) => void;
 	onLayoutChange: (layout: LibraryLayout) => void;
+	onQueryChange: (query: string) => void;
 	onRestore: (rec: ReadingRecord) => void;
 	onToggleFavorite: (rec: ReadingRecord) => void;
 	onEditNote: (rec: ReadingRecord) => void;
@@ -82,28 +84,113 @@ export function renderLibraryGrid(
 	mkLayout('table', '表格');
 	mkLayout('cards', '卡片');
 
-	if (list.length === 0) {
-		const emptyText =
-			opts.filter === 'favorites'
-				? (opts.favoritesEmptyText ??
-					'暂无收藏。点击星标即可收藏。')
-				: opts.emptyText;
-		const hint =
-			opts.filter === 'favorites'
-				? '收藏的卦例会优先显示，并在此筛选中查看。'
-				: undefined;
-		renderLibraryEmpty(container, emptyText, hint);
-		return;
-	}
+	const searchRow = container.createDiv({ cls: 'tianji-library-search' });
+	const searchInput = searchRow.createEl('input', {
+		cls: 'tianji-input tianji-library-search-input',
+		type: 'search',
+		attr: {
+			placeholder: '搜索事由、问题、方式、排盘、笔记…',
+			spellcheck: 'false',
+			enterkeyhint: 'search',
+		},
+	});
+	searchInput.value = opts.query;
 
-	if (opts.layout === 'table') {
-		renderLibraryTable(container, list, opts);
-	} else {
-		const grid = container.createDiv({ cls: 'tianji-library-grid' });
-		for (const rec of list) {
-			renderLibraryCard(grid, rec, opts);
+	const clearBtn = searchRow.createEl('button', {
+		cls: 'tianji-library-search-clear',
+		type: 'button',
+		attr: {
+			title: '清空搜索',
+			'aria-label': '清空搜索',
+		},
+	});
+	setIcon(clearBtn, 'x');
+	clearBtn.toggleClass('is-visible', Boolean(opts.query.trim()));
+
+	const results = container.createDiv({ cls: 'tianji-library-results' });
+
+	const paint = (query: string) => {
+		results.empty();
+		const filtered = filterLibraryList(list, query);
+
+		if (list.length === 0) {
+			const emptyText =
+				opts.filter === 'favorites'
+					? (opts.favoritesEmptyText ??
+						'暂无收藏。点击星标即可收藏。')
+					: opts.emptyText;
+			const hint =
+				opts.filter === 'favorites'
+					? '收藏的卦例会优先显示，并在此筛选中查看。'
+					: undefined;
+			renderLibraryEmpty(results, emptyText, hint);
+			return;
 		}
-	}
+
+		if (filtered.length === 0) {
+			renderLibraryEmpty(
+				results,
+				'没有匹配的记录',
+				'试试其他关键词，或清空搜索。',
+			);
+			return;
+		}
+
+		if (opts.layout === 'table') {
+			renderLibraryTable(results, filtered, opts);
+		} else {
+			const grid = results.createDiv({ cls: 'tianji-library-grid' });
+			for (const rec of filtered) {
+				renderLibraryCard(grid, rec, opts);
+			}
+		}
+	};
+
+	paint(opts.query);
+
+	searchInput.addEventListener('input', () => {
+		const q = searchInput.value;
+		clearBtn.toggleClass('is-visible', Boolean(q.trim()));
+		opts.onQueryChange(q);
+		paint(q);
+	});
+
+	clearBtn.addEventListener('click', () => {
+		searchInput.value = '';
+		clearBtn.toggleClass('is-visible', false);
+		opts.onQueryChange('');
+		paint('');
+		searchInput.focus();
+	});
+}
+
+function filterLibraryList(
+	list: ReadingRecord[],
+	query: string,
+): ReadingRecord[] {
+	const tokens = query
+		.trim()
+		.toLowerCase()
+		.split(/\s+/)
+		.filter(Boolean);
+	if (tokens.length === 0) return list;
+
+	return list.filter((rec) => {
+		const data = parseLibraryRow(rec);
+		const hay = [
+			data.subject,
+			data.question,
+			data.method,
+			data.chartSnippet,
+			data.castTime,
+			rec.title,
+			rec.noteMd,
+			typeFallbackTitle(rec.type),
+		]
+			.join('\n')
+			.toLowerCase();
+		return tokens.every((t) => hay.includes(t));
+	});
 }
 
 function renderLibraryTable(
