@@ -1635,10 +1635,14 @@ export class TianjiView extends ItemView {
 				text: `本局已用 ${this.tarotSessionUsedIds.length} 张 · 剩余 ${remain} 张（续问从此牌组抽）`,
 			});
 			const newGame = sessionBar.createEl('button', {
-				cls: 'tianji-btn',
+				cls: 'tianji-tarot-session-close',
 				type: 'button',
-				text: '新开一局',
+				attr: {
+					title: '新开一局',
+					'aria-label': '新开一局',
+				},
 			});
+			setIcon(newGame, 'x');
 			newGame.addEventListener('click', () => {
 				this.startFreshTarotSession();
 				new Notice('已整副重洗，开始新一局');
@@ -1820,7 +1824,8 @@ export class TianjiView extends ItemView {
 			text: '返回抽牌',
 		});
 		backBtn.addEventListener('click', () => {
-			this.tarotPanel = 'cast';
+			this.startFreshTarotSession();
+			new Notice('已开始新一局');
 			this.render();
 		});
 		const continueBtn = toolbar.createEl('button', {
@@ -1935,7 +1940,7 @@ export class TianjiView extends ItemView {
 	private continueTarotSession(): void {
 		const remain = remainingTarotDeck(this.tarotSessionUsedIds).length;
 		if (remain <= 0) {
-			new Notice('本局牌已抽完，请返回抽牌后「新开一局」');
+			new Notice('本局牌已抽完，请返回抽牌开始新一局');
 			return;
 		}
 		this.tarotQuestion = '';
