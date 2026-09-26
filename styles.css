@@ -2257,7 +2257,7 @@
 .tianji-spread-preview-hexagram-seven [data-pos="result"] { grid-area: result; }
 
 .tianji-spread-preview-celtic-cross {
-	grid-template-columns: 76px minmax(120px, 140px) 76px 76px;
+	grid-template-columns: 76px minmax(100px, 120px) 76px 76px;
 	grid-template-areas:
 		".    p5   .    p10"
 		"p4   mid  p6   p9"
@@ -2282,60 +2282,69 @@
 	width: 76px;
 }
 
-/* 抽牌预览十字：1、2 标题与牌面绑定；2 号整块（含标题）旋转 90° */
+/*
+ * 抽牌预览十字：标题正向分列，仅 2 号牌面旋转叠放。
+ * （整块旋转会让标题侧躺挤进邻位，故预览不用整块转）
+ */
 .tianji-spread-preview-celtic-cross .tianji-celtic-mid {
 	grid-area: mid;
 	position: relative;
 	width: 100%;
-	max-width: 140px;
-	min-height: 150px;
+	max-width: 120px;
 	justify-self: center;
-	display: flex;
-	align-items: center;
-	justify-content: center;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-template-rows: auto 96px;
+	grid-template-areas:
+		"lab1 lab2"
+		"stack stack";
+	justify-items: center;
+	align-items: start;
+	column-gap: 4px;
+	row-gap: 6px;
 	overflow: visible;
 }
 .tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p1"],
 .tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"] {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 4px;
-	width: 56px;
-	max-width: 56px;
-	box-sizing: border-box;
+	display: contents;
 }
-.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p1"] {
-	position: relative;
-	z-index: 1;
-}
-.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"] {
-	position: absolute;
-	left: 50%;
-	top: 50%;
-	z-index: 2;
-	transform: translate(-50%, -50%) rotate(90deg);
-	transform-origin: center center;
-}
-.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"]:active {
-	transform: translate(-50%, -50%) rotate(90deg) scale(0.97);
-}
-.tianji-spread-preview-celtic-cross .tianji-celtic-mid .tianji-spread-preview-label {
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p1"] .tianji-spread-preview-label {
+	grid-area: lab1;
 	width: 100%;
-	max-width: 100%;
+	max-width: 56px;
 	white-space: normal;
 	line-height: 1.2;
 	font-size: 0.7em;
-	text-align: center;
 }
-.tianji-spread-preview-celtic-cross .tianji-celtic-mid .tianji-spread-preview-face {
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-spread-preview-label {
+	grid-area: lab2;
+	width: 100%;
+	max-width: 56px;
+	white-space: normal;
+	line-height: 1.2;
+	font-size: 0.7em;
+}
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p1"] .tianji-spread-preview-face,
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-spread-preview-face {
+	grid-area: stack;
 	width: 48px;
 	height: 80px;
-	/* 逆位只转牌面；整块已由 slot rotate(90deg) */
-	transform: none;
+	flex: none;
+	align-self: center;
+	justify-self: center;
+}
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p1"] .tianji-spread-preview-face {
+	z-index: 1;
+	position: relative;
+}
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-spread-preview-face {
+	z-index: 2;
+	position: relative;
+	transform: rotate(90deg);
+	transform-origin: center center;
 }
 .tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-spread-preview-face.is-reversed {
-	transform: rotate(180deg);
+	transform: rotate(90deg) rotate(180deg);
 }
 
 .tianji-tarot-board {
