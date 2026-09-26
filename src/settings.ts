@@ -1,17 +1,29 @@
-import { App, PluginSettingTab, Setting, ToggleComponent, setIcon } from 'obsidian';
+import { App, PluginSettingTab, Setting, TextComponent, ToggleComponent, setIcon } from 'obsidian';
 import {
 	DEFAULT_DIVINATION_TABS,
 	DIVINATION_TAB_META,
 	moveTabInOrder,
 } from './divination-tabs';
 import type TianjiPlugin from './main';
-import type { DivinationType, OpenLocation, TianjiSettings } from './types';
+import { DEFAULT_NOTE_FILENAME_TEMPLATE } from './notes/reading-note';
+import type {
+	DivinationType,
+	NoteOpenMode,
+	OpenLocation,
+	TianjiSettings,
+} from './types';
 
 export const DEFAULT_SETTINGS: TianjiSettings = {
 	openLocation: 'sidebar-right',
 	libraryLayout: 'table',
 	divinationTabs: DEFAULT_DIVINATION_TABS.map((t) => ({ ...t })),
 	lastActiveTab: null,
+	noteFolder: '天机匣/笔记',
+	noteFilenameTemplate: DEFAULT_NOTE_FILENAME_TEMPLATE,
+	noteTemplateFile: '',
+	noteUidKey: 'tianji_uid',
+	noteOpenMode: 'modal',
+	noteAutoCreate: false,
 };
 
 export class TianjiSettingTab extends PluginSettingTab {
@@ -108,7 +120,8 @@ export class TianjiSettingTab extends PluginSettingTab {
 			});
 			new ToggleComponent(toggleHost)
 				.setValue(tab.enabled)
-				.setDisabled(!tab.enabled && enabledCount <= 1)
+				// 仅禁止关掉「最后一个已启用」模块；已关闭的仍可随时重新打开
+				.setDisabled(tab.enabled && enabledCount <= 1)
 				.onChange(async (value) => {
 					if (!value && enabledCount <= 1) {
 						this.display();
@@ -124,6 +137,123 @@ export class TianjiSettingTab extends PluginSettingTab {
 					this.display();
 				});
 		});
+
+		this.displayNoteSettings(containerEl);
+	}
+
+	private displayNoteSettings(containerEl: HTMLElement): void {
+		new Setting(containerEl)
+			.setName('笔记')
+			.setDesc(
+				'每条卦例对应唯一一篇 Markdown 笔记；默认以编码后的 {{uid}} 命名。',
+			)
+			.setHeading();
+
+		const bindNoteInput = (
+			text: TextComponent,
+			opts: {
+				placeholder: string;
+				value: string;
+				onChange: (value: string) => void | Promise<void>;
+			},
+		) => {
+			text.inputEl.addClass('tianji-settings-input');
+			text.inputEl.setAttribute('spellcheck', 'false');
+			text.setPlaceholder(opts.placeholder).setValue(opts.value);
+			text.onChange((value) => {
+				void opts.onChange(value);
+			});
+		};
+
+		new Setting(containerEl)
+			.setName('笔记文件夹')
+			.setDesc('库内相对路径，例如 天机匣/笔记。')
+			.addText((text) => {
+				bindNoteInput(text, {
+					placeholder: '天机匣/笔记',
+					value: this.plugin.settings.noteFolder,
+					onChange: async (value) => {
+						this.plugin.settings.noteFolder =
+							value.trim() || '天机匣/笔记';
+						await this.plugin.saveSettings();
+					},
+				});
+			});
+
+		new Setting(containerEl)
+			.setName('文件名模板')
+			.setDesc(
+				'可用 {{uid}} {{title}} {{type}} {{date}}（起卦时间，可写 {{date:YYYY-MM-DD}}）；支持 / 嵌套。',
+			)
+			.addText((text) => {
+				bindNoteInput(text, {
+					placeholder: DEFAULT_NOTE_FILENAME_TEMPLATE,
+					value: this.plugin.settings.noteFilenameTemplate,
+					onChange: async (value) => {
+						this.plugin.settings.noteFilenameTemplate =
+							value.trim() || DEFAULT_NOTE_FILENAME_TEMPLATE;
+						await this.plugin.saveSettings();
+					},
+				});
+			});
+
+		new Setting(containerEl)
+			.setName('笔记模板文件')
+			.setDesc('库内模板路径，按原文复制正文；可配合 Templates / Templater。')
+			.addText((text) => {
+				bindNoteInput(text, {
+					placeholder: 'Templates/天机笔记.md',
+					value: this.plugin.settings.noteTemplateFile,
+					onChange: async (value) => {
+						this.plugin.settings.noteTemplateFile = value.trim();
+						await this.plugin.saveSettings();
+					},
+				});
+			});
+
+		new Setting(containerEl)
+			.setName('UID 属性名')
+			.setDesc('frontmatter 字段名，值为卦例 id 编码。默认 tianji_uid。')
+			.addText((text) => {
+				bindNoteInput(text, {
+					placeholder: 'tianji_uid',
+					value: this.plugin.settings.noteUidKey,
+					onChange: async (value) => {
+						this.plugin.settings.noteUidKey =
+							value.trim() || 'tianji_uid';
+						await this.plugin.saveSettings();
+					},
+				});
+			});
+
+		new Setting(containerEl)
+			.setName('打开笔记方式')
+			.setDesc(
+				'标签页：在主编辑区打开。弹窗：在模态窗口中嵌入 Obsidian 编辑器（参考 Modal Opener），双击边框可还原为标签页。',
+			)
+			.addDropdown((dropdown) => {
+				dropdown
+					.addOption('modal', '弹窗')
+					.addOption('tab', '标签页')
+					.setValue(this.plugin.settings.noteOpenMode)
+					.onChange(async (value) => {
+						this.plugin.settings.noteOpenMode =
+							value as NoteOpenMode;
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('自动创建笔记')
+			.setDesc('开启后，若卦例尚无笔记将直接创建并打开，不再询问。')
+			.addToggle((toggle) => {
+				toggle
+					.setValue(this.plugin.settings.noteAutoCreate)
+					.onChange(async (value) => {
+						this.plugin.settings.noteAutoCreate = value;
+						await this.plugin.saveSettings();
+					});
+			});
 	}
 
 	private async moveTab(

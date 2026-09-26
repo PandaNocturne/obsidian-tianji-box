@@ -13,6 +13,9 @@ export type OpenLocation = 'sidebar-right' | 'sidebar-left' | 'tab';
 /** 卦例库布局 */
 export type LibraryLayout = 'table' | 'cards';
 
+/** 笔记打开方式 */
+export type NoteOpenMode = 'tab' | 'modal';
+
 /** 占卜标签页：顺序即显示顺序，enabled 控制是否出现 */
 export interface DivinationTabConfig {
 	id: DivinationType;
@@ -32,6 +35,25 @@ export interface TianjiSettings {
 	divinationTabs: DivinationTabConfig[];
 	/** 上次打开的占卜标签；重载后优先恢复，无效则落到第一个已启用模块 */
 	lastActiveTab: DivinationType | null;
+	/** 笔记 Markdown 所在文件夹（库内相对路径） */
+	noteFolder: string;
+	/**
+	 * 文件名模板（不含 .md）。
+	 * 支持 {{uid}} {{title}} {{type}} {{date}} / {{date:FORMAT}}，以及 Moment 片段；可用 / 嵌套目录。
+	 * {{date}} 为起卦时间（非创建笔记时刻）。默认 {{type}}/{{date:YYMMDD}}_{{title}}。
+	 */
+	noteFilenameTemplate: string;
+	/**
+	 * 新建笔记时引用的库内模板文件路径（可配合核心 Templates / Templater）。
+	 * 为空则正文为空；不解析自定义变量，按文件原文写入。
+	 */
+	noteTemplateFile: string;
+	/** frontmatter 中的 UID 字段名，用于查找笔记 */
+	noteUidKey: string;
+	/** 添加/打开笔记：标签页或弹窗 */
+	noteOpenMode: NoteOpenMode;
+	/** 无笔记时自动创建，不再弹出确认 */
+	noteAutoCreate: boolean;
 }
 
 export interface HexagramInfo {
@@ -105,8 +127,13 @@ export interface ReadingRecord {
 	resultJson: string;
 	aiResponse: string;
 	aiThinking: string;
-	/** Markdown 笔记 / 注释 */
+	/**
+	 * 旧版内联 Markdown（迁移前）。
+	 * 新笔记以库内 .md 为准，通过 noteUid 关联。
+	 */
 	noteMd: string;
+	/** 关联库内笔记的 UID（写入 frontmatter） */
+	noteUid: string;
 	isFavorite: boolean;
 	createdAt: string;
 }

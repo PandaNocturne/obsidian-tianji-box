@@ -169,6 +169,31 @@ export default class TianjiPlugin extends Plugin {
 		) {
 			this.settings.lastActiveTab = null;
 		}
+		if (!this.settings.noteFolder?.trim()) {
+			this.settings.noteFolder = DEFAULT_SETTINGS.noteFolder;
+		}
+		if (
+			!this.settings.noteFilenameTemplate?.trim() ||
+			this.settings.noteFilenameTemplate.trim() === '{{uid}}'
+		) {
+			this.settings.noteFilenameTemplate =
+				DEFAULT_SETTINGS.noteFilenameTemplate;
+		}
+		if (typeof this.settings.noteTemplateFile !== 'string') {
+			this.settings.noteTemplateFile = DEFAULT_SETTINGS.noteTemplateFile;
+		}
+		if (!this.settings.noteUidKey?.trim()) {
+			this.settings.noteUidKey = DEFAULT_SETTINGS.noteUidKey;
+		}
+		if (
+			this.settings.noteOpenMode !== 'tab' &&
+			this.settings.noteOpenMode !== 'modal'
+		) {
+			this.settings.noteOpenMode = DEFAULT_SETTINGS.noteOpenMode;
+		}
+		if (typeof this.settings.noteAutoCreate !== 'boolean') {
+			this.settings.noteAutoCreate = DEFAULT_SETTINGS.noteAutoCreate;
+		}
 	}
 
 	async saveSettings() {

@@ -6,6 +6,7 @@ import type {
 	ReadingRecord,
 } from '../types';
 import { formatTarotReadingChart, type TarotReading } from '../tarot/draw';
+import { readingHasNote } from '../notes/reading-note';
 
 export type LibraryFilter = 'all' | 'favorites';
 export type { LibraryLayout };
@@ -185,6 +186,7 @@ function filterLibraryList(
 			data.castTime,
 			rec.title,
 			rec.noteMd,
+			rec.noteUid,
 			typeFallbackTitle(rec.type),
 		]
 			.join('\n')
@@ -254,15 +256,15 @@ function renderLibraryTable(
 		});
 
 		const noteTd = tr.createEl('td', { cls: 'tianji-lib-col-note' });
-		const hasNote = Boolean(rec.noteMd.trim());
+		const hasNote = readingHasNote(rec);
 		const noteBtn = noteTd.createEl('button', {
 			cls: `tianji-lib-icon-btn tianji-lib-note-btn${
 				hasNote ? ' has-note' : ''
 			}`,
 			type: 'button',
 			attr: {
-				title: hasNote ? '编辑笔记' : '添加笔记',
-				'aria-label': hasNote ? '编辑笔记' : '添加笔记',
+				title: hasNote ? '打开笔记' : '添加笔记',
+				'aria-label': hasNote ? '打开笔记' : '添加笔记',
 			},
 		});
 		setIcon(noteBtn, hasNote ? 'file-text' : 'file-plus');
@@ -349,7 +351,7 @@ function renderLibraryCard(
 		cls: 'tianji-btn',
 		text: '笔记',
 		attr: {
-			title: rec.noteMd.trim() ? '编辑笔记' : '添加笔记',
+			title: readingHasNote(rec) ? '打开笔记' : '添加笔记',
 		},
 	});
 	noteBtn.addEventListener('click', () => opts.onEditNote(rec));
