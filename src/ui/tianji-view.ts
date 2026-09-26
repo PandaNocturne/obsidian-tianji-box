@@ -38,6 +38,8 @@ import { getSpread, isFlexibleSpread, TAROT_SPREADS } from '../tarot/spreads';
 import {
 	buildManualTarot,
 	drawTarot,
+	formatTarotReadingChart,
+	getOrientMeaning,
 	remainingTarotDeck,
 	type DrawnCard,
 	type TarotReading,
@@ -1834,7 +1836,10 @@ export class TianjiView extends ItemView {
 			text: '复制牌阵',
 		});
 		copyBtn.addEventListener('click', () => {
-			void this.copyText(this.tarotReading!.chartText, '牌阵已复制');
+			void this.copyText(
+				formatTarotReadingChart(this.tarotReading!),
+				'牌阵已复制',
+			);
 		});
 
 		const remain = remainingTarotDeck(this.tarotSessionUsedIds).length;
@@ -1849,11 +1854,39 @@ export class TianjiView extends ItemView {
 			text: `${this.tarotReading.spreadName} · ${getDeckInfo(this.tarotReading.deckId).name}`,
 		});
 		this.renderTarotSpread(board, this.tarotReading);
-		board.createEl('pre', {
-			cls: 'tianji-chart-text',
-			text: this.tarotReading.chartText,
-		});
+		this.renderTarotMeaningList(board, this.tarotReading);
 		this.appendReadingNoteSection(stage, this.tarotRecordId);
+	}
+
+	/** 牌阵页：按正/逆位列出每张牌的对应说明 */
+	private renderTarotMeaningList(
+		parent: HTMLElement,
+		reading: TarotReading,
+	): void {
+		const box = parent.createDiv({ cls: 'tianji-tarot-meaning-list' });
+		box.createEl('h4', {
+			cls: 'tianji-tarot-meaning-list-title',
+			text: '牌义说明',
+		});
+		reading.cards.forEach((drawn, i) => {
+			const orient = drawn.reversed ? '逆位' : '正位';
+			const meaning = getOrientMeaning(drawn.card, drawn.reversed);
+			const row = box.createDiv({ cls: 'tianji-tarot-meaning-item' });
+			row.createDiv({
+				cls: 'tianji-tarot-meaning-item-head',
+				text: `${i + 1}. ${drawn.positionLabel} · ${drawn.card.name}（${orient}）`,
+			});
+			if (drawn.card.keywords.length) {
+				row.createDiv({
+					cls: 'tianji-tarot-meaning-item-keys',
+					text: drawn.card.keywords.join(' · '),
+				});
+			}
+			row.createDiv({
+				cls: 'tianji-tarot-meaning-item-body',
+				text: meaning || '（暂无该方位说明）',
+			});
+		});
 	}
 
 	private ensureTarotDraft(): void {
@@ -2378,10 +2411,17 @@ export class TianjiView extends ItemView {
 			cls: 'tianji-tarot-keywords',
 			text: drawn.card.keywords.join(' · '),
 		});
-		cap.createDiv({
-			cls: 'tianji-tarot-meaning',
-			text: drawn.reversed ? drawn.card.reversed : drawn.card.upright,
-		});
+		const meaning = getOrientMeaning(drawn.card, drawn.reversed);
+		if (meaning) {
+			cap.createDiv({
+				cls: 'tianji-tarot-meaning-label',
+				text: drawn.reversed ? '逆位说明' : '正位说明',
+			});
+			cap.createDiv({
+				cls: 'tianji-tarot-meaning',
+				text: meaning,
+			});
+		}
 		cap.createDiv({
 			cls: 'tianji-tarot-detail-hint',
 			text: '点击查看详解',

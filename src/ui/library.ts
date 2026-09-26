@@ -5,6 +5,7 @@ import type {
 	LiuyaoMethod,
 	ReadingRecord,
 } from '../types';
+import { formatTarotReadingChart, type TarotReading } from '../tarot/draw';
 
 export type LibraryFilter = 'all' | 'favorites';
 export type { LibraryLayout };
@@ -31,6 +32,8 @@ interface LibraryRowData {
 	question: string;
 	method: string;
 	chartSnippet: string;
+	/** 完整复制文本（含正/逆位说明等） */
+	chartCopyText: string;
 	castTime: string;
 	castTimeRaw: string;
 }
@@ -252,13 +255,13 @@ function renderLibraryCard(
 	});
 	noteBtn.addEventListener('click', () => opts.onEditNote(rec));
 
-	if (data.chartSnippet) {
+	if (data.chartCopyText || data.chartSnippet) {
 		const copyChart = row.createEl('button', {
 			cls: 'tianji-btn',
 			text: opts.copyBtn,
 		});
 		copyChart.addEventListener('click', () => {
-			opts.onCopy(data.chartSnippet, '已复制');
+			opts.onCopy(data.chartCopyText || data.chartSnippet, '已复制');
 		});
 	}
 
@@ -308,6 +311,16 @@ function parseLibraryRow(rec: ReadingRecord): LibraryRowData {
 		? chartRaw.replace(/\s+/g, ' ').trim().slice(0, 120) +
 			(chartRaw.length > 120 ? '…' : '')
 		: '';
+	let chartCopyText = chartRaw;
+	if (rec.type === 'tarot' && Array.isArray(result.cards)) {
+		try {
+			chartCopyText = formatTarotReadingChart(
+				result as unknown as TarotReading,
+			);
+		} catch {
+			/* 回退已存 chartText */
+		}
+	}
 
 	const castTimeRaw =
 		str(result.castTime) ||
@@ -319,6 +332,7 @@ function parseLibraryRow(rec: ReadingRecord): LibraryRowData {
 		question,
 		method,
 		chartSnippet,
+		chartCopyText,
 		castTime: formatCastTime(castTimeRaw),
 		castTimeRaw,
 	};

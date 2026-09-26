@@ -6,6 +6,7 @@ import {
 	resolveSpread,
 	type TarotSpread,
 } from './spreads';
+import { getTaluoLore } from './taluo';
 
 export interface DrawnCard {
 	card: TarotCardDef;
@@ -23,6 +24,18 @@ export interface TarotReading {
 	drawnAt: string;
 	cards: DrawnCard[];
 	chartText: string;
+}
+
+/** 取该牌当前正/逆位对应的说明（优先 Taluo 详解） */
+export function getOrientMeaning(
+	card: TarotCardDef,
+	reversed: boolean,
+): string {
+	const lore = getTaluoLore(card.id);
+	if (reversed) {
+		return (lore?.reversed || card.reversed || '').trim();
+	}
+	return (lore?.upright || card.upright || '').trim();
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -171,20 +184,43 @@ export function formatTarotChart(p: {
 	}
 	for (const c of p.cards) {
 		const orient = c.reversed ? '逆位' : '正位';
-		const meaning = c.reversed ? c.card.reversed : c.card.upright;
+		const meaning = getOrientMeaning(c.card, c.reversed);
 		lines.push(
 			`${c.positionLabel}（${c.positionHint}）：${c.card.name} / ${c.card.nameEn}　${orient}`,
 			`  关键词：${c.card.keywords.join('、')}`,
-			`  含义：${meaning}`,
-			``,
 		);
+		if (meaning) {
+			lines.push(`  ${orient}说明：${meaning}`);
+		}
+		lines.push(``);
 	}
 	return lines.join('\n').trim();
 }
 
+/** 由完整牌阵结果重建复制文本（含当前正/逆位说明） */
+export function formatTarotReadingChart(reading: TarotReading): string {
+	const spread = resolveSpread(reading.spreadId, reading.cards.length);
+	const body = formatTarotChart({
+		deckId: reading.deckId,
+		spread: {
+			...spread,
+			name: reading.spreadName || spread.name,
+		},
+		question: reading.question,
+		drawnAt: reading.drawnAt,
+		cards: reading.cards,
+	});
+	// 保留续问前缀（若有）
+	if (reading.chartText.startsWith('【续问】')) {
+		const head = reading.chartText.split(/\n\n/)[0];
+		if (head) return `${head}\n\n${body}`;
+	}
+	return body;
+}
+
 export function formatTarotForAi(reading: TarotReading): string {
 	return [
-		reading.chartText,
+		formatTarotReadingChart(reading),
 		``,
 		`请结合牌阵位置关系，给出整体故事线与可执行建议。`,
 	].join('\n');
