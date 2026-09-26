@@ -1776,13 +1776,26 @@ export class TianjiView extends ItemView {
 			cls: `tianji-spread-preview-grid tianji-spread-preview-${spread.id}`,
 		});
 
+		const midHost =
+			spread.id === 'celtic-cross'
+				? layout.createDiv({
+						cls: 'tianji-celtic-mid',
+						attr: { 'data-pos': 'mid' },
+					})
+				: null;
+
 		spread.positions.forEach((pos, i) => {
 			const pick = this.tarotDraft[i] ?? null;
 			const card = pick
 				? TAROT_DECK.find((c) => c.id === pick.cardId)
 				: undefined;
 
-			const slot = layout.createDiv({
+			const host =
+				midHost && (pos.key === 'p1' || pos.key === 'p2')
+					? midHost
+					: layout;
+
+			const slot = host.createDiv({
 				cls: `tianji-spread-preview-slot${pick ? ' is-filled' : ''}`,
 				attr: {
 					'data-pos': pos.key,
@@ -1909,8 +1922,22 @@ export class TianjiView extends ItemView {
 		const layout = parent.createDiv({
 			cls: `tianji-tarot-spread tianji-spread-${reading.spreadId}`,
 		});
+
+		const midHost =
+			reading.spreadId === 'celtic-cross'
+				? layout.createDiv({
+						cls: 'tianji-celtic-mid',
+						attr: { 'data-pos': 'mid' },
+					})
+				: null;
+
 		reading.cards.forEach((drawn, i) => {
-			const slot = layout.createDiv({
+			const host =
+				midHost &&
+				(drawn.positionKey === 'p1' || drawn.positionKey === 'p2')
+					? midHost
+					: layout;
+			const slot = host.createDiv({
 				cls: 'tianji-tarot-slot',
 				attr: { 'data-pos': drawn.positionKey },
 			});

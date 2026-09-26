@@ -2005,16 +2005,15 @@
 .tianji-spread-preview-hexagram-seven [data-pos="result"] { grid-area: result; }
 
 .tianji-spread-preview-celtic-cross {
-	grid-template-columns: repeat(5, 68px);
+	grid-template-columns: 76px 88px 76px 76px;
 	grid-template-areas:
-		".    p5   .    p10  ."
-		"p3   p1   p2   p9   ."
-		".    p4   .    p8   ."
-		".    p6   .    p7   .";
-	gap: 8px 10px;
+		".    p5   .    p10"
+		"p4   mid  p6   p9"
+		".    p3   .    p8"
+		".    .    .    p7";
+	gap: 10px 12px;
+	align-items: center;
 }
-.tianji-spread-preview-celtic-cross [data-pos="p1"] { grid-area: p1; }
-.tianji-spread-preview-celtic-cross [data-pos="p2"] { grid-area: p2; }
 .tianji-spread-preview-celtic-cross [data-pos="p3"] { grid-area: p3; }
 .tianji-spread-preview-celtic-cross [data-pos="p4"] { grid-area: p4; }
 .tianji-spread-preview-celtic-cross [data-pos="p5"] { grid-area: p5; }
@@ -2024,13 +2023,62 @@
 .tianji-spread-preview-celtic-cross [data-pos="p9"] { grid-area: p9; }
 .tianji-spread-preview-celtic-cross [data-pos="p10"] { grid-area: p10; }
 .tianji-spread-preview-celtic-cross .tianji-spread-preview-slot {
-	width: 68px;
+	width: 76px;
 }
-.tianji-spread-preview-celtic-cross [data-pos="p2"] .tianji-spread-preview-face {
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid {
+	grid-area: mid;
+	position: relative;
+	width: 88px;
+	min-height: 112px;
+	display: grid;
+	grid-template-columns: 1fr;
+	grid-template-rows: auto auto 88px;
+	grid-template-areas:
+		"lab1"
+		"lab2"
+		"stack";
+	justify-items: center;
+	align-items: start;
+	gap: 2px;
+	overflow: visible;
+}
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p1"],
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"] {
+	display: contents;
+}
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p1"] .tianji-spread-preview-label {
+	grid-area: lab1;
+	max-width: 88px;
+}
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-spread-preview-label {
+	grid-area: lab2;
+	max-width: 88px;
+}
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p1"] .tianji-spread-preview-hint,
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-spread-preview-hint {
+	display: none;
+}
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p1"] .tianji-spread-preview-face,
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-spread-preview-face {
+	grid-area: stack;
+	width: 52px;
+	height: 88px;
+	flex: none;
+	align-self: center;
+	justify-self: center;
+}
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p1"] .tianji-spread-preview-face {
+	z-index: 1;
+	position: relative;
+}
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-spread-preview-face {
+	z-index: 2;
+	position: relative;
 	transform: rotate(90deg);
-	margin: 8px 0;
+	transform-origin: center center;
+	margin: 0;
 }
-.tianji-spread-preview-celtic-cross [data-pos="p2"] .tianji-spread-preview-face.is-reversed {
+.tianji-spread-preview-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-spread-preview-face.is-reversed {
 	transform: rotate(90deg) rotate(180deg);
 }
 
@@ -2166,17 +2214,18 @@
 .tianji-spread-hexagram-seven [data-pos="result"] { grid-area: result; }
 
 .tianji-spread-celtic-cross {
-	grid-template-columns: repeat(5, minmax(0, 200px));
+	grid-template-columns: minmax(0, 140px) minmax(0, 160px) minmax(0, 140px) minmax(0, 140px);
 	justify-content: center;
+	align-items: center;
+	column-gap: 16px;
+	row-gap: 14px;
 	grid-template-areas:
-		".    p5   .    p10  ."
-		"p3   p1   p2   p9   ."
-		".    p4   .    p8   ."
-		".    p6   .    p7   .";
+		".    p5   .    p10"
+		"p4   mid  p6   p9"
+		".    p3   .    p8"
+		".    .    .    p7";
 }
 
-.tianji-spread-celtic-cross [data-pos="p1"] { grid-area: p1; }
-.tianji-spread-celtic-cross [data-pos="p2"] { grid-area: p2; }
 .tianji-spread-celtic-cross [data-pos="p3"] { grid-area: p3; }
 .tianji-spread-celtic-cross [data-pos="p4"] { grid-area: p4; }
 .tianji-spread-celtic-cross [data-pos="p5"] { grid-area: p5; }
@@ -2186,14 +2235,71 @@
 .tianji-spread-celtic-cross [data-pos="p9"] { grid-area: p9; }
 .tianji-spread-celtic-cross [data-pos="p10"] { grid-area: p10; }
 
-.tianji-spread-celtic-cross .tianji-tarot-slot[data-pos="p2"] .tianji-tarot-card {
-	transform: rotate(90deg);
-	transform-origin: center;
-	margin: 18px 0;
+.tianji-spread-celtic-cross .tianji-celtic-mid {
+	grid-area: mid;
+	width: 100%;
+	max-width: 160px;
+	justify-self: center;
+	display: grid;
+	grid-template-columns: 1fr;
+	grid-template-areas:
+		"pos1"
+		"hint1"
+		"pos2"
+		"hint2"
+		"stack";
+	justify-items: center;
+	align-items: start;
+	gap: 4px;
+	padding: 2px 0 10px;
+	box-sizing: border-box;
+	overflow: visible;
 }
 
-.tianji-spread-celtic-cross .tianji-tarot-slot[data-pos="p2"] .tianji-tarot-card.is-reversed {
+.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos="p1"],
+.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos="p2"] {
+	display: contents;
+}
+
+.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos="p1"] .tianji-tarot-pos {
+	grid-area: pos1;
+}
+.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos="p1"] .tianji-tarot-hint {
+	grid-area: hint1;
+}
+.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-tarot-pos {
+	grid-area: pos2;
+}
+.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-tarot-hint {
+	grid-area: hint2;
+}
+.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos="p1"] .tianji-tarot-card,
+.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-tarot-card {
+	grid-area: stack;
+	width: 100%;
+	max-width: 140px;
+	justify-self: center;
+	align-self: center;
+	margin: 12px 0;
+}
+.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos="p1"] .tianji-tarot-card {
+	z-index: 1;
+	position: relative;
+}
+.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-tarot-card {
+	z-index: 2;
+	position: relative;
+	transform: rotate(90deg);
+	transform-origin: center center;
+}
+.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-tarot-card.is-reversed {
 	transform: rotate(90deg) rotate(180deg);
+}
+
+.tianji-spread-celtic-cross .tianji-celtic-mid .tianji-tarot-pos,
+.tianji-spread-celtic-cross .tianji-celtic-mid .tianji-tarot-hint {
+	text-align: center;
+	max-width: 100%;
 }
 
 .tianji-tarot-slot {
@@ -2461,10 +2567,41 @@
 	.tianji-spread-relation-six [data-pos],
 	.tianji-spread-career-five [data-pos],
 	.tianji-spread-hexagram-seven [data-pos],
-	.tianji-spread-celtic-cross [data-pos] {
+	.tianji-spread-celtic-cross [data-pos],
+	.tianji-spread-celtic-cross .tianji-celtic-mid {
 		grid-area: auto;
 		justify-self: stretch;
 		max-width: none;
+	}
+
+	.tianji-spread-celtic-cross .tianji-celtic-mid {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 12px;
+		padding: 0;
+	}
+
+	.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos="p1"],
+	.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos="p2"] {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		width: 100%;
+		max-width: none;
+	}
+
+	.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos="p1"] .tianji-tarot-card,
+	.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-tarot-card {
+		grid-area: auto;
+		width: 100%;
+		max-width: 200px;
+		margin: 0 auto;
+		transform: none;
+	}
+
+	.tianji-spread-celtic-cross .tianji-celtic-mid [data-pos="p2"] .tianji-tarot-card.is-reversed {
+		transform: none;
 	}
 
 	.tianji-history-actions {

@@ -135,6 +135,12 @@ export function formatTarotChart(p: {
 		`问题：${p.question.trim() || '（未填写）'}`,
 		``,
 	];
+	if (p.spread.id === 'celtic-cross') {
+		lines.push(
+			`说明：前六张成十字，后四张成竖列。读牌先看十字再看竖列；第十张表示当下趋势，并非确定结局。`,
+			``,
+		);
+	}
 	for (const c of p.cards) {
 		const orient = c.reversed ? '逆位' : '正位';
 		const meaning = c.reversed ? c.card.reversed : c.card.upright;
