@@ -52,8 +52,8 @@ export class TarotCardDetailModal extends Modal {
 			});
 		}
 
-		const body = contentEl.createDiv({ cls: 'tianji-card-detail-body' });
-		const media = body.createDiv({ cls: 'tianji-card-detail-media' });
+		const hero = contentEl.createDiv({ cls: 'tianji-card-detail-hero' });
+		const media = hero.createDiv({ cls: 'tianji-card-detail-media' });
 		const face = media.createDiv({
 			cls: `tianji-card-detail-face${this.reversed ? ' is-reversed' : ''}`,
 		});
@@ -86,36 +86,36 @@ export class TarotCardDetailModal extends Modal {
 			});
 		}
 
-		const info = body.createDiv({ cls: 'tianji-card-detail-info' });
+		const meanings = hero.createDiv({ cls: 'tianji-card-detail-meanings' });
 		if (this.card.keywords.length) {
-			info.createDiv({
+			meanings.createDiv({
 				cls: 'tianji-card-detail-keywords',
 				text: this.card.keywords.join(' · '),
 			});
 		}
-
 		this.addSection(
-			info,
+			meanings,
 			'正位含义',
 			this.lore?.upright || this.card.upright,
 			!this.reversed,
 		);
 		this.addSection(
-			info,
+			meanings,
 			'逆位含义',
 			this.lore?.reversed || this.card.reversed,
 			this.reversed,
 		);
 
-		if (this.lore?.love) this.addSection(info, '爱情运势', this.lore.love);
+		const more = contentEl.createDiv({ cls: 'tianji-card-detail-more' });
+		if (this.lore?.love) this.addSection(more, '爱情运势', this.lore.love);
 		if (this.lore?.career)
-			this.addSection(info, '事业运势', this.lore.career);
+			this.addSection(more, '事业运势', this.lore.career);
 		if (this.lore?.money)
-			this.addSection(info, '财运解读', this.lore.money);
+			this.addSection(more, '财运解读', this.lore.money);
 		if (this.lore?.advice)
-			this.addSection(info, '给您的建议', this.lore.advice);
+			this.addSection(more, '给您的建议', this.lore.advice);
 		if (this.lore?.affirmation) {
-			const quote = info.createDiv({
+			const quote = more.createDiv({
 				cls: 'tianji-card-detail-affirmation',
 			});
 			quote.createDiv({

@@ -3699,8 +3699,8 @@
 }
 
 .modal.tianji-card-detail-modal {
-	width: min(720px, 94vw);
-	max-width: 720px;
+	width: min(760px, 94vw);
+	max-width: 760px;
 }
 
 .tianji-card-detail-head {
@@ -3723,10 +3723,11 @@
 	color: var(--text-muted);
 }
 
-.tianji-card-detail-body {
+/* 一行：牌面 | 正位 + 逆位 */
+.tianji-card-detail-hero {
 	display: grid;
-	grid-template-columns: minmax(140px, 200px) minmax(0, 1fr);
-	gap: 18px;
+	grid-template-columns: minmax(132px, 180px) minmax(0, 1fr);
+	gap: 16px 18px;
 	align-items: start;
 }
 
@@ -3735,13 +3736,11 @@
 	flex-direction: column;
 	align-items: center;
 	gap: 8px;
-	position: sticky;
-	top: 0;
 }
 
 .tianji-card-detail-face {
 	width: 100%;
-	max-width: 200px;
+	max-width: 180px;
 	aspect-ratio: 2 / 3.4;
 	border-radius: var(--tianji-radius-sm);
 	overflow: hidden;
@@ -3769,11 +3768,33 @@
 	color: var(--text-accent);
 }
 
+.tianji-card-detail-meanings {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.tianji-card-detail-meanings .tianji-card-detail-sec {
+	margin-bottom: 0;
+	flex: 1 1 auto;
+}
+
 .tianji-card-detail-keywords {
 	font-size: 0.88em;
 	font-weight: 600;
 	color: var(--text-accent);
-	margin-bottom: 12px;
+}
+
+.tianji-card-detail-more {
+	margin-top: 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.tianji-card-detail-more .tianji-card-detail-sec {
+	margin-bottom: 0;
 }
 
 .tianji-card-detail-sec {
@@ -3803,7 +3824,7 @@
 }
 
 .tianji-card-detail-affirmation {
-	margin-top: 8px;
+	margin-top: 0;
 	padding: 10px 12px;
 	border-radius: var(--tianji-radius-sm);
 	border: 1px dashed color-mix(in srgb, var(--interactive-accent) 35%, var(--tianji-border));
@@ -3834,12 +3855,13 @@
 }
 
 @media (max-width: 640px) {
-	.tianji-card-detail-body {
+	.tianji-card-detail-hero {
 		grid-template-columns: 1fr;
+		justify-items: center;
 	}
 
-	.tianji-card-detail-media {
-		position: static;
+	.tianji-card-detail-meanings {
+		width: 100%;
 	}
 
 	.tianji-card-detail-face {
