@@ -2333,20 +2333,19 @@ export class TianjiView extends ItemView {
 			cls: `tianji-tarot-spread tianji-spread-${reading.spreadId}`,
 		});
 
-		const midHost =
-			reading.spreadId === 'celtic-cross'
-				? layout.createDiv({
-						cls: 'tianji-celtic-mid',
-						attr: { 'data-pos': 'mid' },
-					})
-				: null;
+		const isCeltic = reading.spreadId === 'celtic-cross';
+		const midHost = isCeltic
+			? layout.createDiv({
+					cls: 'tianji-celtic-mid',
+					attr: { 'data-pos': 'mid' },
+				})
+			: null;
 
 		reading.cards.forEach((drawn, i) => {
-			const host =
-				midHost &&
-				(drawn.positionKey === 'p1' || drawn.positionKey === 'p2')
-					? midHost
-					: layout;
+			const isMidCard =
+				isCeltic &&
+				(drawn.positionKey === 'p1' || drawn.positionKey === 'p2');
+			const host = isMidCard && midHost ? midHost : layout;
 			const slot = host.createDiv({
 				cls: 'tianji-tarot-slot',
 				attr: { 'data-pos': drawn.positionKey },
@@ -2376,7 +2375,12 @@ export class TianjiView extends ItemView {
 				title: '点击查看牌意详解',
 			},
 		});
-		const face = wrap.createDiv({ cls: 'tianji-tarot-face' });
+		const face = wrap.createDiv({
+			cls: `tianji-tarot-face${drawn.reversed ? ' is-reversed' : ''}`,
+			attr: {
+				'data-pos-face': drawn.positionKey,
+			},
+		});
 		const img = face.createEl('img', {
 			cls: 'tianji-tarot-img',
 			attr: {
@@ -2410,21 +2414,6 @@ export class TianjiView extends ItemView {
 		cap.createDiv({
 			cls: 'tianji-tarot-keywords',
 			text: drawn.card.keywords.join(' · '),
-		});
-		const meaning = getOrientMeaning(drawn.card, drawn.reversed);
-		if (meaning) {
-			cap.createDiv({
-				cls: 'tianji-tarot-meaning-label',
-				text: drawn.reversed ? '逆位说明' : '正位说明',
-			});
-			cap.createDiv({
-				cls: 'tianji-tarot-meaning',
-				text: meaning,
-			});
-		}
-		cap.createDiv({
-			cls: 'tianji-tarot-detail-hint',
-			text: '点击查看详解',
 		});
 
 		const openDetail = () => {
