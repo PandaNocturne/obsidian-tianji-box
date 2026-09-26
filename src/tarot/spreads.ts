@@ -9,10 +9,21 @@ export interface TarotSpread {
 	name: string;
 	desc: string;
 	positions: SpreadPosition[];
+	/** 自定义：张数不固定，由选牌时动态生成位置 */
+	flexible?: boolean;
 }
+
+export const CUSTOM_SPREAD_ID = 'custom';
 
 /** 精选常用牌阵（布局与释义对齐常见牌阵手册） */
 export const TAROT_SPREADS: TarotSpread[] = [
+	{
+		id: CUSTOM_SPREAD_ID,
+		name: '自定义',
+		desc: '任意张数，点 + 自选卡牌',
+		positions: [],
+		flexible: true,
+	},
 	{
 		id: 'single',
 		name: '单牌启示',
@@ -141,5 +152,38 @@ export const TAROT_SPREADS: TarotSpread[] = [
 ];
 
 export function getSpread(id: string): TarotSpread {
-	return TAROT_SPREADS.find((s) => s.id === id) ?? TAROT_SPREADS[0]!;
+	return TAROT_SPREADS.find((s) => s.id === id) ?? TAROT_SPREADS[1]!;
+}
+
+export function isFlexibleSpread(
+	spread: TarotSpread | string | null | undefined,
+): boolean {
+	if (!spread) return false;
+	if (typeof spread === 'string') {
+		return (
+			spread === CUSTOM_SPREAD_ID || getSpread(spread).flexible === true
+		);
+	}
+	return spread.flexible === true || spread.id === CUSTOM_SPREAD_ID;
+}
+
+/** 按张数生成自定义牌位 */
+export function buildCustomPositions(count: number): SpreadPosition[] {
+	const n = Math.max(0, Math.floor(count));
+	return Array.from({ length: n }, (_, i) => ({
+		key: `c${i + 1}`,
+		label: `第 ${i + 1} 张`,
+		hint: '自定义位置',
+	}));
+}
+
+/** 解析牌阵；自定义时按 cardCount 填充位置 */
+export function resolveSpread(id: string, cardCount?: number): TarotSpread {
+	const base = getSpread(id);
+	if (!isFlexibleSpread(base)) return base;
+	const n = Math.max(0, cardCount ?? 0);
+	return {
+		...base,
+		positions: buildCustomPositions(n),
+	};
 }

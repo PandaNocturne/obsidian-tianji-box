@@ -1,7 +1,7 @@
 import { Modal, Notice, setIcon } from 'obsidian';
 import { TAROT_DECK, type TarotCardDef } from '../tarot/cards';
 import { getDeckInfo, type DeckId } from '../tarot/decks';
-import { getSpread } from '../tarot/spreads';
+import { isFlexibleSpread, resolveSpread } from '../tarot/spreads';
 import { buildManualTarot, type TarotReading } from '../tarot/draw';
 
 interface BackSlot {
@@ -29,6 +29,7 @@ export class TarotShuffleModal extends Modal {
 	private allowReversed: boolean;
 	private question: string;
 	private excludeIds: Set<string>;
+	private cardCount: number | null;
 	private onConfirm: (reading: TarotReading) => void;
 
 	private shuffled: TarotCardDef[] = [];
@@ -49,6 +50,8 @@ export class TarotShuffleModal extends Modal {
 			question: string;
 			/** 本局已用牌，仅展示剩余牌背 */
 			excludeIds?: Iterable<string>;
+			/** 自定义牌阵张数 */
+			cardCount?: number;
 			onConfirm: (reading: TarotReading) => void;
 		},
 	) {
@@ -58,9 +61,16 @@ export class TarotShuffleModal extends Modal {
 		this.allowReversed = opts.allowReversed;
 		this.question = opts.question;
 		this.excludeIds = new Set(opts.excludeIds ?? []);
+		this.cardCount =
+			opts.cardCount != null ? Math.max(1, Math.floor(opts.cardCount)) : null;
 		this.onConfirm = opts.onConfirm;
 
-		const spread = getSpread(this.spreadId);
+		const spread = resolveSpread(
+			this.spreadId,
+			isFlexibleSpread(this.spreadId)
+				? (this.cardCount ?? 1)
+				: undefined,
+		);
 		this.slots = spread.positions.map(() => ({
 			deckIndex: null,
 			reversed: false,
@@ -74,15 +84,23 @@ export class TarotShuffleModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 
-		const spread = getSpread(this.spreadId);
+		const spread = resolveSpread(
+			this.spreadId,
+			isFlexibleSpread(this.spreadId)
+				? (this.cardCount ?? this.slots.length)
+				: undefined,
+		);
 		const deck = getDeckInfo(this.deckId);
 		const remain = this.shuffled.length;
 		const need = spread.positions.length;
-		if (remain < need) {
+		if (need < 1 || remain < need) {
 			contentEl.createEl('h2', { text: '洗牌抽牌' });
 			contentEl.createEl('p', {
 				cls: 'tianji-pick-meta',
-				text: `剩余牌不足：需 ${need} 张，仅剩 ${remain} 张。请换更少张的牌阵，或返回后「新开一局」。`,
+				text:
+					need < 1
+						? '请先设定要抽的张数。'
+						: `剩余牌不足：需 ${need} 张，仅剩 ${remain} 张。请换更少张的牌阵，或返回后「新开一局」。`,
 			});
 			const footer = contentEl.createDiv({ cls: 'tianji-pick-footer' });
 			const close = footer.createEl('button', {
@@ -135,7 +153,7 @@ export class TarotShuffleModal extends Modal {
 	private paint(): void {
 		const root = this.bodyEl;
 		root.empty();
-		const spread = getSpread(this.spreadId);
+		const spread = resolveSpread(this.spreadId, this.slots.length);
 		const deck = getDeckInfo(this.deckId);
 
 		const layout = root.createDiv({

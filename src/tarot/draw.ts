@@ -1,6 +1,11 @@
 import { TAROT_DECK, type TarotCardDef } from './cards';
 import { getDeckInfo, type DeckId } from './decks';
-import { getSpread, type TarotSpread } from './spreads';
+import {
+	getSpread,
+	isFlexibleSpread,
+	resolveSpread,
+	type TarotSpread,
+} from './spreads';
 
 export interface DrawnCard {
 	card: TarotCardDef;
@@ -44,11 +49,16 @@ export function drawTarot(params: {
 	allowReversed?: boolean;
 	/** 本局已用牌，从剩余牌组抽取 */
 	excludeIds?: Iterable<string>;
+	/** 自定义牌阵张数 */
+	cardCount?: number;
 }): TarotReading {
-	const spread: TarotSpread = getSpread(params.spreadId);
+	const base = getSpread(params.spreadId);
+	const need = isFlexibleSpread(base)
+		? Math.max(1, Math.floor(params.cardCount ?? 1))
+		: base.positions.length;
+	const spread: TarotSpread = resolveSpread(params.spreadId, need);
 	const allowReversed = params.allowReversed !== false;
 	const pool = shuffle(remainingTarotDeck(params.excludeIds));
-	const need = spread.positions.length;
 	if (pool.length < need) {
 		throw new Error(
 			`剩余牌不足（需 ${need} 张，剩 ${pool.length} 张）`,
@@ -81,10 +91,15 @@ export function buildManualTarot(params: {
 	question: string;
 	picks: Array<{ cardId: string; reversed: boolean }>;
 }): TarotReading {
-	const spread = getSpread(params.spreadId);
-	if (params.picks.length !== spread.positions.length) {
+	const base = getSpread(params.spreadId);
+	if (isFlexibleSpread(base)) {
+		if (params.picks.length < 1) {
+			throw new Error('请至少选择 1 张牌');
+		}
+	} else if (params.picks.length !== base.positions.length) {
 		throw new Error('选牌数量与牌阵位置不符');
 	}
+	const spread = resolveSpread(params.spreadId, params.picks.length);
 	const seen = new Set<string>();
 	const cards: DrawnCard[] = spread.positions.map((pos, i) => {
 		const pick = params.picks[i]!;

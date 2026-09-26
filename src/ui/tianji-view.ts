@@ -34,7 +34,7 @@ import {
 	suitAccent,
 	type DeckId,
 } from '../tarot/decks';
-import { getSpread, TAROT_SPREADS } from '../tarot/spreads';
+import { getSpread, isFlexibleSpread, TAROT_SPREADS } from '../tarot/spreads';
 import {
 	buildManualTarot,
 	drawTarot,
@@ -112,6 +112,8 @@ export class TianjiView extends ItemView {
 	private tarotDraft: (TarotSlotPick | null)[] = [];
 	/** 本局已用牌 id：继续提问时从剩余牌组抽取 */
 	private tarotSessionUsedIds: string[] = [];
+	/** 自定义牌阵：洗牌/自动/手动时的目标张数 */
+	private tarotCustomCount = 3;
 
 	private shellEl: HTMLElement | null = null;
 	private tabsEl: HTMLElement | null = null;
@@ -1647,12 +1649,15 @@ export class TianjiView extends ItemView {
 		this.field(form, '牌阵方式', (el) => {
 			const wrap = el.createDiv({ cls: 'tianji-spread-grid' });
 			for (const s of TAROT_SPREADS) {
+				const countHint = isFlexibleSpread(s)
+					? '任意张数'
+					: `${s.positions.length} 张`;
 				const btn = wrap.createEl('button', {
 					cls: `tianji-spread-chip${this.tarotSpreadId === s.id ? ' is-active' : ''}`,
 					type: 'button',
 					text: s.name,
 					attr: {
-						title: `${s.positions.length} 张 · ${s.desc}`,
+						title: `${countHint} · ${s.desc}`,
 					},
 				});
 				btn.addEventListener('click', () => {
@@ -1664,19 +1669,88 @@ export class TianjiView extends ItemView {
 			}
 		});
 
-		this.field(form, '逆位', (el) => {
-			const wrap = el.createDiv({ cls: 'tianji-radio-row' });
-			this.radio(wrap, '允许逆位', this.tarotAllowReversed, () => {
-				if (this.tarotAllowReversed) return;
-				this.tarotAllowReversed = true;
-				this.syncChipRow(wrap, '允许逆位');
-			});
-			this.radio(wrap, '仅正位', !this.tarotAllowReversed, () => {
-				if (!this.tarotAllowReversed) return;
-				this.tarotAllowReversed = false;
-				this.syncChipRow(wrap, '仅正位');
-			});
+		const options = form.createDiv({ cls: 'tianji-cast-options' });
+
+		const orientBlock = options.createDiv({
+			cls: 'tianji-cast-option tianji-cast-option-orient',
 		});
+		orientBlock.createSpan({
+			cls: 'tianji-cast-option-label',
+			text: '逆位',
+		});
+		const wrap = orientBlock.createDiv({ cls: 'tianji-radio-row' });
+		this.radio(wrap, '允许逆位', this.tarotAllowReversed, () => {
+			if (this.tarotAllowReversed) return;
+			this.tarotAllowReversed = true;
+			this.syncChipRow(wrap, '允许逆位');
+		});
+		this.radio(wrap, '仅正位', !this.tarotAllowReversed, () => {
+			if (!this.tarotAllowReversed) return;
+			this.tarotAllowReversed = false;
+			this.syncChipRow(wrap, '仅正位');
+		});
+
+		if (isFlexibleSpread(this.tarotSpreadId)) {
+			const countBlock = options.createDiv({
+				cls: 'tianji-cast-option tianji-cast-option-count',
+			});
+			countBlock.createSpan({
+				cls: 'tianji-cast-option-label',
+				text: '张数',
+			});
+			const stepper = countBlock.createDiv({
+				cls: 'tianji-count-stepper',
+			});
+			const maxCount = Math.max(
+				1,
+				remainingTarotDeck(this.tarotSessionUsedIds).length,
+			);
+			const clampCount = (raw: number) => {
+				const n = Math.floor(raw);
+				return Number.isFinite(n) ? Math.max(1, Math.min(maxCount, n)) : 1;
+			};
+			const minus = stepper.createEl('button', {
+				cls: 'tianji-count-stepper-btn',
+				type: 'button',
+				text: '−',
+				attr: { 'aria-label': '减少张数' },
+			});
+			const valueEl = stepper.createEl('input', {
+				cls: 'tianji-count-stepper-value',
+				type: 'number',
+				attr: {
+					min: '1',
+					max: String(maxCount),
+					step: '1',
+					'aria-label': '抽牌张数',
+				},
+			});
+			valueEl.value = String(this.tarotCustomCount);
+			const plus = stepper.createEl('button', {
+				cls: 'tianji-count-stepper-btn',
+				type: 'button',
+				text: '+',
+				attr: { 'aria-label': '增加张数' },
+			});
+			const syncStepper = () => {
+				valueEl.value = String(this.tarotCustomCount);
+				minus.disabled = this.tarotCustomCount <= 1;
+				plus.disabled = this.tarotCustomCount >= maxCount;
+			};
+			minus.addEventListener('click', () => {
+				this.tarotCustomCount = clampCount(this.tarotCustomCount - 1);
+				syncStepper();
+			});
+			plus.addEventListener('click', () => {
+				this.tarotCustomCount = clampCount(this.tarotCustomCount + 1);
+				syncStepper();
+			});
+			valueEl.addEventListener('change', () => {
+				this.tarotCustomCount = clampCount(Number(valueEl.value));
+				syncStepper();
+			});
+			syncStepper();
+		}
 
 		const actions = form.createDiv({
 			cls: 'tianji-actions tianji-cast-actions',
@@ -1773,6 +1847,12 @@ export class TianjiView extends ItemView {
 	}
 
 	private ensureTarotDraft(): void {
+		if (isFlexibleSpread(this.tarotSpreadId)) {
+			this.tarotDraft = this.tarotDraft.filter(
+				(p): p is TarotSlotPick => !!p,
+			);
+			return;
+		}
 		const n = getSpread(this.tarotSpreadId).positions.length;
 		if (this.tarotDraft.length !== n) {
 			this.tarotDraft = Array.from({ length: n }, () => null);
@@ -1780,13 +1860,24 @@ export class TianjiView extends ItemView {
 	}
 
 	private resetTarotDraft(): void {
+		if (isFlexibleSpread(this.tarotSpreadId)) {
+			this.tarotDraft = [];
+			return;
+		}
 		const n = getSpread(this.tarotSpreadId).positions.length;
 		this.tarotDraft = Array.from({ length: n }, () => null);
 	}
 
+	private tarotSpreadNeedCount(): number {
+		if (isFlexibleSpread(this.tarotSpreadId)) {
+			return Math.max(1, Math.floor(this.tarotCustomCount) || 1);
+		}
+		return getSpread(this.tarotSpreadId).positions.length;
+	}
+
 	/** 本局剩余牌是否够当前牌阵 */
 	private ensureTarotRemainingForSpread(): boolean {
-		const need = getSpread(this.tarotSpreadId).positions.length;
+		const need = this.tarotSpreadNeedCount();
 		const remain = remainingTarotDeck(this.tarotSessionUsedIds).length;
 		if (remain < need) {
 			new Notice(
@@ -1848,6 +1939,9 @@ export class TianjiView extends ItemView {
 			cardId: c.card.id,
 			reversed: c.reversed,
 		}));
+		if (isFlexibleSpread(reading.spreadId)) {
+			this.tarotCustomCount = Math.max(1, reading.cards.length);
+		}
 		this.render();
 	}
 
@@ -1855,7 +1949,14 @@ export class TianjiView extends ItemView {
 	private renderTarotSpreadPreview(parent: HTMLElement): void {
 		this.ensureTarotDraft();
 		const spread = getSpread(this.tarotSpreadId);
+		const flexible = isFlexibleSpread(spread);
 		const filled = this.tarotDraft.filter(Boolean).length;
+		const remain = remainingTarotDeck([
+			...this.tarotSessionUsedIds,
+			...this.tarotDraft
+				.map((p) => p?.cardId ?? null)
+				.filter((id): id is string => !!id),
+		]).length;
 
 		const box = parent.createDiv({ cls: 'tianji-spread-preview' });
 		const head = box.createDiv({ cls: 'tianji-spread-preview-head' });
@@ -1865,7 +1966,9 @@ export class TianjiView extends ItemView {
 		});
 		head.createDiv({
 			cls: 'tianji-spread-preview-meta',
-			text: `已选 ${filled}/${spread.positions.length} · 点击空位选 1 张`,
+			text: flexible
+				? `已选 ${filled} 张 · 点 + 添加卡牌`
+				: `已选 ${filled}/${spread.positions.length} · 点击空位选 1 张`,
 		});
 
 		const layout = box.createDiv({
@@ -1880,26 +1983,28 @@ export class TianjiView extends ItemView {
 					})
 				: null;
 
-		spread.positions.forEach((pos, i) => {
-			const pick = this.tarotDraft[i] ?? null;
+		const renderFilledSlot = (
+			host: HTMLElement,
+			posKey: string,
+			posLabel: string,
+			posHint: string,
+			i: number,
+			pick: TarotSlotPick | null,
+			opts?: { removable?: boolean },
+		) => {
 			const card = pick
 				? TAROT_DECK.find((c) => c.id === pick.cardId)
 				: undefined;
 
-			const host =
-				midHost && (pos.key === 'p1' || pos.key === 'p2')
-					? midHost
-					: layout;
-
 			const slot = host.createDiv({
 				cls: `tianji-spread-preview-slot${pick ? ' is-filled' : ''}`,
 				attr: {
-					'data-pos': pos.key,
+					'data-pos': posKey,
 					role: 'button',
 					tabindex: '0',
 					title: pick
-						? `更换「${pos.label}」`
-						: `为「${pos.label}」选牌`,
+						? `更换「${posLabel}」`
+						: `为「${posLabel}」选牌`,
 				},
 			});
 
@@ -1926,14 +2031,33 @@ export class TianjiView extends ItemView {
 
 			slot.createDiv({
 				cls: 'tianji-spread-preview-label',
-				text: pos.label,
+				text: posLabel,
 			});
 			slot.createDiv({
 				cls: 'tianji-spread-preview-hint',
 				text: card
 					? `${card.name}${pick?.reversed ? ' · 逆' : ''}`
-					: pos.hint,
+					: posHint,
 			});
+
+			if (opts?.removable && pick) {
+				const remove = slot.createEl('button', {
+					cls: 'tianji-spread-preview-remove',
+					type: 'button',
+					attr: {
+						title: '移除这张',
+						'aria-label': '移除这张',
+					},
+				});
+				setIcon(remove, 'x');
+				remove.addEventListener('click', (ev) => {
+					ev.preventDefault();
+					ev.stopPropagation();
+					this.tarotDraft.splice(i, 1);
+					this.ensureTarotDraft();
+					this.render();
+				});
+			}
 
 			const openPick = () => this.openTarotSlotPick(i);
 			slot.addEventListener('click', openPick);
@@ -1943,7 +2067,75 @@ export class TianjiView extends ItemView {
 					openPick();
 				}
 			});
-		});
+		};
+
+		if (flexible) {
+			this.tarotDraft.forEach((pick, i) => {
+				if (!pick) return;
+				renderFilledSlot(
+					layout,
+					`c${i + 1}`,
+					`第 ${i + 1} 张`,
+					'自定义位置',
+					i,
+					pick,
+					{ removable: true },
+				);
+			});
+
+			const canAdd = remain > 0;
+			const addSlot = layout.createDiv({
+				cls: `tianji-spread-preview-slot tianji-spread-preview-add${canAdd ? '' : ' is-disabled'}`,
+				attr: {
+					role: 'button',
+					tabindex: canAdd ? '0' : '-1',
+					title: canAdd ? '添加一张牌' : '没有剩余牌可添加',
+					'aria-label': '添加一张牌',
+				},
+			});
+			const addFace = addSlot.createDiv({
+				cls: 'tianji-spread-preview-face tianji-spread-preview-add-face',
+			});
+			setIcon(addFace, 'plus');
+			addSlot.createDiv({
+				cls: 'tianji-spread-preview-label',
+				text: '添加',
+			});
+			addSlot.createDiv({
+				cls: 'tianji-spread-preview-hint',
+				text: canAdd ? '点此选牌' : '牌组已空',
+			});
+			const addCard = () => {
+				if (!canAdd) {
+					new Notice('剩余牌不足，无法继续添加');
+					return;
+				}
+				this.openTarotAddCustomCard();
+			};
+			addSlot.addEventListener('click', addCard);
+			addSlot.addEventListener('keydown', (ev) => {
+				if (ev.key === 'Enter' || ev.key === ' ') {
+					ev.preventDefault();
+					addCard();
+				}
+			});
+		} else {
+			spread.positions.forEach((pos, i) => {
+				const pick = this.tarotDraft[i] ?? null;
+				const host =
+					midHost && (pos.key === 'p1' || pos.key === 'p2')
+						? midHost
+						: layout;
+				renderFilledSlot(
+					host,
+					pos.key,
+					pos.label,
+					pos.hint,
+					i,
+					pick,
+				);
+			});
+		}
 
 		const actions = box.createDiv({ cls: 'tianji-spread-preview-actions' });
 		const clearBtn = actions.createEl('button', {
@@ -1962,14 +2154,75 @@ export class TianjiView extends ItemView {
 			type: 'button',
 			text: '开始排盘',
 		});
-		startBtn.disabled = filled < spread.positions.length;
+		startBtn.disabled = flexible
+			? filled < 1
+			: filled < spread.positions.length;
 		startBtn.addEventListener('click', () => {
 			void this.commitTarotDraft();
 		});
 	}
 
+	private openTarotAddCustomCard(): void {
+		this.ensureTarotDraft();
+		const excludeIds = [
+			...this.tarotSessionUsedIds,
+			...this.tarotDraft
+				.map((p) => p?.cardId ?? null)
+				.filter((id): id is string => !!id),
+		];
+		if (
+			remainingTarotDeck(excludeIds).length < 1
+		) {
+			new Notice('剩余牌不足，无法继续添加');
+			return;
+		}
+		const nextIndex = this.tarotDraft.length;
+		new TarotSlotPickModal(this.app, {
+			positionLabel: `第 ${nextIndex + 1} 张`,
+			allowReversed: this.tarotAllowReversed,
+			excludeIds,
+			images: this.plugin.tarotImages,
+			onPick: (pick) => {
+				this.ensureTarotDraft();
+				this.tarotDraft.push(pick);
+				this.tarotCustomCount = Math.max(
+					this.tarotCustomCount,
+					this.tarotDraft.length,
+				);
+				this.render();
+			},
+		}).open();
+	}
+
 	private openTarotSlotPick(posIndex: number): void {
 		this.ensureTarotDraft();
+		const flexible = isFlexibleSpread(this.tarotSpreadId);
+		if (flexible) {
+			const pick = this.tarotDraft[posIndex];
+			if (!pick) {
+				this.openTarotAddCustomCard();
+				return;
+			}
+			const excludeIds = [
+				...this.tarotSessionUsedIds,
+				...this.tarotDraft
+					.map((p, i) => (i !== posIndex && p ? p.cardId : null))
+					.filter((id): id is string => !!id),
+			];
+			new TarotSlotPickModal(this.app, {
+				positionLabel: `第 ${posIndex + 1} 张`,
+				allowReversed: this.tarotAllowReversed,
+				excludeIds,
+				images: this.plugin.tarotImages,
+				onPick: (next) => {
+					this.ensureTarotDraft();
+					this.tarotDraft[posIndex] = next;
+					this.render();
+				},
+			}).open();
+			return;
+		}
+
 		const spread = getSpread(this.tarotSpreadId);
 		const pos = spread.positions[posIndex];
 		if (!pos) return;
@@ -1996,13 +2249,22 @@ export class TianjiView extends ItemView {
 
 	private async commitTarotDraft(): Promise<void> {
 		this.ensureTarotDraft();
-		const missing = this.tarotDraft.findIndex((p) => !p);
-		if (missing >= 0) {
-			new Notice(`请先为第 ${missing + 1} 个位置选牌`);
-			return;
+		const flexible = isFlexibleSpread(this.tarotSpreadId);
+		const picks = this.tarotDraft.filter((p): p is TarotSlotPick => !!p);
+		if (flexible) {
+			if (picks.length < 1) {
+				new Notice('请至少添加 1 张牌');
+				return;
+			}
+		} else {
+			const missing = this.tarotDraft.findIndex((p) => !p);
+			if (missing >= 0) {
+				new Notice(`请先为第 ${missing + 1} 个位置选牌`);
+				return;
+			}
 		}
 		const used = new Set(this.tarotSessionUsedIds);
-		const overlap = this.tarotDraft.find((p) => p && used.has(p.cardId));
+		const overlap = picks.find((p) => used.has(p.cardId));
 		if (overlap) {
 			new Notice('草稿含本局已用牌，请从剩余牌组重新选牌');
 			return;
@@ -2012,9 +2274,9 @@ export class TianjiView extends ItemView {
 				spreadId: this.tarotSpreadId,
 				deckId: this.tarotDeckId,
 				question: this.tarotQuestion,
-				picks: this.tarotDraft.map((p) => ({
-					cardId: p!.cardId,
-					reversed: p!.reversed,
+				picks: picks.map((p) => ({
+					cardId: p.cardId,
+					reversed: p.reversed,
 				})),
 			});
 			await this.saveTarotReading(reading, '手动选牌');
@@ -2184,6 +2446,9 @@ export class TianjiView extends ItemView {
 			allowReversed: this.tarotAllowReversed,
 			question: this.tarotQuestion,
 			excludeIds: this.tarotSessionUsedIds,
+			cardCount: isFlexibleSpread(this.tarotSpreadId)
+				? this.tarotSpreadNeedCount()
+				: undefined,
 			onConfirm: (reading) => {
 				this.applyReadingToDraft(reading);
 				new Notice(`已选好 ${reading.cards.length} 张，可点「开始排盘」`);
@@ -2200,6 +2465,9 @@ export class TianjiView extends ItemView {
 			question: this.tarotQuestion,
 			images: this.plugin.tarotImages,
 			excludeIds: this.tarotSessionUsedIds,
+			cardCount: isFlexibleSpread(this.tarotSpreadId)
+				? this.tarotSpreadNeedCount()
+				: undefined,
 			initialPos,
 			onConfirm: (reading) => {
 				this.applyReadingToDraft(reading);
@@ -2222,6 +2490,9 @@ export class TianjiView extends ItemView {
 				question: this.tarotQuestion,
 				allowReversed: this.tarotAllowReversed,
 				excludeIds: this.tarotSessionUsedIds,
+				cardCount: isFlexibleSpread(this.tarotSpreadId)
+					? this.tarotSpreadNeedCount()
+					: undefined,
 			});
 			this.applyReadingToDraft(reading);
 			new Notice(`已选好 ${reading.cards.length} 张，可点「开始排盘」`);
@@ -2544,6 +2815,9 @@ export class TianjiView extends ItemView {
 			input.sessionUsedIds?.length
 				? [...input.sessionUsedIds]
 				: reading.cards.map((c) => c.card.id);
+		if (isFlexibleSpread(this.tarotSpreadId)) {
+			this.tarotCustomCount = Math.max(1, reading.cards.length);
+		}
 		this.resetTarotDraft();
 		this.tarotPanel = 'chart';
 		this.activeTab = 'tarot';

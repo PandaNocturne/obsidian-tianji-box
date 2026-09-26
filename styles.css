@@ -1927,6 +1927,208 @@
 	flex: 0 0 auto;
 }
 
+.tianji-spread-preview-custom {
+	display: flex;
+	flex-wrap: wrap;
+	width: 100%;
+	max-width: 100%;
+	justify-content: center;
+	align-items: flex-start;
+	gap: 12px 14px;
+}
+
+.tianji-spread-preview-add .tianji-spread-preview-add-face {
+	display: grid;
+	place-items: center;
+	border-style: dashed;
+	color: var(--text-muted);
+	background: color-mix(in srgb, var(--background-modifier-border) 35%, transparent);
+}
+
+.tianji-spread-preview-add .tianji-spread-preview-add-face svg {
+	width: 22px;
+	height: 22px;
+}
+
+.tianji-spread-preview-add:hover .tianji-spread-preview-add-face,
+.tianji-spread-preview-add:focus-visible .tianji-spread-preview-add-face {
+	border-style: dashed;
+	border-color: var(--interactive-accent);
+	color: var(--interactive-accent);
+	background: color-mix(in srgb, var(--interactive-accent) 12%, var(--background-primary));
+}
+
+.tianji-spread-preview-add.is-disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.tianji-spread-preview-add.is-disabled:hover .tianji-spread-preview-add-face,
+.tianji-spread-preview-add.is-disabled:focus-visible .tianji-spread-preview-add-face {
+	border-color: var(--background-modifier-border);
+	color: var(--text-muted);
+	background: color-mix(in srgb, var(--background-modifier-border) 35%, transparent);
+}
+
+.tianji-spread-preview-remove {
+	position: absolute;
+	top: -4px;
+	right: -4px;
+	z-index: 2;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	margin: 0;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 999px;
+	background: var(--background-primary);
+	color: var(--text-muted);
+	cursor: pointer;
+	box-shadow: 0 1px 2px color-mix(in srgb, black 12%, transparent);
+}
+
+.tianji-spread-preview-remove:hover,
+.tianji-spread-preview-remove:focus-visible {
+	color: var(--text-error, #e05454);
+	border-color: var(--text-error, #e05454);
+	outline: none;
+}
+
+.tianji-spread-preview-remove svg {
+	width: 12px;
+	height: 12px;
+}
+
+.tianji-cast-options {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 2px 0;
+}
+
+.tianji-cast-option {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 10px;
+	min-width: 0;
+}
+
+.tianji-cast-option-label {
+	flex: 0 0 auto;
+	font-size: 0.78em;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	color: var(--text-muted);
+	line-height: 1;
+}
+
+.tianji-count-stepper {
+	display: inline-flex;
+	align-items: stretch;
+	height: 32px;
+	box-sizing: border-box;
+	border: 1px solid var(--tianji-border);
+	border-radius: 6px;
+	overflow: hidden;
+	background: var(--background-primary);
+	width: fit-content;
+	isolation: isolate;
+}
+
+.tianji-view .tianji-count-stepper-btn,
+.tianji-view button.tianji-count-stepper-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	width: 32px;
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	border: none !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	background: transparent !important;
+	color: var(--text-normal);
+	font: inherit;
+	font-size: 1.05em;
+	font-weight: 500;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.tianji-view .tianji-count-stepper-btn:hover:not(:disabled),
+.tianji-view button.tianji-count-stepper-btn:hover:not(:disabled) {
+	background: color-mix(in srgb, var(--interactive-accent) 12%, transparent) !important;
+	color: var(--interactive-accent);
+	box-shadow: none !important;
+}
+
+.tianji-view .tianji-count-stepper-btn:disabled,
+.tianji-view button.tianji-count-stepper-btn:disabled {
+	opacity: 0.35;
+	cursor: not-allowed;
+}
+
+.tianji-view .tianji-count-stepper-value,
+.tianji-view input.tianji-count-stepper-value {
+	box-sizing: border-box;
+	width: 2.6em;
+	height: 100%;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	border: none !important;
+	border-left: 1px solid var(--tianji-border) !important;
+	border-right: 1px solid var(--tianji-border) !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	outline: none !important;
+	background: transparent !important;
+	background-image: none !important;
+	color: var(--text-normal);
+	font: inherit;
+	font-weight: 650;
+	font-size: 0.95em;
+	line-height: 32px;
+	text-align: center;
+	appearance: textfield;
+	-webkit-appearance: none;
+	-moz-appearance: textfield;
+}
+
+.tianji-view .tianji-count-stepper-value::-webkit-outer-spin-button,
+.tianji-view .tianji-count-stepper-value::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	appearance: none;
+	margin: 0;
+}
+
+.tianji-view .tianji-count-stepper-value:focus,
+.tianji-view input.tianji-count-stepper-value:focus {
+	outline: none !important;
+	box-shadow: none !important;
+	border-radius: 0 !important;
+	background: color-mix(in srgb, var(--interactive-accent) 8%, transparent) !important;
+}
+
+.tianji-cast-option-orient .tianji-radio-row {
+	margin: 0;
+}
+
+.tianji-muted {
+	font-size: 0.84em;
+	color: var(--text-muted);
+	line-height: 1.4;
+}
+
 /* 预览区各牌阵几何（固定列宽，不与牌阵页共享） */
 .tianji-spread-preview-single {
 	grid-template-columns: 76px;
@@ -2126,6 +2328,14 @@
 }
 
 /* —— 各牌阵几何布局（牌阵页） —— */
+.tianji-spread-custom {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 14px;
+	justify-content: center;
+	align-items: flex-start;
+}
+
 .tianji-spread-single {
 	grid-template-columns: minmax(0, 200px);
 	justify-content: center;

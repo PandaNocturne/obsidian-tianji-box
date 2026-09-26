@@ -5,7 +5,7 @@ import {
 	type DeckId,
 } from '../tarot/decks';
 import type { TarotImageCache } from '../tarot/image-cache';
-import { getSpread } from '../tarot/spreads';
+import { isFlexibleSpread, resolveSpread } from '../tarot/spreads';
 import { buildManualTarot, type TarotReading } from '../tarot/draw';
 import { renderTarotPickCardCell } from './tarot-pick-card';
 
@@ -23,6 +23,7 @@ export class TarotPickModal extends Modal {
 	private question: string;
 	private images: TarotImageCache;
 	private excludeIds: Set<string>;
+	private cardCount: number | null;
 	private onConfirm: (reading: TarotReading) => void;
 
 	private slots: PickSlot[] = [];
@@ -47,6 +48,8 @@ export class TarotPickModal extends Modal {
 			initialPos?: number;
 			/** 本局已用牌，仅展示剩余牌 */
 			excludeIds?: Iterable<string>;
+			/** 自定义牌阵张数 */
+			cardCount?: number;
 		},
 	) {
 		super(app);
@@ -56,9 +59,16 @@ export class TarotPickModal extends Modal {
 		this.question = opts.question;
 		this.images = opts.images;
 		this.excludeIds = new Set(opts.excludeIds ?? []);
+		this.cardCount =
+			opts.cardCount != null ? Math.max(1, Math.floor(opts.cardCount)) : null;
 		this.onConfirm = opts.onConfirm;
 
-		const spread = getSpread(this.spreadId);
+		const spread = resolveSpread(
+			this.spreadId,
+			isFlexibleSpread(this.spreadId)
+				? (this.cardCount ?? 1)
+				: undefined,
+		);
 		this.slots = spread.positions.map(() => ({
 			cardId: null,
 			reversed: false,
@@ -72,15 +82,23 @@ export class TarotPickModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 
-		const spread = getSpread(this.spreadId);
+		const spread = resolveSpread(
+			this.spreadId,
+			isFlexibleSpread(this.spreadId)
+				? (this.cardCount ?? this.slots.length)
+				: undefined,
+		);
 		const deck = getDeckInfo(this.deckId);
 		const remain = TAROT_DECK.length - this.excludeIds.size;
 		const need = spread.positions.length;
-		if (remain < need) {
+		if (need < 1 || remain < need) {
 			contentEl.createEl('h2', { text: '手动选牌' });
 			contentEl.createEl('p', {
 				cls: 'tianji-pick-meta',
-				text: `剩余牌不足：需 ${need} 张，仅剩 ${remain} 张。请换更少张的牌阵，或返回后「新开一局」。`,
+				text:
+					need < 1
+						? '请先设定要选的张数。'
+						: `剩余牌不足：需 ${need} 张，仅剩 ${remain} 张。请换更少张的牌阵，或返回后「新开一局」。`,
 			});
 			const footer = contentEl.createDiv({ cls: 'tianji-pick-footer' });
 			const close = footer.createEl('button', {
@@ -139,7 +157,7 @@ export class TarotPickModal extends Modal {
 	private paint(): void {
 		const root = this.bodyEl;
 		root.empty();
-		const spread = getSpread(this.spreadId);
+		const spread = resolveSpread(this.spreadId, this.slots.length);
 
 		const layout = root.createDiv({ cls: 'tianji-pick-layout' });
 
