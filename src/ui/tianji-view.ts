@@ -303,7 +303,11 @@ export class TianjiView extends ItemView {
 	/* -------------------- 六爻 -------------------- */
 
 	private renderLiuyao(container: HTMLElement): void {
-		this.renderPanelSwitch(container, {
+		const workTop =
+			this.liuyaoPanel === 'chart'
+				? container.createDiv({ cls: 'tianji-work-top' })
+				: container;
+		this.renderPanelSwitch(workTop, {
 			mode: this.liuyaoPanel,
 			castLabel: '起卦',
 			chartLabel: '排盘',
@@ -324,7 +328,7 @@ export class TianjiView extends ItemView {
 			return;
 		}
 		if (this.liuyaoPanel === 'chart') {
-			this.renderLiuyaoChart(container);
+			this.renderLiuyaoChart(container, workTop);
 			return;
 		}
 		this.renderLiuyaoCast(container);
@@ -705,7 +709,10 @@ export class TianjiView extends ItemView {
 		this.liuyaoRecordId = null;
 	}
 
-	private renderLiuyaoChart(container: HTMLElement): void {
+	private renderLiuyaoChart(
+		container: HTMLElement,
+		topBar?: HTMLElement,
+	): void {
 		const stage = container.createDiv({ cls: 'tianji-stage tianji-chart-stage' });
 		if (!this.liuyaoResult) {
 			this.renderChartEmpty(stage, '尚未排盘。请先在「起卦」完成起卦。', '去起卦', () => {
@@ -716,7 +723,7 @@ export class TianjiView extends ItemView {
 		}
 
 		const r = this.liuyaoResult;
-		const toolbar = stage.createDiv({ cls: 'tianji-chart-toolbar' });
+		const toolbar = (topBar ?? stage).createDiv({ cls: 'tianji-chart-toolbar' });
 		const backBtn = toolbar.createEl('button', {
 			cls: 'tianji-btn',
 			text: '返回起卦',
@@ -1045,7 +1052,11 @@ export class TianjiView extends ItemView {
 	/* -------------------- 八字 -------------------- */
 
 	private renderBazi(container: HTMLElement): void {
-		this.renderPanelSwitch(container, {
+		const workTop =
+			this.baziPanel === 'chart'
+				? container.createDiv({ cls: 'tianji-work-top' })
+				: container;
+		this.renderPanelSwitch(workTop, {
 			mode: this.baziPanel,
 			castLabel: '起盘',
 			chartLabel: '命盘',
@@ -1066,7 +1077,7 @@ export class TianjiView extends ItemView {
 			return;
 		}
 		if (this.baziPanel === 'chart') {
-			this.renderBaziChartPage(container);
+			this.renderBaziChartPage(container, workTop);
 			return;
 		}
 
@@ -1261,7 +1272,10 @@ export class TianjiView extends ItemView {
 		});
 	}
 
-	private renderBaziChartPage(container: HTMLElement): void {
+	private renderBaziChartPage(
+		container: HTMLElement,
+		topBar?: HTMLElement,
+	): void {
 		const stage = container.createDiv({
 			cls: 'tianji-stage tianji-chart-stage',
 		});
@@ -1278,7 +1292,7 @@ export class TianjiView extends ItemView {
 			return;
 		}
 
-		const toolbar = stage.createDiv({ cls: 'tianji-chart-toolbar' });
+		const toolbar = (topBar ?? stage).createDiv({ cls: 'tianji-chart-toolbar' });
 		const backBtn = toolbar.createEl('button', {
 			cls: 'tianji-btn',
 			text: '返回起盘',
@@ -1622,7 +1636,11 @@ export class TianjiView extends ItemView {
 	/* -------------------- 塔罗 -------------------- */
 
 	private renderTarot(container: HTMLElement): void {
-		this.renderPanelSwitch(container, {
+		const workTop =
+			this.tarotPanel === 'chart'
+				? container.createDiv({ cls: 'tianji-work-top' })
+				: container;
+		this.renderPanelSwitch(workTop, {
 			mode: this.tarotPanel,
 			castLabel: '抽牌',
 			chartLabel: '牌阵',
@@ -1643,7 +1661,7 @@ export class TianjiView extends ItemView {
 			return;
 		}
 		if (this.tarotPanel === 'chart') {
-			this.renderTarotChartPage(container);
+			this.renderTarotChartPage(container, workTop);
 			return;
 		}
 
@@ -1825,7 +1843,10 @@ export class TianjiView extends ItemView {
 		this.renderTarotSpreadPreview(stage);
 	}
 
-	private renderTarotChartPage(container: HTMLElement): void {
+	private renderTarotChartPage(
+		container: HTMLElement,
+		topBar?: HTMLElement,
+	): void {
 		const stage = container.createDiv({
 			cls: 'tianji-stage tianji-chart-stage',
 		});
@@ -1842,7 +1863,7 @@ export class TianjiView extends ItemView {
 			return;
 		}
 
-		const toolbar = stage.createDiv({ cls: 'tianji-chart-toolbar' });
+		const toolbar = (topBar ?? stage).createDiv({ cls: 'tianji-chart-toolbar' });
 		const backBtn = toolbar.createEl('button', {
 			cls: 'tianji-btn',
 			text: '返回抽牌',
