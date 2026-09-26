@@ -548,18 +548,50 @@ function formatProfessionalChart(p: {
 		),
 	];
 
-	// 附当前/第一大运的流年流月摘要
-	const focus = p.dayun.find((du) => du.liuNian.length > 0) ?? p.dayun[1];
-	if (focus?.liuNian.length) {
-		lines.push(``, `【流年 · ${focus.label}运】`);
-		for (const ln of focus.liuNian) {
+	// 全量大运的流年、流月（含十神）
+	for (const du of p.dayun) {
+		if (!du.liuNian.length) continue;
+		lines.push(
+			``,
+			`【流年 · ${du.label}运 ${du.startYear}-${du.endYear}】`,
+		);
+		for (const ln of du.liuNian) {
 			lines.push(
-				`${ln.year}年 ${ln.age}岁 ${ln.label}（${ln.shiShen}） 流月：${ln.liuYue.map((ly) => ly.label).join(' ')}`,
+				`${ln.year}年 ${ln.age}岁 ${ln.label}（${ln.shiShen}）`,
 			);
+			if (ln.liuYue.length) {
+				lines.push(
+					`　流月：${ln.liuYue.map((ly) => `${ly.label}(${ly.shiShen})`).join(' ')}`,
+				);
+			}
 		}
 	}
 
 	return lines.join('\n');
+}
+
+/** 由命盘对象即时生成排盘全文（含全部流年流月），供复制与入库文本。 */
+export function formatBaziChartText(chart: BaziProfessionalChart): string {
+	return formatProfessionalChart({
+		gender: chart.gender,
+		solarText: chart.solarText,
+		lunarText: chart.lunarText,
+		cityName: chart.cityName,
+		trueSolarText: chart.trueSolarText,
+		trueSolarDetail: chart.trueSolarDetail,
+		y: chart.year,
+		m: chart.month,
+		d: chart.day,
+		h: chart.hour,
+		dayMaster: chart.dayMaster,
+		dayMasterElement: chart.dayMasterElement,
+		wuxingText: chart.wuxingText,
+		taiyuan: chart.taiyuan,
+		minggong: chart.minggong,
+		shengong: chart.shengong,
+		qiyunText: chart.qiyunText,
+		dayun: chart.dayun,
+	});
 }
 
 export function formatBaziForAi(
@@ -567,18 +599,16 @@ export function formatBaziForAi(
 	question?: string,
 	selectedDayunIndex?: number,
 ): string {
-	const lines = [chart.chartText];
+	const lines = [formatBaziChartText(chart)];
 	if (
 		selectedDayunIndex != null &&
-		chart.dayun[selectedDayunIndex]?.liuNian.length
+		chart.dayun[selectedDayunIndex]
 	) {
 		const du = chart.dayun[selectedDayunIndex]!;
-		lines.push(``, `【当前选中大运】${du.label}（${du.startYear}-${du.endYear}）`);
-		for (const ln of du.liuNian) {
-			lines.push(
-				`${ln.year} ${ln.label}(${ln.shiShen}) 月：${ln.liuYue.map((x) => `${x.label}(${x.shiShen})`).join(' ')}`,
-			);
-		}
+		lines.push(
+			``,
+			`【当前选中大运】${du.label}（${du.startYear}-${du.endYear}）`,
+		);
 	}
 	if (question?.trim()) {
 		lines.push(``, `重点关注：${question.trim()}`);

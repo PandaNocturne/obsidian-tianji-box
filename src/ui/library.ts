@@ -5,6 +5,10 @@ import type {
 	LiuyaoMethod,
 	ReadingRecord,
 } from '../types';
+import {
+	formatBaziChartText,
+	type BaziProfessionalChart,
+} from '../bazi/pillars';
 import { formatTarotReadingChart, type TarotReading } from '../tarot/draw';
 import { readingHasNote } from '../notes/reading-note';
 
@@ -413,6 +417,15 @@ function parseLibraryRow(rec: ReadingRecord): LibraryRowData {
 			(chartRaw.length > 120 ? '…' : '')
 		: '';
 	let chartCopyText = chartRaw;
+	if (rec.type === 'bazi' && Array.isArray(result.dayun)) {
+		try {
+			chartCopyText = formatBaziChartText(
+				result as unknown as BaziProfessionalChart,
+			);
+		} catch {
+			/* 回退已存 chartText */
+		}
+	}
 	if (rec.type === 'tarot' && Array.isArray(result.cards)) {
 		try {
 			chartCopyText = formatTarotReadingChart(

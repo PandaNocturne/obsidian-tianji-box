@@ -22,6 +22,7 @@ import {
 } from '../liuyao/casting';
 import {
 	calculateBazi,
+	formatBaziChartText,
 	wuxingOfChar,
 	type BaziProfessionalChart,
 	type CalendarType,
@@ -1338,7 +1339,7 @@ export class TianjiView extends ItemView {
 			text: '复制排盘',
 		});
 		copyBtn.addEventListener('click', () => {
-			void this.copyText(chart.chartText, '八字排盘已复制');
+			void this.copyText(formatBaziChartText(chart), '八字排盘已复制');
 		});
 
 		const info = card.createDiv({ cls: 'tianji-bazi-info' });
@@ -1381,6 +1382,11 @@ export class TianjiView extends ItemView {
 
 		card.createEl('h4', { cls: 'tianji-bazi-section', text: '基本命盘' });
 		const table = card.createEl('table', { cls: 'tianji-bazi-table' });
+		const colgroup = table.createEl('colgroup');
+		colgroup.createEl('col', { cls: 'tianji-bazi-label-col' });
+		for (let i = 0; i < 4; i++) {
+			colgroup.createEl('col');
+		}
 		const thead = table.createEl('thead');
 		const hr = thead.createEl('tr');
 		hr.createEl('th', { text: '' });
@@ -1525,24 +1531,30 @@ export class TianjiView extends ItemView {
 				});
 			}
 		}
-
-		card.createEl('pre', {
-			cls: 'tianji-chart-text',
-			text: chart.chartText,
-		});
 	}
 
 	/** 按五行给天干地支（及五行字）上色 */
 	private appendWuxingText(parent: HTMLElement, text: string): void {
+		const wxClass: Record<WuXing, string> = {
+			木: 'mu',
+			火: 'huo',
+			土: 'tu',
+			金: 'jin',
+			水: 'shui',
+		};
 		for (const ch of text) {
 			const wx =
 				wuxingOfChar(ch) ??
-				(ch === '木' || ch === '火' || ch === '土' || ch === '金' || ch === '水'
+				(ch === '木' ||
+				ch === '火' ||
+				ch === '土' ||
+				ch === '金' ||
+				ch === '水'
 					? (ch as WuXing)
 					: null);
 			if (wx) {
 				parent.createSpan({
-					cls: `tianji-wx tianji-wx-${wx}`,
+					cls: `tianji-wx tianji-wx-${wxClass[wx]}`,
 					text: ch,
 				});
 			} else {

@@ -45,8 +45,7 @@
 .tianji-reading-note,
 .tianji-bazi-info,
 .tianji-notes,
-.tianji-library-table-wrap,
-.tianji-chart-text {
+.tianji-library-table-wrap {
 	border: 1px solid var(--tianji-border);
 	border-radius: var(--tianji-radius);
 	background: var(--tianji-surface-soft);
@@ -860,20 +859,6 @@
 	font-weight: 650;
 }
 
-.tianji-chart-text {
-	white-space: pre;
-	overflow-x: auto;
-	word-break: normal;
-	font-family: 'Sarasa Mono SC', 'Noto Sans Mono CJK SC', 'Microsoft YaHei Mono',
-		'Cascadia Mono', 'Consolas', var(--font-monospace), monospace;
-	font-size: 0.82em;
-	line-height: 1.75;
-	tab-size: 4;
-	margin: 12px 0 0;
-	padding: 12px 14px;
-	user-select: text;
-}
-
 /* —— Liuyao professional chart —— */
 .tianji-liuyao-result {
 	padding: 14px 16px 18px;
@@ -1255,6 +1240,8 @@
 
 .tianji-bazi-table {
 	width: 100%;
+	max-width: 100%;
+	table-layout: fixed;
 	border-collapse: separate;
 	border-spacing: 0;
 	font-size: 0.84em;
@@ -1262,6 +1249,7 @@
 	overflow: hidden;
 	border-radius: var(--tianji-radius-sm);
 	border: 1px solid var(--tianji-border);
+	box-sizing: border-box;
 }
 
 .tianji-bazi-table th,
@@ -1272,6 +1260,8 @@
 	text-align: center;
 	vertical-align: top;
 	word-break: break-word;
+	overflow-wrap: anywhere;
+	min-width: 0;
 }
 
 .tianji-bazi-table th:last-child,
@@ -1296,6 +1286,10 @@
 	white-space: nowrap;
 }
 
+.tianji-bazi-table col.tianji-bazi-label-col {
+	width: 3.2em;
+}
+
 .tianji-bazi-gan,
 .tianji-bazi-zhi {
 	font-size: 1.28em;
@@ -1314,43 +1308,45 @@
 	font-weight: inherit;
 }
 
-.tianji-wx-木 {
+.tianji-wx-mu {
 	color: #2f9e44;
 }
 
-.tianji-wx-火 {
+.tianji-wx-huo {
 	color: #e03131;
 }
 
-.tianji-wx-土 {
-	color: #c4922a;
+.tianji-wx-tu {
+	/* 土：偏棕褐，与金的亮金色区分 */
+	color: #795548;
 }
 
-.tianji-wx-金 {
-	color: #868e96;
+.tianji-wx-jin {
+	/* 金：亮金色 / 金黄 */
+	color: #e6a700;
 }
 
-.tianji-wx-水 {
+.tianji-wx-shui {
 	color: #1c7ed6;
 }
 
-.theme-dark .tianji-wx-木 {
+.theme-dark .tianji-wx-mu {
 	color: #69db7c;
 }
 
-.theme-dark .tianji-wx-火 {
+.theme-dark .tianji-wx-huo {
 	color: #ff6b6b;
 }
 
-.theme-dark .tianji-wx-土 {
-	color: #fcc419;
+.theme-dark .tianji-wx-tu {
+	color: #cbb29a;
 }
 
-.theme-dark .tianji-wx-金 {
-	color: #dee2e6;
+.theme-dark .tianji-wx-jin {
+	color: #ffe066;
 }
 
-.theme-dark .tianji-wx-水 {
+.theme-dark .tianji-wx-shui {
 	color: #74c0fc;
 }
 
@@ -3091,9 +3087,28 @@
 
 	.tianji-bazi-table {
 		font-size: 0.72em;
-		display: block;
-		overflow-x: auto;
+		width: 100%;
 		max-width: 100%;
+		table-layout: fixed;
+		display: table;
+	}
+
+	.tianji-bazi-table th,
+	.tianji-bazi-table td {
+		padding: 6px 3px;
+		overflow-wrap: anywhere;
+		word-break: break-word;
+	}
+
+	.tianji-bazi-table tbody th,
+	.tianji-bazi-table col.tianji-bazi-label-col {
+		width: 2.6em;
+	}
+
+	.tianji-bazi-gan,
+	.tianji-bazi-zhi {
+		font-size: 1.12em;
+		letter-spacing: 0.02em;
 	}
 
 	.tianji-tarot-spread,
@@ -3255,12 +3270,6 @@
 
 	.tianji-history-actions .tianji-btn {
 		flex: 0 0 auto;
-	}
-
-	.tianji-chart-text {
-		font-size: 0.82em;
-		max-height: 50vh;
-		overflow: auto;
 	}
 
 	.tianji-deck-grid {
