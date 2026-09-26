@@ -302,20 +302,30 @@
 	appearance: none;
 	-webkit-appearance: none;
 	min-height: 2.75em;
-	padding: 8px 2.4em 8px 12px;
+	padding: 8px 12px;
 	border-radius: var(--tianji-radius-sm);
 	border: 1px solid var(--tianji-border);
 	background-color: var(--background-modifier-form-field, var(--background-primary));
+	background-image: none;
 	color: var(--text-normal);
 	font: inherit;
 	font-size: 0.95em;
 	line-height: 1.5;
+	transition: border-color var(--tianji-ease), box-shadow var(--tianji-ease);
+}
+
+.tianji-input,
+.tianji-textarea {
+	cursor: text;
+}
+
+.tianji-select {
 	cursor: pointer;
+	padding-right: 2.4em;
 	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
 	background-repeat: no-repeat;
 	background-position: right 10px center;
 	background-size: 12px;
-	transition: border-color var(--tianji-ease), box-shadow var(--tianji-ease);
 }
 
 .tianji-select option {
@@ -335,6 +345,8 @@
 }
 
 .tianji-textarea {
+	display: block;
+	width: 100%;
 	resize: vertical;
 	min-height: 72px;
 	font-family: inherit;
