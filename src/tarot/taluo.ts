@@ -39,10 +39,6 @@ export function getTaluoPageUrl(card: TarotCardDef): string {
 	return `https://taluo.net/cards/${getTaluoSlug(card)}`;
 }
 
-export function getTaluoImageUrl(card: TarotCardDef): string {
-	return `https://taluo.net/image/${getTaluoSlug(card)}.jpg`;
-}
-
 export function getTaluoLore(cardId: string): TaluoCardLore | undefined {
 	return CARDS[cardId];
 }

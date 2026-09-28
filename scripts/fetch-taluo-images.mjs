@@ -1,5 +1,6 @@
 /**
- * 从 taluo.net 下载 78 张牌面，覆盖本地 assets/tarot/rider-waite/
+ * 开发用：从 taluo.net 下载 78 张牌面到 assets/tarot/rider-waite/，随插件离线分发。
+ * 运行时不会联网；仅在更新牌面资源时执行。
  * 用法：node scripts/fetch-taluo-images.mjs
  */
 import { mkdirSync, readdirSync, unlinkSync, writeFileSync } from 'node:fs';

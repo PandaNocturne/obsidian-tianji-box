@@ -1,5 +1,6 @@
 /**
- * 从 taluo.net 抓取 78 张牌释义，生成 src/tarot/taluo-lore.json
+ * 开发用：从 taluo.net 抓取 78 张牌释义，生成 src/tarot/taluo-lore.json（随插件离线打包）。
+ * 运行时不会联网；仅在更新释义数据时执行。
  * 用法：node scripts/fetch-taluo-cards.mjs
  */
 import { writeFileSync, mkdirSync } from 'node:fs';

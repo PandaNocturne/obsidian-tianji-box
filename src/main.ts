@@ -28,7 +28,6 @@ export default class TianjiPlugin extends Plugin {
 		}
 
 		this.tarotImages = new TarotImageCache(this);
-		void this.tarotImages.prefetchAll();
 
 		this.registerView(
 			TIANJI_VIEW_TYPE,

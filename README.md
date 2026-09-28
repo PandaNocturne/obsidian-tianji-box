@@ -18,10 +18,10 @@
 
 ## 外部服务说明
 
-- **塔罗释义**：正逆位与运势文案来自 [Taluo.net](https://taluo.net/)（已打包进插件，离线可读）。详情弹窗可跳转该站原文。
-- **塔罗牌面**：优先从 Taluo.net 下载并缓存到插件目录（`assets/tarot/rider-waite/{slug}.jpg`）；若失败则回退 [Sacred Texts](https://www.sacred-texts.com/tarot/pkt/) 公版图。首次使用可能产生网络请求。
+- **塔罗释义**：正逆位与运势文案来自 [Taluo.net](https://taluo.net/)，已打包进 `src/tarot/taluo-lore.json`，运行时离线读取。详情弹窗可跳转该站原文。
+- **塔罗牌面**：78 张图随插件分发于 `assets/tarot/rider-waite/`，运行时只读本地文件，**不会联网下载**。
 
-更新 Taluo 释义 / 牌面：
+开发时更新释义 / 牌面（仅构建机联网，产物再打包进插件）：
 
 ```bash
 node scripts/fetch-taluo-cards.mjs
@@ -36,7 +36,7 @@ npm run dev
 npm run build
 ```
 
-产物：`main.js`、`manifest.json`、`styles.css`、`sql-wasm.wasm`
+产物：`main.js`、`manifest.json`、`styles.css`、`sql-wasm.wasm`、`assets/tarot/`（牌面）
 
 ## 使用
 

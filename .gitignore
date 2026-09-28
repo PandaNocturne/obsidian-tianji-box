@@ -22,8 +22,7 @@ tianji.db
 # sql.js wasm (copied on build)
 sql-wasm.wasm
 
-# 塔罗牌面本地缓存（运行时自动下载）
-assets/tarot/
+# 塔罗牌面随插件打包离线分发（assets/tarot/rider-waite/）
 
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store
