@@ -481,6 +481,14 @@ function methodLabel(
 			str(input.spreadId);
 		return spread || '塔罗';
 	}
+	if (type === 'xiaoliuren') {
+		return (
+			str(result.methodLabel) ||
+			str(input.methodLabel) ||
+			method ||
+			'小六壬'
+		);
+	}
 	return '';
 }
 
@@ -488,6 +496,8 @@ function typeFallbackTitle(type: DivinationType): string {
 	switch (type) {
 		case 'liuyao':
 			return '六爻占卜';
+		case 'xiaoliuren':
+			return '小六壬';
 		case 'bazi':
 			return '八字排盘';
 		case 'tarot':

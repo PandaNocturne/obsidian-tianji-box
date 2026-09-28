@@ -32,6 +32,8 @@ export function noteTypeLabel(type: DivinationType): string {
 	switch (type) {
 		case 'liuyao':
 			return '六爻';
+		case 'xiaoliuren':
+			return '小六壬';
 		case 'tarot':
 			return '塔罗牌';
 		case 'bazi':

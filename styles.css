@@ -1,4 +1,4 @@
-/* 天机 · 扁平卡片（跟随 Obsidian 主题，轻边框无重阴影） */
+/* ?? ? ??????? Obsidian ??????????? */
 
 .tianji-view {
 	--tianji-radius: 10px;
@@ -32,7 +32,7 @@
 	box-sizing: border-box;
 }
 
-/* 统一卡片底：细边框 + 柔和底色，无投影 */
+/* ????????? + ???????? */
 .tianji-card,
 .tianji-form,
 .tianji-result-card,
@@ -52,7 +52,7 @@
 	box-shadow: none;
 }
 
-/* —— Header —— */
+/* ?? Header ?? */
 .tianji-header {
 	display: flex;
 	align-items: center;
@@ -66,7 +66,7 @@
 	box-shadow: none;
 }
 
-/* —— Tabs —— */
+/* ?? Tabs ?? */
 .tianji-tabs {
 	display: flex;
 	gap: 4px;
@@ -135,7 +135,7 @@
 	color: var(--interactive-accent);
 }
 
-/* —— Panel switch (work / library) —— */
+/* ?? Panel switch (work / library) ?? */
 .tianji-work-top {
 	display: flex;
 	flex-wrap: wrap;
@@ -196,12 +196,12 @@
 	border: 1px solid color-mix(in srgb, var(--interactive-accent) 40%, var(--tianji-border));
 }
 
-/* —— Body / Work layout —— */
+/* ?? Body / Work layout ?? */
 .tianji-body {
 	width: 100%;
 }
 
-/* —— 起卦 / 排盘 分屏 —— */
+/* ?? ?? / ?? ?? ?? */
 .tianji-stage {
 	width: 100%;
 	max-width: 920px;
@@ -215,7 +215,7 @@
 	max-width: none;
 }
 
-/* —— Form —— */
+/* ?? Form ?? */
 .tianji-form {
 	display: flex;
 	flex-direction: column;
@@ -330,7 +330,7 @@
 	line-height: 1.65;
 }
 
-/* —— Form —— */
+/* ?? Form ?? */
 .tianji-field {
 	display: flex;
 	flex-direction: column;
@@ -446,7 +446,7 @@
 	font-weight: 600;
 }
 
-/* —— Yao board —— */
+/* ?? Yao board ?? */
 .tianji-yao-board {
 	padding: var(--tianji-card-pad);
 	margin-bottom: 0;
@@ -524,7 +524,7 @@
 	color: var(--text-muted);
 }
 
-/* —— Coin cast (sidebar-friendly) —— */
+/* ?? Coin cast (sidebar-friendly) ?? */
 .tianji-coin-panel {
 	display: flex;
 	flex-direction: column;
@@ -717,7 +717,7 @@
 	justify-content: center;
 }
 
-/* —— Actions / Buttons —— */
+/* ?? Actions / Buttons ?? */
 .tianji-actions {
 	display: flex;
 	flex-wrap: wrap;
@@ -816,7 +816,7 @@
 	line-height: 1.4;
 }
 
-/* —— Results / history —— */
+/* ?? Results / history ?? */
 .tianji-result-card,
 .tianji-history-card {
 	padding: var(--tianji-card-pad);
@@ -859,7 +859,7 @@
 	font-weight: 650;
 }
 
-/* —— Liuyao professional chart —— */
+/* ?? Liuyao professional chart ?? */
 .tianji-liuyao-result {
 	padding: 14px 16px 18px;
 }
@@ -980,7 +980,7 @@
 	color: #c0392b;
 }
 
-/* —— Simple analysis（简易分析） —— */
+/* ?? Simple analysis?????? ?? */
 .tianji-simple-analysis {
 	margin-top: 20px;
 	display: flex;
@@ -1104,7 +1104,7 @@
 	padding-left: 13px;
 }
 
-/* —— Gua compare (legacy keep for other uses) —— */
+/* ?? Gua compare (legacy keep for other uses) ?? */
 .tianji-gua-compare {
 	display: flex;
 	flex-direction: row;
@@ -1216,7 +1216,7 @@
 	min-width: 0;
 }
 
-/* —— Bazi —— */
+/* ?? Bazi ?? */
 .tianji-bazi-info {
 	font-size: 0.88em;
 	line-height: 1.7;
@@ -1303,7 +1303,7 @@
 	font-weight: 600;
 }
 
-/* 天干地支 / 五行配色 */
+/* ???? / ???? */
 .tianji-wx {
 	font-weight: inherit;
 }
@@ -1317,12 +1317,12 @@
 }
 
 .tianji-wx-tu {
-	/* 土：偏棕褐，与金的亮金色区分 */
+	/* ?????????????? */
 	color: #795548;
 }
 
 .tianji-wx-jin {
-	/* 金：亮金色 / 金黄 */
+	/* ????? / ?? */
 	color: #e6a700;
 }
 
@@ -1445,7 +1445,7 @@
 	font-size: 0.82em;
 }
 
-/* —— History —— */
+/* ?? History ?? */
 .tianji-library-filter {
 	display: flex;
 	flex-wrap: wrap;
@@ -1868,7 +1868,7 @@
 	line-height: 1.45;
 }
 
-/* —— Tarot —— */
+/* ?? Tarot ?? */
 .tianji-deck-grid {
 	display: grid;
 	grid-template-columns: 1fr;
@@ -1953,7 +1953,7 @@
 	background: color-mix(in srgb, var(--interactive-accent) 18%, var(--background-primary));
 }
 
-/* 抽牌页底部：牌阵布局预览（居中，与牌阵页网格隔离） */
+/* ????????????????????????? */
 .tianji-spread-preview {
 	padding: var(--tianji-card-pad);
 	margin: 0;
@@ -2310,7 +2310,7 @@
 	line-height: 1.4;
 }
 
-/* 预览区各牌阵几何（固定列宽，不与牌阵页共享） */
+/* ?????????????????????? */
 .tianji-spread-preview-single {
 	grid-template-columns: 76px;
 }
@@ -2329,7 +2329,7 @@
 .tianji-spread-preview-holy-triangle [data-pos="now"] { grid-area: now; }
 .tianji-spread-preview-holy-triangle [data-pos="result"] { grid-area: result; }
 
-/* 二选一：Y 形分叉 */
+/* ????Y ??? */
 .tianji-spread-preview-two-choice {
 	grid-template-columns: repeat(3, 76px);
 	grid-template-areas:
@@ -2343,7 +2343,7 @@
 .tianji-spread-preview-two-choice [data-pos="aOut"] { grid-area: aOut; }
 .tianji-spread-preview-two-choice [data-pos="bOut"] { grid-area: bOut; }
 
-/* 恋人金字塔：顶 4，底 2-1-3 */
+/* ??????? 4?? 2-1-3 */
 .tianji-spread-preview-lovers-pyramid {
 	grid-template-columns: repeat(3, 76px);
 	grid-template-areas:
@@ -2355,7 +2355,7 @@
 .tianji-spread-preview-lovers-pyramid [data-pos="relation"] { grid-area: relation; }
 .tianji-spread-preview-lovers-pyramid [data-pos="path"] { grid-area: path; }
 
-/* 爱情十字 */
+/* ???? */
 .tianji-spread-preview-love-cross {
 	grid-template-columns: repeat(3, 76px);
 	grid-template-areas:
@@ -2369,7 +2369,7 @@
 .tianji-spread-preview-love-cross [data-pos="path"] { grid-area: path; }
 .tianji-spread-preview-love-cross [data-pos="result"] { grid-area: result; }
 
-/* 关系发展：上 1 3 5 / 下 2 4 6 */
+/* ?????? 1 3 5 / ? 2 4 6 */
 .tianji-spread-preview-relation-six {
 	grid-template-columns: repeat(3, 76px);
 	grid-template-areas:
@@ -2395,7 +2395,7 @@
 .tianji-spread-preview-career-five [data-pos="action"] { grid-area: c4; }
 .tianji-spread-preview-career-five [data-pos="result"] { grid-area: c5; }
 
-/* 六芒星：1顶 2左上 6右上 7中 3左下 5右下 4底 */
+/* ????1? 2?? 6?? 7? 3?? 5?? 4? */
 .tianji-spread-preview-hexagram-seven {
 	grid-template-columns: repeat(3, 76px);
 	grid-template-areas:
@@ -2438,8 +2438,8 @@
 }
 
 /*
- * 抽牌预览十字：标题正向分列，仅 2 号牌面旋转叠放。
- * （整块旋转会让标题侧躺挤进邻位，故预览不用整块转）
+ * ??????????????? 2 ????????
+ * ?????????????????????????
  */
 .tianji-spread-preview-celtic-cross .tianji-celtic-mid {
 	grid-area: mid;
@@ -2528,7 +2528,7 @@
 	justify-content: center;
 }
 
-/* —— 各牌阵几何布局（牌阵页） —— */
+/* ?? ???????????? ?? */
 .tianji-spread-custom {
 	display: flex;
 	flex-wrap: wrap;
@@ -2675,9 +2675,9 @@
 }
 
 /*
- * 宽屏十字中心：
- * 1、2 各自「标题 + 牌面 + 牌名/标签」绑定为整块；
- * 2 号整块旋转 90° 横跨 1 号，不再拆开只叠牌面。
+ * ???????
+ * 1?2 ????? + ?? + ??/?????????
+ * 2 ????? 90? ?? 1 ???????????
  */
 .tianji-spread-celtic-cross .tianji-celtic-mid {
 	grid-area: mid;
@@ -2971,7 +2971,7 @@
 	white-space: pre-wrap;
 }
 
-/* —— Container-width responsive（按界面宽度，不按侧边栏位置） —— */
+/* ?? Container-width responsive??????????????? ?? */
 @container tianji (max-width: 720px) {
 	.tianji-shell {
 		/* padding: 12px 12px 28px; */
@@ -3043,6 +3043,34 @@
 
 	.tianji-liuyao-info-grid {
 		grid-template-columns: 1fr;
+	}
+
+	.tianji-xlr-info-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.tianji-xlr-board {
+		align-items: stretch;
+	}
+
+	.tianji-xlr-grid {
+		max-width: none;
+		width: 100%;
+		margin-left: 0;
+		margin-right: 0;
+	}
+
+	.tianji-xlr-taiji {
+		max-width: none;
+	}
+
+	.tianji-xlr-taiji-chips {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+
+	.tianji-xlr-cell {
+		min-height: 108px;
+		padding: 8px 8px 26px;
 	}
 
 	.tianji-liuyao-boards {
@@ -3159,7 +3187,7 @@
 		min-width: 108px;
 	}
 
-	/* 窄屏：排盘结果凯尔特十字取消叠放；抽牌预览十字保持几何布局不变 */
+	/* ??????????????????????????????? */
 	.tianji-spread-celtic-cross > .tianji-celtic-mid {
 		display: contents;
 	}
@@ -3308,14 +3336,14 @@
 	}
 }
 
-/* —— Modal / viewport fallbacks —— */
+/* ?? Modal / viewport fallbacks ?? */
 @media (max-width: 960px) {
 	.tianji-deck-grid {
 		grid-template-columns: repeat(3, 1fr);
 	}
 }
 
-/* —— Tarot pick modal —— */
+/* ?? Tarot pick modal ?? */
 .modal.tianji-tarot-pick-modal {
 	width: min(920px, 96vw);
 	max-width: 96vw;
@@ -3512,7 +3540,7 @@
 	align-content: start;
 }
 
-/* 单卡选牌：tools + grid 直接挂在 body 下 */
+/* ?????tools + grid ???? body ? */
 .tianji-pick-body > .tianji-pick-grid {
 	flex: 1 1 auto;
 	min-height: 0;
@@ -3718,7 +3746,7 @@
 	}
 }
 
-/* —— Shuffle back pick —— */
+/* ?? Shuffle back pick ?? */
 .tianji-shuffle-layout {
 	display: flex;
 	flex-direction: column;
@@ -3837,7 +3865,7 @@
 	align-content: start;
 }
 
-/* 堆叠：重叠折行，整体与每排居中 */
+/* ??????????????? */
 .tianji-shuffle-stack {
 	flex: 1;
 	min-height: 0;
@@ -3928,7 +3956,7 @@
 }
 
 .tianji-shuffle-stack .tianji-shuffle-back {
-	/* 布局只占步进宽，牌面溢出形成重叠，便于每排 justify-content:center */
+	/* ????????????????????? justify-content:center */
 	flex: 0 0 26px;
 	width: 26px;
 	height: 100px;
@@ -4008,7 +4036,7 @@
 }
 
 
-/* —— Reading notes（Markdown 笔记注释） —— */
+/* ?? Reading notes?Markdown ????? ?? */
 .tianji-lib-col-note {
 	white-space: nowrap;
 }
@@ -4045,7 +4073,7 @@
 	width: min(640px, 94vw);
 }
 
-/* —— File note modal（嵌入真实 Markdown 视图，参考 modal-opener） —— */
+/* ?? File note modal????? Markdown ????? modal-opener? ?? */
 .modal.tianji-file-note-modal {
 	width: min(920px, 94vw);
 	height: min(86vh, 960px);
@@ -4216,7 +4244,7 @@
 	gap: 8px;
 }
 
-/* —— Tarot card detail modal —— */
+/* ?? Tarot card detail modal ?? */
 .tianji-tarot-card.is-clickable {
 	cursor: pointer;
 	border-radius: var(--tianji-radius-sm);
@@ -4258,7 +4286,7 @@
 	color: var(--text-muted);
 }
 
-/* 一行：牌面 | 正位 + 逆位 */
+/* ????? | ?? + ?? */
 .tianji-card-detail-hero {
 	display: grid;
 	grid-template-columns: minmax(132px, 180px) minmax(0, 1fr);
@@ -4404,7 +4432,7 @@
 	}
 }
 
-/* —— Settings: divination module order —— */
+/* ?? Settings: divination module order ?? */
 .tianji-settings-tabs {
 	display: flex;
 	flex-direction: column;
@@ -4467,7 +4495,7 @@
 	margin-left: 4px;
 }
 
-/* 设置页笔记相关输入：强制单行 */
+/* ?????????????? */
 input.tianji-settings-input[type='text'] {
 	width: 16rem;
 	max-width: min(16rem, 42vw);
@@ -4483,4 +4511,210 @@ input.tianji-settings-input[type='text'] {
 
 .tianji-tabs.is-single .tianji-tab {
 	cursor: default;
+}
+
+/* ???? ????????? ???? */
+.tianji-xlr-result {
+	padding: var(--tianji-card-pad, 12px);
+}
+
+.tianji-xlr-info h4,
+.tianji-xlr-board h4 {
+	margin: 0 0 10px;
+	font-size: 0.95em;
+	font-weight: 600;
+}
+
+.tianji-xlr-info-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	gap: 8px 12px;
+	margin-bottom: 16px;
+}
+
+.tianji-xlr-board {
+	margin-top: 8px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.tianji-xlr-board h4 {
+	text-align: left;
+	align-self: stretch;
+}
+
+.tianji-xlr-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	overflow: hidden;
+	background: var(--background-primary);
+	width: 100%;
+	max-width: 420px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.tianji-xlr-cell {
+	position: relative;
+	min-height: 118px;
+	padding: 10px 10px 28px;
+	border-right: 1px solid var(--background-modifier-border);
+	border-bottom: 1px solid var(--background-modifier-border);
+	box-sizing: border-box;
+	background: var(--background-primary);
+}
+
+.tianji-xlr-cell:nth-child(3n) {
+	border-right: none;
+}
+
+.tianji-xlr-cell:nth-child(n + 4) {
+	border-bottom: none;
+}
+
+.tianji-xlr-star {
+	position: absolute;
+	top: 8px;
+	left: 10px;
+	color: #c9953a;
+	font-size: 0.82em;
+	font-weight: 500;
+	line-height: 1.2;
+}
+
+.tianji-xlr-spirit {
+	position: absolute;
+	top: 8px;
+	right: 10px;
+	color: #6aa8c4;
+	font-size: 0.82em;
+	font-weight: 500;
+	line-height: 1.2;
+}
+
+.tianji-xlr-branch {
+	position: absolute;
+	top: 50%;
+	left: 12px;
+	transform: translateY(-50%);
+	color: #6a9a62;
+	font-size: 1em;
+	font-weight: 650;
+	line-height: 1.2;
+}
+
+.tianji-xlr-relation {
+	position: absolute;
+	top: 50%;
+	right: 10px;
+	transform: translateY(-50%);
+	color: #b56aa8;
+	font-size: 0.82em;
+	font-weight: 500;
+	line-height: 1.2;
+}
+
+.tianji-xlr-relation-self {
+	color: #c44a4a;
+	font-weight: 700;
+}
+
+.tianji-xlr-self {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	color: #c44a4a;
+	font-size: 0.95em;
+	font-weight: 700;
+	line-height: 1.2;
+	z-index: 1;
+	pointer-events: none;
+}
+
+.tianji-xlr-foot-marks,
+.tianji-xlr-marks {
+	position: absolute;
+	left: 10px;
+	bottom: 8px;
+	color: #c44a4a;
+	font-size: 0.78em;
+	font-weight: 650;
+	line-height: 1.15;
+	z-index: 1;
+}
+
+.tianji-xlr-mark {
+	color: #c44a4a;
+	font-size: 0.72em;
+	font-weight: 650;
+	line-height: 1.15;
+}
+
+.tianji-xlr-palace {
+	position: absolute;
+	right: 10px;
+	bottom: 8px;
+	font-size: 1.05em;
+	font-weight: 650;
+	color: var(--text-normal);
+	letter-spacing: 0.04em;
+	line-height: 1.2;
+	text-align: right;
+}
+
+.tianji-xlr-taiji {
+	width: 100%;
+	max-width: 420px;
+	margin: 12px auto 0;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.tianji-xlr-taiji-label {
+	font-size: 0.9em;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.tianji-xlr-taiji-chips {
+	display: grid;
+	grid-template-columns: repeat(6, minmax(0, 1fr));
+	gap: 6px;
+}
+
+.tianji-xlr-taiji-chip {
+	margin: 0;
+	padding: 6px 2px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 0.78em;
+	font-weight: 550;
+	line-height: 1.2;
+	cursor: pointer;
+}
+
+.tianji-xlr-taiji-chip:hover {
+	background: var(--background-modifier-hover);
+}
+
+.tianji-xlr-taiji-chip.is-active {
+	border-color: var(--interactive-accent);
+	background: color-mix(in srgb, var(--interactive-accent) 18%, var(--background-primary));
+	color: var(--text-normal);
+	font-weight: 700;
+	box-shadow: inset 0 0 0 1px var(--interactive-accent);
+}
+
+.tianji-xlr-taiji-hint {
+	font-size: 0.78em;
+	color: var(--text-muted);
+	line-height: 1.3;
 }
