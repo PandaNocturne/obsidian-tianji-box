@@ -53,9 +53,14 @@ import {
 import {
 	buildXiaoliurenResult,
 	getBodySideRelation,
+	withTaijiRelations,
 	type XiaoliurenCell,
 	type XiaoliurenResult,
 } from '../xiaoliuren/chart';
+import {
+	PALACES_GRID,
+	type XiaoliurenPalace,
+} from '../xiaoliuren/palaces';
 import { TarotPickModal } from './tarot-pick-modal';
 import { TarotShuffleModal } from './tarot-shuffle-modal';
 import {
@@ -151,6 +156,8 @@ export class TianjiView extends ItemView {
 	private xiaoliurenCastLocal = '';
 	private xiaoliurenResult: XiaoliurenResult | null = null;
 	private xiaoliurenRecordId: number | null = null;
+	/** 立太极宫位；null 表示未立，六亲按身宫 */
+	private xiaoliurenTaijiPalace: XiaoliurenPalace | null = null;
 
 	private shellEl: HTMLElement | null = null;
 	private tabsEl: HTMLElement | null = null;
@@ -2897,6 +2904,7 @@ export class TianjiView extends ItemView {
 	): Promise<void> {
 		if (!this.requireXiaoliurenQuestion()) return;
 		this.xiaoliurenResult = result;
+		this.xiaoliurenTaijiPalace = null;
 		this.xiaoliurenPanel = 'chart';
 		const title =
 			this.xiaoliurenSubject.trim() ||
@@ -2993,10 +3001,37 @@ export class TianjiView extends ItemView {
 
 		const board = card.createDiv({ cls: 'tianji-xlr-board' });
 		board.createEl('h4', { text: '课盘' });
+		const taiji = this.xiaoliurenTaijiPalace;
+		const displayCells = withTaijiRelations(r, taiji);
 		const grid = board.createDiv({ cls: 'tianji-xlr-grid' });
-		for (const cell of r.gridCells) {
+		for (const cell of displayCells) {
 			this.renderXiaoliurenCell(grid, cell);
 		}
+
+		const taijiBar = board.createDiv({ cls: 'tianji-xlr-taiji' });
+		taijiBar.createSpan({
+			cls: 'tianji-xlr-taiji-label',
+			text: '立太极',
+		});
+		const chips = taijiBar.createDiv({ cls: 'tianji-xlr-taiji-chips' });
+		for (const palace of PALACES_GRID) {
+			const btn = chips.createEl('button', {
+				cls: `tianji-xlr-taiji-chip${taiji === palace ? ' is-active' : ''}`,
+				type: 'button',
+				text: palace,
+			});
+			btn.addEventListener('click', () => {
+				this.xiaoliurenTaijiPalace =
+					this.xiaoliurenTaijiPalace === palace ? null : palace;
+				this.render();
+			});
+		}
+		taijiBar.createDiv({
+			cls: 'tianji-xlr-taiji-hint',
+			text: taiji
+				? `当前太极：${taiji}${taiji === r.bodyPalace ? '（身宫）' : ''}（再点取消）`
+				: '未立太极（点宫位立太极，六亲按该宫重排）',
+		});
 
 		this.appendReadingNoteSection(stage, this.xiaoliurenRecordId);
 	}
@@ -3009,7 +3044,9 @@ export class TianjiView extends ItemView {
 			cls: 'tianji-xlr-cell',
 			attr: { 'data-palace': cell.palace },
 		});
-		const isBody = cell.marks.includes('身') || cell.relation === '自身';
+
+		// 立太极后「自身」跟太极宫；未立时跟身宫（relation 已是自身）
+		const isSelf = cell.relation === '自身';
 
 		el.createSpan({
 			cls: 'tianji-xlr-star',
@@ -3024,8 +3061,8 @@ export class TianjiView extends ItemView {
 			text: cell.branch,
 		});
 
-		// 身宫：自身居中；右侧为「自身六亲」（地支 vs 地盘），同为红色
-		if (isBody) {
+		// 自身居中；右侧为「自身六亲」（地支 vs 地盘），同为红色
+		if (isSelf) {
 			el.createSpan({
 				cls: 'tianji-xlr-self',
 				text: '自身',
@@ -3044,7 +3081,10 @@ export class TianjiView extends ItemView {
 			});
 		}
 
-		const footMarks = this.formatXiaoliurenFootMarks(cell.marks);
+		// 身宫若非当前「自身」，左下角补「身」标记
+		const footMarks = this.formatXiaoliurenFootMarks(cell.marks, {
+			includeShen: cell.marks.includes('身') && !isSelf,
+		});
 		if (footMarks) {
 			el.createSpan({
 				cls: 'tianji-xlr-foot-marks',
@@ -3058,9 +3098,15 @@ export class TianjiView extends ItemView {
 		});
 	}
 
-	/** 左下角标记：时+刻 → 时刻；不含「身」（身用居中「自身」） */
-	private formatXiaoliurenFootMarks(marks: string[]): string {
-		const set = new Set(marks.filter((m) => m !== '身'));
+	/** 左下角标记：时+刻 → 时刻；身仅在非「自身」展示时保留 */
+	private formatXiaoliurenFootMarks(
+		marks: string[],
+		opts?: { includeShen?: boolean },
+	): string {
+		const includeShen = opts?.includeShen ?? false;
+		const set = new Set(
+			marks.filter((m) => includeShen || m !== '身'),
+		);
 		const parts: string[] = [];
 		if (set.has('日')) parts.push('日');
 		if (set.has('数')) parts.push('数');
@@ -3072,6 +3118,7 @@ export class TianjiView extends ItemView {
 			if (set.has('时')) parts.push('时');
 			if (set.has('刻')) parts.push('刻');
 		}
+		if (includeShen && set.has('身')) parts.push('身');
 		return parts.join('');
 	}
 
@@ -3106,6 +3153,7 @@ export class TianjiView extends ItemView {
 			}
 		}
 		this.xiaoliurenResult = result;
+		this.xiaoliurenTaijiPalace = null;
 		this.xiaoliurenRecordId = rec.id;
 		this.xiaoliurenPanel = 'chart';
 		this.activeTab = 'xiaoliuren';

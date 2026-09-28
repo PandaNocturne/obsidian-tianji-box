@@ -274,6 +274,30 @@ function formatChartText(
 	return lines.join('\n');
 }
 
+/**
+ * 立太极后按太极宫重算六亲（不改动原排盘地支/神煞/五星）。
+ * taijiPalace 为 null 时返回原宫位六亲。
+ */
+export function withTaijiRelations(
+	result: XiaoliurenResult,
+	taijiPalace: XiaoliurenPalace | null,
+): XiaoliurenCell[] {
+	if (!taijiPalace) return result.gridCells;
+
+	const branches = {} as Record<XiaoliurenPalace, Dizhi>;
+	for (const cell of result.cells) {
+		branches[cell.palace] = cell.branch;
+	}
+	const relations = placeRelations(branches, taijiPalace);
+	const side = getBodySideRelation(branches[taijiPalace]!, taijiPalace);
+
+	return result.gridCells.map((cell) => ({
+		...cell,
+		relation: relations[cell.palace]!,
+		bodySideRelation: cell.palace === taijiPalace ? side : null,
+	}));
+}
+
 export function buildXiaoliurenResult(params: {
 	cast: XiaoliurenCastCore;
 	subject: string;
