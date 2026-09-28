@@ -43,9 +43,15 @@ export interface XiaoliurenCastCore {
 	kePalace: XiaoliurenPalace | null;
 	/** 数字：数宫 */
 	numberPalace: XiaoliurenPalace | null;
-	/** 身宫 = 时辰落宫 */
+	/**
+	 * 身宫：
+	 * - 日时 / 数字：时辰落宫
+	 * - 时刻：刻落宫
+	 */
 	bodyPalace: XiaoliurenPalace;
-	/** 排五星起点宫（日参考宫） */
+	/** 安地支起始地支（落在身宫）：日时/数字用时支，时刻用刻支 */
+	bodyBranch: Dizhi;
+	/** 排五星起点宫（日参考宫：日时=日宫，时刻=时宫，数字=数宫） */
 	starStartPalace: XiaoliurenPalace;
 	/** 报数（数字起卦） */
 	inputNumber: number | null;
@@ -97,16 +103,23 @@ export function castXiaoliuren(input: XiaoliurenCastInput): XiaoliurenCastCore {
 	let hourPalace: XiaoliurenPalace;
 	let kePalace: XiaoliurenPalace | null = null;
 	let numberPalace: XiaoliurenPalace | null = null;
+	let bodyPalace: XiaoliurenPalace;
+	let bodyBranch: Dizhi;
 	let starStartPalace: XiaoliurenPalace;
 	let inputNumber: number | null = null;
 
 	if (input.method === 'day-hour') {
 		dayPalace = palaceFromSteps(lunar.day);
 		hourPalace = palaceFromStartByBranchIndex(dayPalace, hIdx);
+		bodyPalace = hourPalace;
+		bodyBranch = hBranch;
 		starStartPalace = dayPalace;
 	} else if (input.method === 'hour-ke') {
 		hourPalace = palaceFromStartByBranchIndex('大安', hIdx);
 		kePalace = palaceFromStartByBranchIndex(hourPalace, kIdx);
+		// 时刻起卦：身在刻宫，安地支以刻支起
+		bodyPalace = kePalace;
+		bodyBranch = kBranch;
 		starStartPalace = hourPalace;
 	} else {
 		const raw = Math.floor(Number(input.number));
@@ -118,6 +131,8 @@ export function castXiaoliuren(input: XiaoliurenCastInput): XiaoliurenCastCore {
 		const steps = rem === 0 ? 6 : rem;
 		numberPalace = palaceFromSteps(steps);
 		hourPalace = palaceFromStartByBranchIndex(numberPalace, hIdx);
+		bodyPalace = hourPalace;
+		bodyBranch = hBranch;
 		starStartPalace = numberPalace;
 	}
 
@@ -133,7 +148,8 @@ export function castXiaoliuren(input: XiaoliurenCastInput): XiaoliurenCastCore {
 		hourPalace,
 		kePalace,
 		numberPalace,
-		bodyPalace: hourPalace,
+		bodyPalace,
+		bodyBranch,
 		starStartPalace,
 		inputNumber,
 	};

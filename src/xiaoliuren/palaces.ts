@@ -76,6 +76,16 @@ export const DIZHI_WUXING: Record<Dizhi, WuXing> = {
 	亥: '水',
 };
 
+/** 六宫地盘五行（取自身六亲用） */
+export const PALACE_DIPAN_WUXING: Record<XiaoliurenPalace, WuXing> = {
+	大安: '木',
+	留连: '水',
+	速喜: '火',
+	赤口: '金',
+	小吉: '水',
+	空亡: '土',
+};
+
 export type LiuQin =
 	| '自身'
 	| '父母'

@@ -3024,19 +3024,19 @@ export class TianjiView extends ItemView {
 			text: cell.branch,
 		});
 
-		// 身宫：自身居中；右侧中间仍放六亲（非土身时为土之本然六亲，如官鬼/子孙）
+		// 身宫：自身居中；右侧为「自身六亲」（地支 vs 地盘），同为红色
 		if (isBody) {
 			el.createSpan({
 				cls: 'tianji-xlr-self',
 				text: '自身',
 			});
-			const side = getBodySideRelation(cell.branch);
-			if (side) {
-				el.createSpan({
-					cls: 'tianji-xlr-relation',
-					text: side,
-				});
-			}
+			const side =
+				cell.bodySideRelation ??
+				getBodySideRelation(cell.branch, cell.palace);
+			el.createSpan({
+				cls: 'tianji-xlr-relation tianji-xlr-relation-self',
+				text: side,
+			});
 		} else if (cell.relation) {
 			el.createSpan({
 				cls: 'tianji-xlr-relation',

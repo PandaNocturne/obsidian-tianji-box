@@ -6,6 +6,7 @@ import {
 	LIU_SHEN_ORDER,
 	PALACES_CLOCKWISE,
 	PALACES_GRID,
+	PALACE_DIPAN_WUXING,
 	WU_XING_STAR_ORDER,
 	nextPalace,
 	palaceIndex,
@@ -25,6 +26,8 @@ export interface XiaoliurenCell {
 	spirit: LiuShen;
 	branch: Dizhi;
 	relation: LiuQin;
+	/** 身宫右侧：自身地支 vs 地盘五行 */
+	bodySideRelation: LiuQin | null;
 	marks: XiaoliurenMark[];
 }
 
@@ -38,6 +41,7 @@ export interface XiaoliurenResult {
 	lunarText: string;
 	hourBranch: Dizhi;
 	keBranch: Dizhi;
+	bodyBranch: Dizhi;
 	lunarDay: number;
 	inputNumber: number | null;
 	dayPalace: XiaoliurenPalace | null;
@@ -56,7 +60,6 @@ export interface XiaoliurenResult {
 /** 生克：other 相对 me */
 function relationOf(me: WuXing, other: WuXing): LiuQin {
 	if (me === other) return '兄弟';
-	// 生我
 	const shengWo: Record<WuXing, WuXing> = {
 		木: '水',
 		火: '木',
@@ -64,7 +67,6 @@ function relationOf(me: WuXing, other: WuXing): LiuQin {
 		金: '土',
 		水: '金',
 	};
-	// 我生
 	const woSheng: Record<WuXing, WuXing> = {
 		木: '火',
 		火: '土',
@@ -72,7 +74,6 @@ function relationOf(me: WuXing, other: WuXing): LiuQin {
 		金: '水',
 		水: '木',
 	};
-	// 克我
 	const keWo: Record<WuXing, WuXing> = {
 		木: '金',
 		火: '水',
@@ -80,7 +81,6 @@ function relationOf(me: WuXing, other: WuXing): LiuQin {
 		金: '火',
 		水: '土',
 	};
-	// 我克
 	const woKe: Record<WuXing, WuXing> = {
 		木: '土',
 		火: '金',
@@ -95,13 +95,13 @@ function relationOf(me: WuXing, other: WuXing): LiuQin {
 	return '兄弟';
 }
 
-/** 安地支：时辰地支安时宫，顺时针隔位排 */
+/** 安地支：自身地支安身宫，顺时针隔位排（全阴或全阳） */
 export function placeBranches(
-	hourPalace: XiaoliurenPalace,
-	hourBranch: Dizhi,
+	bodyPalace: XiaoliurenPalace,
+	bodyBranch: Dizhi,
 ): Record<XiaoliurenPalace, Dizhi> {
-	const startBranchIdx = DIZHI_LIST.indexOf(hourBranch);
-	const startPalaceIdx = palaceIndex(hourPalace);
+	const startBranchIdx = DIZHI_LIST.indexOf(bodyBranch);
+	const startPalaceIdx = palaceIndex(bodyPalace);
 	const map = {} as Record<XiaoliurenPalace, Dizhi>;
 	for (let i = 0; i < 6; i++) {
 		const palace = PALACES_CLOCKWISE[(startPalaceIdx + i) % 6]!;
@@ -111,7 +111,7 @@ export function placeBranches(
 	return map;
 }
 
-/** 排六亲 */
+/** 排六亲：以身宫地支五行为我；兄弟取身宫顺时针第一土 */
 export function placeRelations(
 	branches: Record<XiaoliurenPalace, Dizhi>,
 	bodyPalace: XiaoliurenPalace,
@@ -128,34 +128,31 @@ export function placeRelations(
 		map[palace] = relationOf(me, DIZHI_WUXING[branches[palace]!]);
 	}
 
-	// 非土支为身：无同类时，顺时针第一个土支宫为兄弟
-	if (me !== '土') {
-		const hasBrother = PALACES_CLOCKWISE.some(
-			(p) => p !== bodyPalace && map[p] === '兄弟',
-		);
-		if (!hasBrother) {
-			let cur = nextPalace(bodyPalace);
-			for (let i = 0; i < 6; i++) {
-				if (DIZHI_WUXING[branches[cur]!] === '土') {
-					map[cur] = '兄弟';
-					break;
-				}
-				cur = nextPalace(cur);
-			}
+	// 先定兄弟：身宫起顺时针第一个土支宫为兄弟（身宫本身除外）
+	let cur = nextPalace(bodyPalace);
+	for (let i = 0; i < 6; i++) {
+		if (DIZHI_WUXING[branches[cur]!] === '土') {
+			map[cur] = '兄弟';
+			break;
 		}
+		cur = nextPalace(cur);
 	}
 
 	return map;
 }
 
 /**
- * 身宫右侧六亲：非土身时取土的本然六亲（与兄弟位让位对应）。
- * 例：亥水为身 → 官鬼；午火为身 → 子孙。
+ * 取自身六亲：身宫地支五行 vs 该宫地盘五行。
+ * 例：未土在大安（木）→ 木克土 → 官鬼；土在赤口（金）→ 土生金 → 子孙。
  */
-export function getBodySideRelation(bodyBranch: Dizhi): LiuQin | null {
-	const me = DIZHI_WUXING[bodyBranch];
-	if (me === '土') return null;
-	return relationOf(me, '土');
+export function getBodySideRelation(
+	bodyBranch: Dizhi,
+	bodyPalace: XiaoliurenPalace,
+): LiuQin {
+	return relationOf(
+		DIZHI_WUXING[bodyBranch],
+		PALACE_DIPAN_WUXING[bodyPalace],
+	);
 }
 
 /** 青龙起宫：按身宫地支 */
@@ -196,7 +193,7 @@ export function placeSpirits(
 	return map;
 }
 
-/** 排五星：自 starStart 起木星 */
+/** 排五星：自星起点（对宫/日参考宫）起木星 */
 export function placeStars(
 	starStart: XiaoliurenPalace,
 ): Record<XiaoliurenPalace, WuXingStar> {
@@ -209,7 +206,9 @@ export function placeStars(
 	return map;
 }
 
-function buildMarks(cast: XiaoliurenCastCore): Record<XiaoliurenPalace, XiaoliurenMark[]> {
+function buildMarks(
+	cast: XiaoliurenCastCore,
+): Record<XiaoliurenPalace, XiaoliurenMark[]> {
 	const marks: Record<XiaoliurenPalace, XiaoliurenMark[]> = {
 		大安: [],
 		留连: [],
@@ -230,7 +229,9 @@ function buildMarks(cast: XiaoliurenCastCore): Record<XiaoliurenPalace, Xiaoliur
 	return marks;
 }
 
-function formatChartText(result: Omit<XiaoliurenResult, 'chartText' | 'gridCells'>): string {
+function formatChartText(
+	result: Omit<XiaoliurenResult, 'chartText' | 'gridCells'>,
+): string {
 	const lines: string[] = [
 		`【小六壬】${result.methodLabel}`,
 		`公历：${result.solarText}`,
@@ -252,14 +253,22 @@ function formatChartText(result: Omit<XiaoliurenResult, 'chartText' | 'gridCells
 	if (result.numberPalace) lines.push(`数宫：${result.numberPalace}`);
 	lines.push(`时宫：${result.hourPalace}`);
 	if (result.kePalace) lines.push(`刻宫：${result.kePalace}`);
-	lines.push(`身宫：${result.bodyPalace}`, ``, `—— 排盘 ——`);
+	lines.push(
+		`身宫：${result.bodyPalace}（${result.bodyBranch}）`,
+		``,
+		`—— 排盘 ——`,
+	);
 
 	for (const palace of PALACES_GRID) {
 		const cell = result.cells.find((c) => c.palace === palace)!;
 		const mark =
 			cell.marks.length > 0 ? ` [${cell.marks.join('')}]` : '';
+		const side =
+			cell.bodySideRelation != null
+				? ` · 自身六亲:${cell.bodySideRelation}`
+				: '';
 		lines.push(
-			`${palace}${mark}：${cell.star} · ${cell.spirit} · ${cell.branch} · ${cell.relation}`,
+			`${palace}${mark}：${cell.star} · ${cell.spirit} · ${cell.branch} · ${cell.relation}${side}`,
 		);
 	}
 	return lines.join('\n');
@@ -271,11 +280,12 @@ export function buildXiaoliurenResult(params: {
 	question: string;
 }): XiaoliurenResult {
 	const { cast, subject, question } = params;
-	const branches = placeBranches(cast.hourPalace, cast.hourBranch);
+	const branches = placeBranches(cast.bodyPalace, cast.bodyBranch);
 	const relations = placeRelations(branches, cast.bodyPalace);
-	const spirits = placeSpirits(branches[cast.bodyPalace]!);
+	const spirits = placeSpirits(cast.bodyBranch);
 	const stars = placeStars(cast.starStartPalace);
 	const marks = buildMarks(cast);
+	const bodySide = getBodySideRelation(cast.bodyBranch, cast.bodyPalace);
 
 	const cells: XiaoliurenCell[] = PALACES_CLOCKWISE.map((palace) => ({
 		palace,
@@ -283,6 +293,7 @@ export function buildXiaoliurenResult(params: {
 		spirit: spirits[palace]!,
 		branch: branches[palace]!,
 		relation: relations[palace]!,
+		bodySideRelation: palace === cast.bodyPalace ? bodySide : null,
 		marks: marks[palace]!,
 	}));
 
@@ -296,6 +307,7 @@ export function buildXiaoliurenResult(params: {
 		lunarText: cast.lunarText,
 		hourBranch: cast.hourBranch,
 		keBranch: cast.keBranch,
+		bodyBranch: cast.bodyBranch,
 		lunarDay: cast.lunarDay,
 		inputNumber: cast.inputNumber,
 		dayPalace: cast.dayPalace,

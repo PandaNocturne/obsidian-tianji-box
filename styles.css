@@ -4532,7 +4532,7 @@ input.tianji-settings-input[type='text'] {
 }
 
 .tianji-xlr-board h4 {
-	text-align: center;
+	text-align: left;
 	align-self: stretch;
 }
 
@@ -4608,6 +4608,11 @@ input.tianji-settings-input[type='text'] {
 	font-size: 0.82em;
 	font-weight: 500;
 	line-height: 1.2;
+}
+
+.tianji-xlr-relation-self {
+	color: #c44a4a;
+	font-weight: 700;
 }
 
 .tianji-xlr-self {
