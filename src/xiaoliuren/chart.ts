@@ -229,9 +229,54 @@ function buildMarks(
 	return marks;
 }
 
+function formatCellMarks(marks: XiaoliurenMark[]): string {
+	if (marks.length === 0) return '';
+	const set = new Set(marks);
+	const parts: string[] = [];
+	if (set.has('日')) parts.push('日');
+	if (set.has('数')) parts.push('数');
+	if (set.has('时') && set.has('刻')) {
+		parts.push('时刻');
+		set.delete('时');
+		set.delete('刻');
+	} else {
+		if (set.has('时')) parts.push('时');
+		if (set.has('刻')) parts.push('刻');
+	}
+	if (set.has('身')) parts.push('身');
+	return parts.join('、');
+}
+
+function formatPalaceBlock(cell: XiaoliurenCell): string {
+	const lines = [
+		`【${cell.palace}】`,
+		`  五星：${cell.star}`,
+		`  六神：${cell.spirit}`,
+		`  地支：${cell.branch}`,
+		`  六亲：${cell.relation}`,
+	];
+	if (cell.bodySideRelation != null) {
+		lines.push(`  自身六亲：${cell.bodySideRelation}`);
+	}
+	const markText = formatCellMarks(cell.marks);
+	if (markText) lines.push(`  标记：${markText}`);
+	return lines.join('\n');
+}
+
 function formatChartText(
 	result: Omit<XiaoliurenResult, 'chartText' | 'gridCells'>,
+	opts?: {
+		cells?: XiaoliurenCell[];
+		taijiPalace?: XiaoliurenPalace | null;
+	},
 ): string {
+	const cells = opts?.cells ?? result.cells;
+	const taijiPalace = opts?.taijiPalace ?? null;
+	const byPalace = {} as Record<XiaoliurenPalace, XiaoliurenCell>;
+	for (const cell of cells) {
+		byPalace[cell.palace] = cell;
+	}
+
 	const lines: string[] = [
 		`【小六壬】${result.methodLabel}`,
 		`公历：${result.solarText}`,
@@ -253,25 +298,31 @@ function formatChartText(
 	if (result.numberPalace) lines.push(`数宫：${result.numberPalace}`);
 	lines.push(`时宫：${result.hourPalace}`);
 	if (result.kePalace) lines.push(`刻宫：${result.kePalace}`);
-	lines.push(
-		`身宫：${result.bodyPalace}（${result.bodyBranch}）`,
-		``,
-		`—— 排盘 ——`,
-	);
-
-	for (const palace of PALACES_GRID) {
-		const cell = result.cells.find((c) => c.palace === palace)!;
-		const mark =
-			cell.marks.length > 0 ? ` [${cell.marks.join('')}]` : '';
-		const side =
-			cell.bodySideRelation != null
-				? ` · 自身六亲:${cell.bodySideRelation}`
-				: '';
+	lines.push(`身宫：${result.bodyPalace}（${result.bodyBranch}）`);
+	if (taijiPalace) {
 		lines.push(
-			`${palace}${mark}：${cell.star} · ${cell.spirit} · ${cell.branch} · ${cell.relation}${side}`,
+			`立太极：${taijiPalace}${taijiPalace === result.bodyPalace ? '（身宫）' : ''}（六亲按此宫重排）`,
 		);
 	}
-	return lines.join('\n');
+
+	lines.push(
+		``,
+		`—— 六宫排盘（掌诀 2×3）——`,
+		`布局：`,
+		`  留连 | 速喜 | 赤口`,
+		`  大安 | 空亡 | 小吉`,
+		``,
+		`上排：`,
+	);
+	for (const palace of ['留连', '速喜', '赤口'] as XiaoliurenPalace[]) {
+		lines.push(formatPalaceBlock(byPalace[palace]!), ``);
+	}
+	lines.push(`下排：`);
+	for (const palace of ['大安', '空亡', '小吉'] as XiaoliurenPalace[]) {
+		lines.push(formatPalaceBlock(byPalace[palace]!), ``);
+	}
+
+	return lines.join('\n').trimEnd() + '\n';
 }
 
 /**
@@ -296,6 +347,15 @@ export function withTaijiRelations(
 		relation: relations[cell.palace]!,
 		bodySideRelation: cell.palace === taijiPalace ? side : null,
 	}));
+}
+
+/** 生成复制用排盘文本；含当前立太极后的六亲，便于 AI 分析 */
+export function formatXiaoliurenChartText(
+	result: XiaoliurenResult,
+	taijiPalace: XiaoliurenPalace | null = null,
+): string {
+	const cells = withTaijiRelations(result, taijiPalace);
+	return formatChartText(result, { cells, taijiPalace });
 }
 
 export function buildXiaoliurenResult(params: {

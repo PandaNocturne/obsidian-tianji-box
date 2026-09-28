@@ -52,6 +52,7 @@ import {
 } from '../xiaoliuren/casting';
 import {
 	buildXiaoliurenResult,
+	formatXiaoliurenChartText,
 	getBodySideRelation,
 	withTaijiRelations,
 	type XiaoliurenCell,
@@ -2968,7 +2969,10 @@ export class TianjiView extends ItemView {
 			text: '复制排盘',
 		});
 		copyBtn.addEventListener('click', () => {
-			void this.copyText(r.chartText, '排盘已复制');
+			void this.copyText(
+				formatXiaoliurenChartText(r, this.xiaoliurenTaijiPalace),
+				'排盘已复制',
+			);
 		});
 		this.appendFavoriteToolbarBtn(toolbar, this.xiaoliurenRecordId);
 
