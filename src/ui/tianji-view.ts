@@ -45,6 +45,17 @@ import {
 	type DrawnCard,
 	type TarotReading,
 } from '../tarot/draw';
+import {
+	castXiaoliuren,
+	XIAOLIUREN_METHOD_LABELS,
+	type XiaoliurenMethod,
+} from '../xiaoliuren/casting';
+import {
+	buildXiaoliurenResult,
+	getBodySideRelation,
+	type XiaoliurenCell,
+	type XiaoliurenResult,
+} from '../xiaoliuren/chart';
 import { TarotPickModal } from './tarot-pick-modal';
 import { TarotShuffleModal } from './tarot-shuffle-modal';
 import {
@@ -68,7 +79,7 @@ import {
 
 export const TIANJI_VIEW_TYPE = 'tianji-view';
 
-export type TabId = 'liuyao' | 'bazi' | 'tarot';
+export type TabId = DivinationType;
 /** cast=表单；chart=排盘；library=历史库 */
 type PanelMode = 'cast' | 'chart' | 'library';
 
@@ -78,6 +89,7 @@ export class TianjiView extends ItemView {
 	private liuyaoPanel: PanelMode = 'cast';
 	private baziPanel: PanelMode = 'cast';
 	private tarotPanel: PanelMode = 'cast';
+	private xiaoliurenPanel: PanelMode = 'cast';
 	/** 历史库筛选：全部 / 仅收藏 */
 	private libraryFilter: LibraryFilter = 'all';
 	/** 历史库搜索关键词 */
@@ -131,6 +143,15 @@ export class TianjiView extends ItemView {
 	/** 自定义牌阵：洗牌/自动/手动时的目标张数 */
 	private tarotCustomCount = 3;
 
+	// 小六壬 state
+	private xiaoliurenSubject = '问事';
+	private xiaoliurenQuestion = '';
+	private xiaoliurenMethod: XiaoliurenMethod = 'day-hour';
+	private xiaoliurenNumber = '';
+	private xiaoliurenCastLocal = '';
+	private xiaoliurenResult: XiaoliurenResult | null = null;
+	private xiaoliurenRecordId: number | null = null;
+
 	private shellEl: HTMLElement | null = null;
 	private tabsEl: HTMLElement | null = null;
 	private bodyEl: HTMLElement | null = null;
@@ -143,6 +164,7 @@ export class TianjiView extends ItemView {
 		const pad = (n: number) => String(n).padStart(2, '0');
 		this.baziDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 		this.liuyaoCastLocal = this.toDatetimeLocal(now);
+		this.xiaoliurenCastLocal = this.toDatetimeLocal(now);
 	}
 
 	/** 上次打开的标签（若仍启用），否则第一个已启用模块 */
@@ -267,6 +289,8 @@ export class TianjiView extends ItemView {
 		}
 		this.bodyEl.empty();
 		if (this.activeTab === 'liuyao') this.renderLiuyao(this.bodyEl);
+		else if (this.activeTab === 'xiaoliuren')
+			this.renderXiaoliuren(this.bodyEl);
 		else if (this.activeTab === 'bazi') this.renderBazi(this.bodyEl);
 		else this.renderTarot(this.bodyEl);
 	}
@@ -2676,6 +2700,418 @@ export class TianjiView extends ItemView {
 		this.render();
 	}
 
+	/* -------------------- 小六壬 -------------------- */
+
+	private renderXiaoliuren(container: HTMLElement): void {
+		const workTop =
+			this.xiaoliurenPanel === 'chart'
+				? container.createDiv({ cls: 'tianji-work-top' })
+				: container;
+		this.renderPanelSwitch(workTop, {
+			mode: this.xiaoliurenPanel,
+			castLabel: '起卦',
+			chartLabel: '排盘',
+			libraryLabel: '课例库',
+			type: 'xiaoliuren',
+			onChange: (m) => {
+				this.xiaoliurenPanel = m;
+				this.render();
+			},
+		});
+		if (this.xiaoliurenPanel === 'library') {
+			this.renderTypeLibrary(container, {
+				type: 'xiaoliuren',
+				emptyText: '暂无小六壬课例。起卦排盘后将自动写入课例库。',
+			});
+			return;
+		}
+		if (this.xiaoliurenPanel === 'chart') {
+			this.renderXiaoliurenChart(container, workTop);
+			return;
+		}
+		this.renderXiaoliurenCast(container);
+	}
+
+	private renderXiaoliurenCast(container: HTMLElement): void {
+		const stage = container.createDiv({ cls: 'tianji-stage' });
+		const form = stage.createDiv({ cls: 'tianji-form tianji-cast-card' });
+
+		const top = form.createDiv({ cls: 'tianji-cast-row' });
+		this.field(top, '占测事由', (el) => {
+			const input = el.createEl('input', {
+				type: 'text',
+				cls: 'tianji-input',
+				placeholder: '如：事业、感情、财运…',
+				value: this.xiaoliurenSubject,
+			});
+			input.addEventListener('input', () => {
+				this.xiaoliurenSubject = input.value;
+			});
+		});
+		this.field(top, '起卦时间', (el) => {
+			const input = el.createEl('input', {
+				type: 'datetime-local',
+				cls: 'tianji-input',
+				value: this.normalizeDatetimeLocal(this.xiaoliurenCastLocal),
+			});
+			input.step = '1';
+			input.addEventListener('change', () => {
+				this.xiaoliurenCastLocal = this.normalizeDatetimeLocal(
+					input.value,
+				);
+				input.value = this.xiaoliurenCastLocal;
+			});
+			const nowBtn = el.createEl('button', {
+				cls: 'tianji-btn',
+				text: '此刻',
+			});
+			nowBtn.addEventListener('click', () => {
+				this.xiaoliurenCastLocal = this.toDatetimeLocal(new Date());
+				input.value = this.xiaoliurenCastLocal;
+			});
+		});
+
+		this.field(form, '占测问题（必填）', (el) => {
+			const ta = el.createEl('textarea', {
+				cls: 'tianji-textarea',
+				placeholder: '请描述您的具体问题（必填）',
+				attr: { required: 'true' },
+			});
+			ta.value = this.xiaoliurenQuestion;
+			ta.rows = 3;
+			ta.addEventListener('input', () => {
+				this.xiaoliurenQuestion = ta.value;
+			});
+		});
+
+		this.field(form, '起卦方式', (el) => {
+			const wrap = el.createDiv({ cls: 'tianji-radio-row' });
+			(
+				Object.keys(XIAOLIUREN_METHOD_LABELS) as XiaoliurenMethod[]
+			).forEach((id) => {
+				this.radio(
+					wrap,
+					XIAOLIUREN_METHOD_LABELS[id],
+					this.xiaoliurenMethod === id,
+					() => {
+						if (this.xiaoliurenMethod === id) return;
+						this.xiaoliurenMethod = id;
+						this.render();
+					},
+				);
+			});
+		});
+
+		if (this.xiaoliurenMethod === 'number') {
+			this.field(form, '报数（必填）', (el) => {
+				const input = el.createEl('input', {
+					type: 'number',
+					cls: 'tianji-input',
+					placeholder: '请报一个正整数',
+					attr: { min: '1', step: '1' },
+					value: this.xiaoliurenNumber,
+				});
+				input.addEventListener('input', () => {
+					this.xiaoliurenNumber = input.value;
+				});
+			});
+		}
+
+		const notes = form.createEl('details', { cls: 'tianji-notes' });
+		notes.createEl('summary', { text: '起卦说明' });
+		const ul = notes.createEl('ul');
+		const tips: Record<XiaoliurenMethod, string[]> = {
+			'day-hour': [
+				'按农历日自大安顺数得日宫，再自日宫起子时顺数到当前时辰得时宫（身宫）。',
+				'排盘含安地支、排六亲、取六神、排五星。',
+			],
+			'hour-ke': [
+				'自大安起子时得时宫；再自时宫起子刻（每 10 分钟一刻）得刻宫。',
+				'身宫为时宫；五星自时宫起木星。',
+			],
+			number: [
+				'报数除以 6 取余（余 0 作 6）自大安起数宫，再自数宫起时得时宫（身宫）。',
+				'五星自数宫起木星。',
+			],
+		};
+		for (const tip of tips[this.xiaoliurenMethod]) {
+			ul.createEl('li', { text: tip });
+		}
+
+		const actions = form.createDiv({
+			cls: 'tianji-actions tianji-cast-actions',
+		});
+		const btn = actions.createEl('button', {
+			cls: 'tianji-btn tianji-btn-primary',
+			text: '起卦排盘',
+		});
+		btn.addEventListener('click', () => {
+			void this.runXiaoliurenCast();
+		});
+	}
+
+	private requireXiaoliurenQuestion(): boolean {
+		if (this.xiaoliurenQuestion.trim()) return true;
+		new Notice('占测问题不能为空');
+		return false;
+	}
+
+	private parseXiaoliurenCastTime(): Date {
+		const d = new Date(
+			this.normalizeDatetimeLocal(this.xiaoliurenCastLocal),
+		);
+		return Number.isNaN(d.getTime()) ? new Date() : d;
+	}
+
+	private async runXiaoliurenCast(): Promise<void> {
+		if (!this.requireXiaoliurenQuestion()) return;
+		if (this.xiaoliurenMethod === 'number') {
+			const n = Number(this.xiaoliurenNumber);
+			if (!Number.isFinite(n) || n < 1 || !Number.isInteger(n)) {
+				new Notice('请输入大于 0 的正整数报数');
+				return;
+			}
+		}
+		try {
+			const cast = castXiaoliuren({
+				method: this.xiaoliurenMethod,
+				castTime: this.parseXiaoliurenCastTime(),
+				number:
+					this.xiaoliurenMethod === 'number'
+						? Number(this.xiaoliurenNumber)
+						: undefined,
+			});
+			const result = buildXiaoliurenResult({
+				cast,
+				subject: this.xiaoliurenSubject,
+				question: this.xiaoliurenQuestion,
+			});
+			await this.saveXiaoliurenCast(result);
+		} catch (e) {
+			new Notice(String(e));
+		}
+	}
+
+	private async saveXiaoliurenCast(
+		result: XiaoliurenResult,
+	): Promise<void> {
+		if (!this.requireXiaoliurenQuestion()) return;
+		this.xiaoliurenResult = result;
+		this.xiaoliurenPanel = 'chart';
+		const title =
+			this.xiaoliurenSubject.trim() ||
+			this.xiaoliurenQuestion.trim().slice(0, 20) ||
+			'小六壬';
+		try {
+			this.xiaoliurenRecordId = await this.plugin.db.insertReading({
+				type: 'xiaoliuren',
+				title,
+				inputJson: JSON.stringify({
+					subject: this.xiaoliurenSubject,
+					question: this.xiaoliurenQuestion,
+					method: this.xiaoliurenMethod,
+					methodLabel: result.methodLabel,
+					castTime: result.castTime,
+					number: result.inputNumber,
+				}),
+				resultJson: JSON.stringify(result),
+			});
+			new Notice(`已排盘：${result.methodLabel}`);
+		} catch (e) {
+			new Notice(`排盘已出，存档失败：${String(e)}`);
+		}
+		this.render();
+	}
+
+	private renderXiaoliurenChart(
+		container: HTMLElement,
+		topBar?: HTMLElement,
+	): void {
+		const stage = container.createDiv({
+			cls: 'tianji-stage tianji-chart-stage',
+		});
+		if (!this.xiaoliurenResult) {
+			this.renderChartEmpty(
+				stage,
+				'尚未起卦。请先在「起卦」完成排盘。',
+				'去起卦',
+				() => {
+					this.xiaoliurenPanel = 'cast';
+					this.render();
+				},
+			);
+			return;
+		}
+
+		const r = this.xiaoliurenResult;
+		const toolbar = (topBar ?? stage).createDiv({
+			cls: 'tianji-chart-toolbar',
+		});
+		const backBtn = toolbar.createEl('button', {
+			cls: 'tianji-btn',
+			text: '返回起卦',
+		});
+		backBtn.addEventListener('click', () => {
+			this.xiaoliurenPanel = 'cast';
+			this.render();
+		});
+		const copyBtn = toolbar.createEl('button', {
+			cls: 'tianji-btn tianji-btn-primary',
+			text: '复制排盘',
+		});
+		copyBtn.addEventListener('click', () => {
+			void this.copyText(r.chartText, '排盘已复制');
+		});
+		this.appendFavoriteToolbarBtn(toolbar, this.xiaoliurenRecordId);
+
+		const card = stage.createDiv({
+			cls: 'tianji-result-card tianji-xlr-result',
+		});
+		const info = card.createDiv({ cls: 'tianji-xlr-info' });
+		info.createEl('h4', { text: '基本信息' });
+		const infoGrid = info.createDiv({ cls: 'tianji-xlr-info-grid' });
+		const subject =
+			r.question.trim()
+				? `${r.subject || '问事'}（${r.question.trim()}）`
+				: r.subject || '问事';
+		this.addInfoCell(infoGrid, '占测事由', subject);
+		this.addInfoCell(infoGrid, '起卦方式', r.methodLabel);
+		this.addInfoCell(infoGrid, '公历', r.solarText);
+		this.addInfoCell(infoGrid, '农历', r.lunarText);
+		this.addInfoCell(infoGrid, '时辰', `${r.hourBranch}时`);
+		if (r.method === 'hour-ke') {
+			this.addInfoCell(infoGrid, '刻', `${r.keBranch}刻`);
+		}
+		if (r.method === 'number' && r.inputNumber != null) {
+			this.addInfoCell(infoGrid, '报数', String(r.inputNumber));
+		}
+		if (r.dayPalace) this.addInfoCell(infoGrid, '日宫', r.dayPalace);
+		if (r.numberPalace) this.addInfoCell(infoGrid, '数宫', r.numberPalace);
+		this.addInfoCell(infoGrid, '时宫', r.hourPalace);
+		if (r.kePalace) this.addInfoCell(infoGrid, '刻宫', r.kePalace);
+		this.addInfoCell(infoGrid, '身宫', r.bodyPalace);
+
+		const board = card.createDiv({ cls: 'tianji-xlr-board' });
+		board.createEl('h4', { text: '课盘' });
+		const grid = board.createDiv({ cls: 'tianji-xlr-grid' });
+		for (const cell of r.gridCells) {
+			this.renderXiaoliurenCell(grid, cell);
+		}
+
+		this.appendReadingNoteSection(stage, this.xiaoliurenRecordId);
+	}
+
+	private renderXiaoliurenCell(
+		parent: HTMLElement,
+		cell: XiaoliurenCell,
+	): void {
+		const el = parent.createDiv({
+			cls: 'tianji-xlr-cell',
+			attr: { 'data-palace': cell.palace },
+		});
+		const isBody = cell.marks.includes('身') || cell.relation === '自身';
+
+		el.createSpan({
+			cls: 'tianji-xlr-star',
+			text: cell.star,
+		});
+		el.createSpan({
+			cls: 'tianji-xlr-spirit',
+			text: cell.spirit,
+		});
+		el.createSpan({
+			cls: 'tianji-xlr-branch',
+			text: cell.branch,
+		});
+
+		// 身宫：自身居中；右侧中间仍放六亲（非土身时为土之本然六亲，如官鬼/子孙）
+		if (isBody) {
+			el.createSpan({
+				cls: 'tianji-xlr-self',
+				text: '自身',
+			});
+			const side = getBodySideRelation(cell.branch);
+			if (side) {
+				el.createSpan({
+					cls: 'tianji-xlr-relation',
+					text: side,
+				});
+			}
+		} else if (cell.relation) {
+			el.createSpan({
+				cls: 'tianji-xlr-relation',
+				text: cell.relation,
+			});
+		}
+
+		const footMarks = this.formatXiaoliurenFootMarks(cell.marks);
+		if (footMarks) {
+			el.createSpan({
+				cls: 'tianji-xlr-foot-marks',
+				text: footMarks,
+			});
+		}
+
+		el.createSpan({
+			cls: 'tianji-xlr-palace',
+			text: cell.palace,
+		});
+	}
+
+	/** 左下角标记：时+刻 → 时刻；不含「身」（身用居中「自身」） */
+	private formatXiaoliurenFootMarks(marks: string[]): string {
+		const set = new Set(marks.filter((m) => m !== '身'));
+		const parts: string[] = [];
+		if (set.has('日')) parts.push('日');
+		if (set.has('数')) parts.push('数');
+		if (set.has('时') && set.has('刻')) {
+			parts.push('时刻');
+			set.delete('时');
+			set.delete('刻');
+		} else {
+			if (set.has('时')) parts.push('时');
+			if (set.has('刻')) parts.push('刻');
+		}
+		return parts.join('');
+	}
+
+	private restoreXiaoliuren(rec: ReadingRecord): void {
+		const result = JSON.parse(rec.resultJson) as XiaoliurenResult;
+		let input: {
+			subject?: string;
+			question?: string;
+			method?: XiaoliurenMethod;
+			castTime?: string;
+			number?: number | null;
+		} = {};
+		try {
+			input = JSON.parse(rec.inputJson) as typeof input;
+		} catch {
+			/* ignore */
+		}
+
+		this.xiaoliurenSubject = input.subject ?? result.subject ?? '问事';
+		this.xiaoliurenQuestion = input.question ?? result.question ?? '';
+		this.xiaoliurenMethod = input.method ?? result.method ?? 'day-hour';
+		this.xiaoliurenNumber =
+			input.number != null
+				? String(input.number)
+				: result.inputNumber != null
+					? String(result.inputNumber)
+					: '';
+		if (input.castTime || result.castTime) {
+			const d = new Date(input.castTime || result.castTime);
+			if (!Number.isNaN(d.getTime())) {
+				this.xiaoliurenCastLocal = this.toDatetimeLocal(d);
+			}
+		}
+		this.xiaoliurenResult = result;
+		this.xiaoliurenRecordId = rec.id;
+		this.xiaoliurenPanel = 'chart';
+		this.activeTab = 'xiaoliuren';
+		this.persistActiveTab('xiaoliuren');
+	}
+
 	/* -------------------- 分类型库 -------------------- */
 
 	private renderPanelSwitch(
@@ -2993,6 +3429,7 @@ export class TianjiView extends ItemView {
 	private restoreReading(rec: ReadingRecord): void {
 		try {
 			if (rec.type === 'liuyao') this.restoreLiuyao(rec);
+			else if (rec.type === 'xiaoliuren') this.restoreXiaoliuren(rec);
 			else if (rec.type === 'bazi') this.restoreBazi(rec);
 			else this.restoreTarot(rec);
 			new Notice('已打开排盘');

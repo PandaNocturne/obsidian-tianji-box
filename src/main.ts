@@ -70,6 +70,14 @@ export default class TianjiPlugin extends Plugin {
 			},
 		});
 
+		this.addCommand({
+			id: 'open-tianji-xiaoliuren',
+			name: '打开小六壬',
+			callback: () => {
+				void this.activateView('xiaoliuren');
+			},
+		});
+
 		this.addSettingTab(new TianjiSettingTab(this.app, this));
 	}
 
@@ -164,7 +172,8 @@ export default class TianjiPlugin extends Plugin {
 			last !== null &&
 			last !== 'liuyao' &&
 			last !== 'bazi' &&
-			last !== 'tarot'
+			last !== 'tarot' &&
+			last !== 'xiaoliuren'
 		) {
 			this.settings.lastActiveTab = null;
 		}

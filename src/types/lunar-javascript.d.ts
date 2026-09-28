@@ -32,6 +32,13 @@ declare module 'lunar-javascript' {
 		static fromYmd(y: number, m: number, d: number): Lunar;
 		getSolar(): Solar;
 		getEightChar(): EightChar;
+		/** 农历日 1–30 */
+		getDay(): number;
+		getMonth(): number;
+		getYear(): number;
+		getMonthInChinese(): string;
+		getDayInChinese(): string;
+		getYearInGanZhi(): string;
 		toString(): string;
 	}
 
