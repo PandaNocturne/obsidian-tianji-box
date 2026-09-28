@@ -118,6 +118,7 @@ export class TianjiView extends ItemView {
 	// 塔罗 state
 	private tarotDeckId: DeckId = DEFAULT_DECK_ID;
 	private tarotSpreadId = 'three-time';
+	private tarotSubject = '问事';
 	private tarotQuestion = '';
 	private tarotAllowReversed = true;
 	private tarotReading: TarotReading | null = null;
@@ -1710,10 +1711,23 @@ export class TianjiView extends ItemView {
 			});
 		}
 
-		this.field(form, '占测问题', (el) => {
+		this.field(form, '占测事由', (el) => {
+			const input = el.createEl('input', {
+				type: 'text',
+				cls: 'tianji-input',
+				placeholder: '如：事业、感情、财运…',
+				value: this.tarotSubject,
+			});
+			input.addEventListener('input', () => {
+				this.tarotSubject = input.value;
+			});
+		});
+
+		this.field(form, '占测问题（必填）', (el) => {
 			const ta = el.createEl('textarea', {
 				cls: 'tianji-textarea',
-				placeholder: '请输入具体问题，例如：这段关系接下来会如何发展？',
+				placeholder: '请描述您的具体问题（必填）',
+				attr: { required: 'true' },
 			});
 			ta.value = this.tarotQuestion;
 			ta.rows = 3;
@@ -1921,6 +1935,14 @@ export class TianjiView extends ItemView {
 		board.createEl('h3', {
 			text: `${this.tarotReading.spreadName} · ${getDeckInfo(this.tarotReading.deckId).name}`,
 		});
+		const subject =
+			this.tarotReading.question.trim()
+				? `${this.tarotReading.subject || this.tarotSubject || '问事'}（${this.tarotReading.question.trim()}）`
+				: this.tarotReading.subject || this.tarotSubject || '问事';
+		board.createDiv({
+			cls: 'tianji-tarot-board-meta',
+			text: `占测事由：${subject}`,
+		});
 		this.renderTarotSpread(board, this.tarotReading);
 		this.renderTarotMeaningList(board, this.tarotReading);
 		this.appendReadingNoteSection(stage, this.tarotRecordId);
@@ -2016,6 +2038,7 @@ export class TianjiView extends ItemView {
 	/** 整副重洗，清空本局已用牌 */
 	private startFreshTarotSession(): void {
 		this.tarotSessionUsedIds = [];
+		this.tarotSubject = '问事';
 		this.tarotQuestion = '';
 		this.tarotReading = null;
 		this.tarotRecordId = null;
@@ -2349,6 +2372,7 @@ export class TianjiView extends ItemView {
 	}
 
 	private async commitTarotDraft(): Promise<void> {
+		if (!this.requireTarotQuestion()) return;
 		this.ensureTarotDraft();
 		const flexible = isFlexibleSpread(this.tarotSpreadId);
 		const picks = this.tarotDraft.filter((p): p is TarotSlotPick => !!p);
@@ -2374,6 +2398,7 @@ export class TianjiView extends ItemView {
 			const reading = buildManualTarot({
 				spreadId: this.tarotSpreadId,
 				deckId: this.tarotDeckId,
+				subject: this.tarotSubject,
 				question: this.tarotQuestion,
 				picks: picks.map((p) => ({
 					cardId: p.cardId,
@@ -2536,11 +2561,13 @@ export class TianjiView extends ItemView {
 	}
 
 	private openTarotShuffleModal(): void {
+		if (!this.requireTarotQuestion()) return;
 		if (!this.ensureTarotRemainingForSpread()) return;
 		new TarotShuffleModal(this.app, {
 			deckId: this.tarotDeckId,
 			spreadId: this.tarotSpreadId,
 			allowReversed: this.tarotAllowReversed,
+			subject: this.tarotSubject,
 			question: this.tarotQuestion,
 			excludeIds: this.tarotSessionUsedIds,
 			cardCount: isFlexibleSpread(this.tarotSpreadId)
@@ -2554,11 +2581,13 @@ export class TianjiView extends ItemView {
 	}
 
 	private openTarotPickModal(initialPos = 0): void {
+		if (!this.requireTarotQuestion()) return;
 		if (!this.ensureTarotRemainingForSpread()) return;
 		new TarotPickModal(this.app, {
 			deckId: this.tarotDeckId,
 			spreadId: this.tarotSpreadId,
 			allowReversed: this.tarotAllowReversed,
+			subject: this.tarotSubject,
 			question: this.tarotQuestion,
 			images: this.plugin.tarotImages,
 			excludeIds: this.tarotSessionUsedIds,
@@ -2575,6 +2604,7 @@ export class TianjiView extends ItemView {
 
 	private async runTarotDraw(): Promise<void> {
 		if (this.tarotShuffling) return;
+		if (!this.requireTarotQuestion()) return;
 		if (!this.ensureTarotRemainingForSpread()) return;
 		this.tarotShuffling = true;
 		this.render();
@@ -2584,6 +2614,7 @@ export class TianjiView extends ItemView {
 			const reading = drawTarot({
 				spreadId: this.tarotSpreadId,
 				deckId: this.tarotDeckId,
+				subject: this.tarotSubject,
 				question: this.tarotQuestion,
 				allowReversed: this.tarotAllowReversed,
 				excludeIds: this.tarotSessionUsedIds,
@@ -2601,16 +2632,24 @@ export class TianjiView extends ItemView {
 		}
 	}
 
+	private requireTarotQuestion(): boolean {
+		if (this.tarotQuestion.trim()) return true;
+		new Notice('占测问题不能为空');
+		return false;
+	}
+
 	private async saveTarotReading(
 		reading: TarotReading,
 		methodLabel: string,
 	): Promise<void> {
+		if (!this.requireTarotQuestion()) return;
 		const saved = this.annotateTarotFollowUp(reading);
 		this.rememberTarotSessionCards(saved);
 		this.tarotReading = saved;
 		this.tarotPanel = 'chart';
 		this.resetTarotDraft();
 		const title =
+			this.tarotSubject.trim() ||
 			this.tarotQuestion.trim().slice(0, 24) ||
 			`${saved.spreadName}${methodLabel}`;
 		try {
@@ -2620,6 +2659,7 @@ export class TianjiView extends ItemView {
 				inputJson: JSON.stringify({
 					deckId: this.tarotDeckId,
 					spreadId: this.tarotSpreadId,
+					subject: this.tarotSubject,
 					question: this.tarotQuestion,
 					allowReversed: this.tarotAllowReversed,
 					method: methodLabel,
@@ -3042,6 +3082,7 @@ export class TianjiView extends ItemView {
 		let input: {
 			deckId?: DeckId;
 			spreadId?: string;
+			subject?: string;
 			question?: string;
 			allowReversed?: boolean;
 			sessionUsedIds?: string[];
@@ -3054,6 +3095,8 @@ export class TianjiView extends ItemView {
 
 		this.tarotDeckId = DEFAULT_DECK_ID;
 		this.tarotSpreadId = input.spreadId ?? reading.spreadId ?? 'three-time';
+		this.tarotSubject =
+			input.subject ?? reading.subject ?? '问事';
 		this.tarotQuestion =
 			input.question ?? reading.question ?? '';
 		this.tarotAllowReversed = input.allowReversed !== false;

@@ -20,6 +20,8 @@ export interface TarotReading {
 	deckId: DeckId;
 	spreadId: string;
 	spreadName: string;
+	/** 占测事由（如事业、感情） */
+	subject: string;
 	question: string;
 	drawnAt: string;
 	cards: DrawnCard[];
@@ -57,6 +59,7 @@ export function remainingTarotDeck(excludeIds?: Iterable<string>): TarotCardDef[
 export function drawTarot(params: {
 	spreadId: string;
 	deckId: DeckId;
+	subject?: string;
 	question: string;
 	/** 是否允许逆位 */
 	allowReversed?: boolean;
@@ -92,6 +95,7 @@ export function drawTarot(params: {
 	return finalizeReading({
 		deckId: params.deckId,
 		spread,
+		subject: params.subject,
 		question: params.question,
 		cards,
 	});
@@ -101,6 +105,7 @@ export function drawTarot(params: {
 export function buildManualTarot(params: {
 	spreadId: string;
 	deckId: DeckId;
+	subject?: string;
 	question: string;
 	picks: Array<{ cardId: string; reversed: boolean }>;
 }): TarotReading {
@@ -132,6 +137,7 @@ export function buildManualTarot(params: {
 	return finalizeReading({
 		deckId: params.deckId,
 		spread,
+		subject: params.subject,
 		question: params.question,
 		cards,
 	});
@@ -140,13 +146,16 @@ export function buildManualTarot(params: {
 function finalizeReading(p: {
 	deckId: DeckId;
 	spread: TarotSpread;
+	subject?: string;
 	question: string;
 	cards: DrawnCard[];
 }): TarotReading {
 	const drawnAt = new Date().toISOString();
+	const subject = (p.subject ?? '').trim() || '问事';
 	const chartText = formatTarotChart({
 		deckId: p.deckId,
 		spread: p.spread,
+		subject,
 		question: p.question,
 		drawnAt,
 		cards: p.cards,
@@ -155,6 +164,7 @@ function finalizeReading(p: {
 		deckId: p.deckId,
 		spreadId: p.spread.id,
 		spreadName: p.spread.name,
+		subject,
 		question: p.question,
 		drawnAt,
 		cards: p.cards,
@@ -165,15 +175,19 @@ function finalizeReading(p: {
 export function formatTarotChart(p: {
 	deckId: DeckId;
 	spread: TarotSpread;
+	subject?: string;
 	question: string;
 	drawnAt: string;
 	cards: DrawnCard[];
 }): string {
+	const subject = (p.subject ?? '').trim() || '问事';
+	const question = p.question.trim();
 	const lines = [
 		`【塔罗牌阵】${p.spread.name}`,
 		`牌组：${getDeckInfo(p.deckId).name}`,
 		`时间：${new Date(p.drawnAt).toLocaleString()}`,
-		`问题：${p.question.trim() || '（未填写）'}`,
+		`占测事由：${subject}`,
+		`占测问题：${question || '（未填写）'}`,
 		``,
 	];
 	if (p.spread.id === 'celtic-cross') {
@@ -206,6 +220,7 @@ export function formatTarotReadingChart(reading: TarotReading): string {
 			...spread,
 			name: reading.spreadName || spread.name,
 		},
+		subject: reading.subject,
 		question: reading.question,
 		drawnAt: reading.drawnAt,
 		cards: reading.cards,

@@ -27,6 +27,7 @@ export class TarotShuffleModal extends Modal {
 	private deckId: DeckId;
 	private spreadId: string;
 	private allowReversed: boolean;
+	private subject: string;
 	private question: string;
 	private excludeIds: Set<string>;
 	private cardCount: number | null;
@@ -47,6 +48,7 @@ export class TarotShuffleModal extends Modal {
 			deckId: DeckId;
 			spreadId: string;
 			allowReversed: boolean;
+			subject?: string;
 			question: string;
 			/** 本局已用牌，仅展示剩余牌背 */
 			excludeIds?: Iterable<string>;
@@ -59,6 +61,7 @@ export class TarotShuffleModal extends Modal {
 		this.deckId = opts.deckId;
 		this.spreadId = opts.spreadId;
 		this.allowReversed = opts.allowReversed;
+		this.subject = opts.subject ?? '';
 		this.question = opts.question;
 		this.excludeIds = new Set(opts.excludeIds ?? []);
 		this.cardCount =
@@ -379,6 +382,7 @@ export class TarotShuffleModal extends Modal {
 			const reading = buildManualTarot({
 				spreadId: this.spreadId,
 				deckId: this.deckId,
+				subject: this.subject,
 				question: this.question,
 				picks: this.slots.map((s) => {
 					const card = this.shuffled[s.deckIndex!]!;

@@ -20,6 +20,7 @@ export class TarotPickModal extends Modal {
 	private deckId: DeckId;
 	private spreadId: string;
 	private allowReversed: boolean;
+	private subject: string;
 	private question: string;
 	private images: TarotImageCache;
 	private excludeIds: Set<string>;
@@ -41,6 +42,7 @@ export class TarotPickModal extends Modal {
 			deckId: DeckId;
 			spreadId: string;
 			allowReversed: boolean;
+			subject?: string;
 			question: string;
 			images: TarotImageCache;
 			onConfirm: (reading: TarotReading) => void;
@@ -56,6 +58,7 @@ export class TarotPickModal extends Modal {
 		this.deckId = opts.deckId;
 		this.spreadId = opts.spreadId;
 		this.allowReversed = opts.allowReversed;
+		this.subject = opts.subject ?? '';
 		this.question = opts.question;
 		this.images = opts.images;
 		this.excludeIds = new Set(opts.excludeIds ?? []);
@@ -329,6 +332,7 @@ export class TarotPickModal extends Modal {
 			const reading = buildManualTarot({
 				spreadId: this.spreadId,
 				deckId: this.deckId,
+				subject: this.subject,
 				question: this.question,
 				picks: this.slots.map((s) => ({
 					cardId: s.cardId!,

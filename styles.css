@@ -2510,7 +2510,14 @@
 }
 
 .tianji-tarot-board h3 {
+	margin: 0 0 6px;
+}
+
+.tianji-tarot-board-meta {
 	margin: 0 0 14px;
+	font-size: 0.9em;
+	color: var(--text-muted);
+	line-height: 1.4;
 }
 
 .tianji-tarot-spread {
