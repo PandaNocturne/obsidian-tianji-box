@@ -1,4 +1,9 @@
-export type DivinationType = 'liuyao' | 'bazi' | 'tarot' | 'xiaoliuren';
+export type DivinationType =
+	| 'liuyao'
+	| 'bazi'
+	| 'tarot'
+	| 'xiaoliuren'
+	| 'meihua';
 
 export type Gender = 'male' | 'female';
 
@@ -30,7 +35,7 @@ export interface TianjiSettings {
 	libraryLayout: LibraryLayout;
 	/**
 	 * 占卜模块启用与排序。
-	 * 默认顺序：六爻 > 小六壬 > 塔罗牌 > 八字。
+	 * 默认顺序：六爻 > 小六壬 > 梅花易数 > 塔罗牌 > 八字。
 	 */
 	divinationTabs: DivinationTabConfig[];
 	/** 上次打开的占卜标签；重载后优先恢复，无效则落到第一个已启用模块 */

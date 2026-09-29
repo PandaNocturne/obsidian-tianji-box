@@ -489,6 +489,14 @@ function methodLabel(
 			'小六壬'
 		);
 	}
+	if (type === 'meihua') {
+		return (
+			str(result.methodLabel) ||
+			str(input.methodLabel) ||
+			method ||
+			'梅花易数'
+		);
+	}
 	return '';
 }
 
@@ -498,6 +506,8 @@ function typeFallbackTitle(type: DivinationType): string {
 			return '六爻占卜';
 		case 'xiaoliuren':
 			return '小六壬';
+		case 'meihua':
+			return '梅花易数';
 		case 'bazi':
 			return '八字排盘';
 		case 'tarot':

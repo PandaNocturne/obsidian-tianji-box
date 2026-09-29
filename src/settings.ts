@@ -42,7 +42,7 @@ export class TianjiSettingTab extends PluginSettingTab {
 
 		containerEl.createEl('p', {
 			cls: 'setting-item-description',
-			text: '本插件仅提供六爻、八字、塔罗的本地排盘与存档。如需解读，请复制排盘文本，自行到其他 AI 服务中分析。',
+			text: '本插件仅提供六爻、小六壬、梅花易数、八字、塔罗的本地排盘与存档。如需解读，请复制排盘文本，自行到其他 AI 服务中分析。',
 		});
 
 		new Setting(containerEl)
