@@ -189,6 +189,7 @@ export class TianjiView extends ItemView {
 	private meihuaRecordId: number | null = null;
 
 	private shellEl: HTMLElement | null = null;
+	private headerEl: HTMLElement | null = null;
 	private tabsEl: HTMLElement | null = null;
 	private bodyEl: HTMLElement | null = null;
 	/** 模块下拉的 document 关闭监听只注册一次 */
@@ -298,6 +299,7 @@ export class TianjiView extends ItemView {
 
 	async onClose(): Promise<void> {
 		this.shellEl = null;
+		this.headerEl = null;
 		this.tabsEl = null;
 		this.bodyEl = null;
 		this.tabMenuDocBound = false;
@@ -306,14 +308,14 @@ export class TianjiView extends ItemView {
 
 	/** @param full 为 true 时重建整壳（首次打开）；默认只刷新内容区，避免闪烁 */
 	private render(full = false): void {
-		if (full || !this.shellEl || !this.bodyEl || !this.tabsEl) {
+		if (full || !this.shellEl || !this.bodyEl || !this.tabsEl || !this.headerEl) {
 			const root = this.contentEl;
 			root.empty();
 			root.addClass('tianji-view');
 
 			this.shellEl = root.createDiv({ cls: 'tianji-shell' });
-			const header = this.shellEl.createDiv({ cls: 'tianji-header' });
-			this.tabsEl = header.createDiv({ cls: 'tianji-tabs' });
+			this.headerEl = this.shellEl.createDiv({ cls: 'tianji-header' });
+			this.tabsEl = this.headerEl.createDiv({ cls: 'tianji-tabs' });
 			this.buildTabs();
 			this.bodyEl = this.shellEl.createDiv({ cls: 'tianji-body' });
 		}
@@ -327,6 +329,8 @@ export class TianjiView extends ItemView {
 			this.render(true);
 			return;
 		}
+		// 先把 tabs 移回 header，避免 empty() 销毁模块切换栏
+		this.parkTabsInHeader();
 		this.bodyEl.empty();
 		try {
 			if (!this.plugin.db?.isReady()) {
@@ -354,6 +358,31 @@ export class TianjiView extends ItemView {
 				text: String(e),
 			});
 		}
+	}
+
+	/** 将模块切换栏移入指定容器（排盘顶栏 / header） */
+	private placeTabsIn(parent: HTMLElement): void {
+		if (!this.tabsEl) return;
+		if (this.tabsEl.parentElement !== parent) {
+			parent.prepend(this.tabsEl);
+		}
+		this.headerEl?.toggleClass(
+			'is-empty',
+			this.tabsEl.parentElement !== this.headerEl,
+		);
+	}
+
+	private parkTabsInHeader(): void {
+		if (this.headerEl) this.placeTabsIn(this.headerEl);
+	}
+
+	/**
+	 * 顶栏：tabs 与 panel-switch 并排；排盘时工具栏也挂在同一行右侧。
+	 */
+	private bindWorkTop(container: HTMLElement): HTMLElement {
+		const workTop = container.createDiv({ cls: 'tianji-work-top' });
+		this.placeTabsIn(workTop);
+		return workTop;
 	}
 
 	private buildTabs(): void {
@@ -501,10 +530,7 @@ export class TianjiView extends ItemView {
 	/* -------------------- 六爻 -------------------- */
 
 	private renderLiuyao(container: HTMLElement): void {
-		const workTop =
-			this.liuyaoPanel === 'chart'
-				? container.createDiv({ cls: 'tianji-work-top' })
-				: container;
+		const workTop = this.bindWorkTop(container);
 		this.renderPanelSwitch(workTop, {
 			mode: this.liuyaoPanel,
 			castLabel: '起卦',
@@ -1348,10 +1374,7 @@ export class TianjiView extends ItemView {
 	/* -------------------- 八字 -------------------- */
 
 	private renderBazi(container: HTMLElement): void {
-		const workTop =
-			this.baziPanel === 'chart'
-				? container.createDiv({ cls: 'tianji-work-top' })
-				: container;
+		const workTop = this.bindWorkTop(container);
 		this.renderPanelSwitch(workTop, {
 			mode: this.baziPanel,
 			castLabel: '起盘',
@@ -1941,10 +1964,7 @@ export class TianjiView extends ItemView {
 	/* -------------------- 塔罗 -------------------- */
 
 	private renderTarot(container: HTMLElement): void {
-		const workTop =
-			this.tarotPanel === 'chart'
-				? container.createDiv({ cls: 'tianji-work-top' })
-				: container;
+		const workTop = this.bindWorkTop(container);
 		this.renderPanelSwitch(workTop, {
 			mode: this.tarotPanel,
 			castLabel: '抽牌',
@@ -2963,10 +2983,7 @@ export class TianjiView extends ItemView {
 	/* -------------------- 梅花易数 -------------------- */
 
 	private renderMeihua(container: HTMLElement): void {
-		const workTop =
-			this.meihuaPanel === 'chart'
-				? container.createDiv({ cls: 'tianji-work-top' })
-				: container;
+		const workTop = this.bindWorkTop(container);
 		this.renderPanelSwitch(workTop, {
 			mode: this.meihuaPanel,
 			castLabel: '起卦',
@@ -3447,10 +3464,7 @@ export class TianjiView extends ItemView {
 	/* -------------------- 小六壬 -------------------- */
 
 	private renderXiaoliuren(container: HTMLElement): void {
-		const workTop =
-			this.xiaoliurenPanel === 'chart'
-				? container.createDiv({ cls: 'tianji-work-top' })
-				: container;
+		const workTop = this.bindWorkTop(container);
 		this.renderPanelSwitch(workTop, {
 			mode: this.xiaoliurenPanel,
 			castLabel: '起卦',

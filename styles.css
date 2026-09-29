@@ -66,6 +66,11 @@
 	box-shadow: none;
 }
 
+.tianji-header.is-empty {
+	display: none;
+	margin: 0;
+}
+
 /* ?? Module switcher: prev / custom dropdown / next ?? */
 .tianji-tabs {
 	position: relative;
@@ -281,24 +286,34 @@ button.tianji-tab-option {
 /* ?? Panel switch (work / library) ?? */
 .tianji-work-top {
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	align-items: center;
-	justify-content: space-between;
+	justify-content: flex-start;
 	gap: 10px 12px;
 	width: 100%;
 	margin-bottom: 14px;
 }
 
+.tianji-work-top .tianji-tabs {
+	flex: 1 1 auto;
+	width: auto;
+	max-width: none;
+	min-width: 0;
+	margin: 0;
+}
+
 .tianji-work-top .tianji-panel-switch {
 	margin-bottom: 0;
 	width: auto;
-	flex: 0 1 auto;
+	flex: 0 0 auto;
+	flex-shrink: 0;
 }
 
 .tianji-work-top .tianji-chart-toolbar {
 	margin-bottom: 0;
 	margin-left: auto;
 	flex: 0 1 auto;
+	flex-shrink: 0;
 	justify-content: flex-end;
 }
 
@@ -3179,13 +3194,21 @@ button.tianji-tab-option {
 	}
 
 	.tianji-work-top {
-		flex-direction: column;
+		flex-wrap: wrap;
 		align-items: stretch;
 		gap: 10px;
 	}
 
+	.tianji-work-top .tianji-tabs {
+		width: 100%;
+		max-width: 100%;
+		flex: 1 1 100%;
+		min-width: 0;
+	}
+
 	.tianji-work-top .tianji-panel-switch {
 		width: 100%;
+		flex: 1 1 100%;
 	}
 
 	.tianji-work-top .tianji-chart-toolbar {
