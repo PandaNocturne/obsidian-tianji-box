@@ -36,6 +36,8 @@ export interface LibraryRenderOpts {
 interface LibraryRowData {
 	subject: string;
 	question: string;
+	/** 卡片标题：事由（问题） */
+	title: string;
 	method: string;
 	chartSnippet: string;
 	/** 完整复制文本（含正/逆位说明等） */
@@ -324,7 +326,7 @@ function renderLibraryCard(
 
 	top.createSpan({
 		cls: 'tianji-history-title',
-		text: data.subject,
+		text: data.title,
 	});
 	top.createSpan({
 		cls: 'tianji-history-time',
@@ -402,6 +404,7 @@ function parseLibraryRow(rec: ReadingRecord): LibraryRowData {
 		str(result.question) || str(input.question),
 	].filter(Boolean);
 	const question = questionParts.join(' · ');
+	const title = formatReadingTitle(subject, question);
 	const method = methodLabel(
 		rec.type,
 		str(result.method) || str(input.method),
@@ -442,12 +445,20 @@ function parseLibraryRow(rec: ReadingRecord): LibraryRowData {
 	return {
 		subject,
 		question,
+		title,
 		method,
 		chartSnippet,
 		chartCopyText,
 		castTime: formatCastTime(castTimeRaw),
 		castTimeRaw,
 	};
+}
+
+/** 与排盘基本信息一致：有问题时显示「事由（问题）」 */
+function formatReadingTitle(subject: string, question: string): string {
+	const s = subject.trim() || '问事';
+	const q = question.trim();
+	return q ? `${s}（${q}）` : s;
 }
 
 function methodLabel(

@@ -1871,10 +1871,12 @@ button.tianji-tab-option {
 
 .tianji-history-top {
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	align-items: center;
 	gap: 8px;
 	margin-bottom: 10px;
+	min-width: 0;
+	max-width: 100%;
 }
 
 .tianji-fav-btn {
@@ -1958,13 +1960,18 @@ button.tianji-tab-option {
 
 .tianji-history-title {
 	font-weight: 650;
-	flex: 1;
-	min-width: 120px;
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .tianji-history-time {
 	font-size: 0.78em;
 	color: var(--text-muted);
+	flex: 0 0 auto;
+	white-space: nowrap;
 }
 
 .tianji-history-actions {
