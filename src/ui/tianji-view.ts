@@ -18,6 +18,7 @@ import { getZhouyiByBinary, type ZhouyiText } from '../liuyao/zhouyi';
 import {
 	autoCastLines,
 	buildLiuyaoResult,
+	castLiuyaoFromThreeNumbers,
 	throwThreeCoinsDetailed,
 	type CoinFace,
 } from '../liuyao/casting';
@@ -120,6 +121,9 @@ export class TianjiView extends ItemView {
 	private liuyaoQuestion = '';
 	private liuyaoMethod: LiuyaoMethod = 'auto';
 	private liuyaoLines: YaoValue[] = [7, 7, 7, 7, 7, 7];
+	private liuyaoNum1 = '';
+	private liuyaoNum2 = '';
+	private liuyaoNum3 = '';
 	private liuyaoCoinIndex = 0;
 	private liuyaoCoinFaces: [CoinFace, CoinFace, CoinFace] = [
 		'yang',
@@ -601,6 +605,7 @@ export class TianjiView extends ItemView {
 				{ id: 'auto', label: '天机起卦' },
 				{ id: 'coin', label: '铜钱起卦' },
 				{ id: 'manual', label: '手动起卦' },
+				{ id: 'three', label: '三数起卦' },
 			];
 			for (const m of methods) {
 				this.radio(wrap, m.label, this.liuyaoMethod === m.id, () => {
@@ -645,6 +650,33 @@ export class TianjiView extends ItemView {
 					this.render();
 				});
 			}
+		} else if (this.liuyaoMethod === 'three') {
+			const nums = form.createDiv({ cls: 'tianji-three-nums' });
+			const mkNum = (
+				value: string,
+				placeholder: string,
+				onInput: (v: string) => void,
+			) => {
+				const input = nums.createEl('input', {
+					type: 'number',
+					cls: 'tianji-input tianji-three-nums-input',
+					placeholder,
+					attr: { min: '1', step: '1', 'aria-label': placeholder },
+					value,
+				});
+				input.addEventListener('input', () => onInput(input.value));
+			};
+			mkNum(this.liuyaoNum1, '上卦', (v) => {
+				this.liuyaoNum1 = v;
+			});
+			nums.createSpan({ cls: 'tianji-three-nums-sep', text: '-' });
+			mkNum(this.liuyaoNum2, '下卦', (v) => {
+				this.liuyaoNum2 = v;
+			});
+			nums.createSpan({ cls: 'tianji-three-nums-sep', text: '-' });
+			mkNum(this.liuyaoNum3, '动爻', (v) => {
+				this.liuyaoNum3 = v;
+			});
 		}
 
 		const notes = form.createEl('details', {
@@ -653,12 +685,21 @@ export class TianjiView extends ItemView {
 		notes.open = this.liuyaoMethod !== 'coin';
 		notes.createEl('summary', { text: '注意事项' });
 		const ul = notes.createEl('ul');
-		for (const tip of [
-			'心态端正：心平气和、专注一事，勿仓促起卦。',
-			'环境安静：选择不被打扰之处，利于意念凝聚。',
-			'诚心诚意：认真对待，勿玩笑戏弄求卦。',
-			'避免频繁：同一问题短时间内勿反复起卦。',
-		]) {
+		const tips =
+			this.liuyaoMethod === 'three'
+				? [
+						'三数分别定上卦、下卦、动爻（除 8 / 8 / 6 取余；余 0 作 8 / 6）。',
+						'先天数：1乾 2兑 3离 4震 5巽 6坎 7艮 8坤；动爻为老阳/老阴。',
+						'心态端正：心平气和、专注一事，勿仓促起卦。',
+						'避免频繁：同一问题短时间内勿反复起卦。',
+					]
+				: [
+						'心态端正：心平气和、专注一事，勿仓促起卦。',
+						'环境安静：选择不被打扰之处，利于意念凝聚。',
+						'诚心诚意：认真对待，勿玩笑戏弄求卦。',
+						'避免频繁：同一问题短时间内勿反复起卦。',
+					];
+		for (const tip of tips) {
 			ul.createEl('li', { text: tip });
 		}
 
@@ -706,6 +747,16 @@ export class TianjiView extends ItemView {
 				} catch (e) {
 					new Notice(String(e));
 				}
+			});
+		}
+
+		if (this.liuyaoMethod === 'three') {
+			const castBtn = actions.createEl('button', {
+				cls: 'tianji-btn tianji-btn-primary',
+				text: '确认排盘',
+			});
+			castBtn.addEventListener('click', () => {
+				void this.runLiuyaoThreeCast();
 			});
 		}
 	}
@@ -945,6 +996,18 @@ export class TianjiView extends ItemView {
 		this.addInfoCell(infoGrid, '占测事由', subject);
 		this.addInfoCell(infoGrid, '起卦时间', r.solarText);
 		this.addInfoCell(infoGrid, '方式', this.liuyaoMethodLabel(r.method));
+		if (
+			r.method === 'three' &&
+			this.liuyaoNum1 &&
+			this.liuyaoNum2 &&
+			this.liuyaoNum3
+		) {
+			this.addInfoCell(
+				infoGrid,
+				'三数',
+				`上${this.liuyaoNum1} / 下${this.liuyaoNum2} / 动${this.liuyaoNum3}`,
+			);
+		}
 		this.addInfoCell(infoGrid, '干支历', r.ganZhiText);
 
 		const boards = card.createDiv({
@@ -1143,6 +1206,8 @@ export class TianjiView extends ItemView {
 				return '铜钱起卦';
 			case 'manual':
 				return '手动起卦';
+			case 'three':
+				return '三数起卦';
 		}
 	}
 
@@ -1207,6 +1272,38 @@ export class TianjiView extends ItemView {
 		return false;
 	}
 
+	private parseLiuyaoInt(raw: string, label: string): number | null {
+		const n = Number(raw);
+		if (!Number.isFinite(n) || n < 1 || !Number.isInteger(n)) {
+			new Notice(`${label}须为正整数`);
+			return null;
+		}
+		return n;
+	}
+
+	private async runLiuyaoThreeCast(): Promise<void> {
+		if (!this.requireLiuyaoQuestion()) return;
+		const n1 = this.parseLiuyaoInt(this.liuyaoNum1, '上卦数');
+		const n2 = this.parseLiuyaoInt(this.liuyaoNum2, '下卦数');
+		const n3 = this.parseLiuyaoInt(this.liuyaoNum3, '动爻数');
+		if (n1 == null || n2 == null || n3 == null) return;
+		try {
+			this.liuyaoLines = castLiuyaoFromThreeNumbers(n1, n2, n3);
+			await this.saveLiuyaoCast(
+				buildLiuyaoResult({
+					lines: [...this.liuyaoLines],
+					method: 'three',
+					subject: this.liuyaoSubject,
+					gender: this.liuyaoGender,
+					question: this.liuyaoQuestion,
+					castTime: this.parseCastTime(),
+				}),
+			);
+		} catch (e) {
+			new Notice(String(e));
+		}
+	}
+
 	private async saveLiuyaoCast(result: LiuyaoResult): Promise<void> {
 		if (!this.requireLiuyaoQuestion()) return;
 		this.liuyaoResult = result;
@@ -1226,6 +1323,13 @@ export class TianjiView extends ItemView {
 					question: this.liuyaoQuestion,
 					method: this.liuyaoMethod,
 					castTime: result.castTime,
+					...(this.liuyaoMethod === 'three'
+						? {
+								num1: Number(this.liuyaoNum1),
+								num2: Number(this.liuyaoNum2),
+								num3: Number(this.liuyaoNum3),
+							}
+						: {}),
 				}),
 				resultJson: JSON.stringify(result),
 			});
@@ -4134,6 +4238,9 @@ export class TianjiView extends ItemView {
 			question?: string;
 			method?: LiuyaoMethod;
 			castTime?: string;
+			num1?: number;
+			num2?: number;
+			num3?: number;
 		} = {};
 		try {
 			input = JSON.parse(rec.inputJson) as typeof input;
@@ -4146,6 +4253,9 @@ export class TianjiView extends ItemView {
 		this.liuyaoQuestion = input.question ?? result.question ?? '';
 		this.liuyaoMethod = input.method ?? result.method ?? 'manual';
 		this.liuyaoLines = [...(result.lines ?? [7, 7, 7, 7, 7, 7])] as YaoValue[];
+		this.liuyaoNum1 = input.num1 != null ? String(input.num1) : '';
+		this.liuyaoNum2 = input.num2 != null ? String(input.num2) : '';
+		this.liuyaoNum3 = input.num3 != null ? String(input.num3) : '';
 		this.liuyaoCoinIndex = 6;
 		if (input.castTime || result.castTime) {
 			const d = new Date(input.castTime || result.castTime);

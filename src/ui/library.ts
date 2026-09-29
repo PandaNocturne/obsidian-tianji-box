@@ -464,6 +464,8 @@ function methodLabel(
 				return '铜钱起卦';
 			case 'manual':
 				return '手动起卦';
+			case 'three':
+				return '三数起卦';
 			default:
 				return method || '六爻';
 		}

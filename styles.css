@@ -389,6 +389,32 @@ button.tianji-tab-option {
 	padding-top: 4px;
 }
 
+.tianji-three-nums {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	padding: 4px 0 2px;
+}
+
+.tianji-three-nums-input {
+	width: 4.5em;
+	max-width: 28%;
+	text-align: center;
+	/* 去掉 number 输入在部分浏览器里的挤出感 */
+	padding-left: 6px;
+	padding-right: 6px;
+}
+
+.tianji-three-nums-sep {
+	flex: 0 0 auto;
+	color: var(--text-muted);
+	font-size: 1.1em;
+	font-weight: 600;
+	line-height: 1;
+	user-select: none;
+}
+
 .tianji-chart-toolbar {
 	display: flex;
 	flex-wrap: wrap;

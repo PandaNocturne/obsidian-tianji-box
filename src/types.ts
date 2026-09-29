@@ -7,7 +7,7 @@ export type DivinationType =
 
 export type Gender = 'male' | 'female';
 
-export type LiuyaoMethod = 'auto' | 'coin' | 'manual';
+export type LiuyaoMethod = 'auto' | 'coin' | 'manual' | 'three';
 
 /** 爻值：6老阴 7少阳 8少阴 9老阳 */
 export type YaoValue = 6 | 7 | 8 | 9;

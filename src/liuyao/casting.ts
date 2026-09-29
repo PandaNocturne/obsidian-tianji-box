@@ -22,6 +22,11 @@ import {
 	getPalaceElement,
 	getShiYing,
 } from './najia';
+import {
+	hexagramBinary,
+	mod6,
+	trigramFromNumber,
+} from '../meihua/trigrams';
 
 /** 三枚铜钱：字=3（阳）背=2（阴），和为 6/7/8/9 */
 export type CoinFace = 'yang' | 'yin';
@@ -48,6 +53,32 @@ export function throwThreeCoinsDetailed(): {
 
 export function autoCastLines(): YaoValue[] {
 	return Array.from({ length: 6 }, () => throwThreeCoins());
+}
+
+/**
+ * 三数起卦：n1%8 上卦，n2%8 下卦，n3%6 动爻；
+ * 静爻为少阳/少阴，动爻为老阳/老阴。
+ */
+export function castLiuyaoFromThreeNumbers(
+	num1: number,
+	num2: number,
+	num3: number,
+): YaoValue[] {
+	const upper = trigramFromNumber(num1);
+	const lower = trigramFromNumber(num2);
+	const moving = mod6(num3);
+	const binary = hexagramBinary(lower, upper);
+	const lines: YaoValue[] = [];
+	for (let i = 0; i < 6; i++) {
+		const yang = binary[i] === '1';
+		const isMoving = i + 1 === moving;
+		if (yang) {
+			lines.push(isMoving ? 9 : 7);
+		} else {
+			lines.push(isMoving ? 6 : 8);
+		}
+	}
+	return lines;
 }
 
 export function isYang(value: YaoValue): boolean {
@@ -284,6 +315,8 @@ function methodLabel(method: LiuyaoMethod): string {
 			return '铜钱起卦';
 		case 'manual':
 			return '手动起卦';
+		case 'three':
+			return '三数起卦';
 	}
 }
 
