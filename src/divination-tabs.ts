@@ -13,7 +13,7 @@ export const DIVINATION_TAB_META: Record<
 	{ label: string; shortLabel: string; icon: string }
 > = {
 	liuyao: { label: '六爻占卜', shortLabel: '六爻', icon: 'hexagon' },
-	xiaoliuren: { label: '小六壬', shortLabel: '小六壬', icon: 'circle-dot' },
+	xiaoliuren: { label: '小六壬', shortLabel: '六壬', icon: 'circle-dot' },
 	meihua: { label: '梅花易数', shortLabel: '梅花', icon: 'flower-2' },
 	tarot: { label: '塔罗牌', shortLabel: '塔罗', icon: 'layout-grid' },
 	bazi: { label: '八字分析', shortLabel: '八字', icon: 'calendar' },

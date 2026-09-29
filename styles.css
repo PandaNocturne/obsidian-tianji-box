@@ -59,80 +59,198 @@
 	justify-content: stretch;
 	gap: 12px;
 	flex-wrap: wrap;
-	margin-bottom: 14px;
+	margin-bottom: 12px;
 	padding: 0;
 	border: none;
 	background: transparent;
 	box-shadow: none;
 }
 
-/* ?? Tabs ?? */
+/* ?? Module switcher: prev / custom dropdown / next ?? */
 .tianji-tabs {
+	position: relative;
 	display: flex;
-	gap: 4px;
+	flex-wrap: nowrap;
+	align-items: stretch;
+	gap: 0;
 	margin: 0;
-	padding: 4px;
+	padding: 3px;
 	border-radius: var(--tianji-radius);
 	background: var(--tianji-surface-soft);
 	border: 1px solid var(--tianji-border);
 	width: 100%;
 	max-width: 100%;
-	flex-wrap: wrap;
+	box-sizing: border-box;
 	box-shadow: none;
-	backdrop-filter: none;
+	z-index: 5;
 }
 
-.tianji-tab {
-	flex: 1;
-	display: inline-flex;
+.tianji-view button.tianji-tab-nav,
+.tianji-tabs button.tianji-tab-nav,
+button.tianji-tab-nav {
+	flex: 0 0 auto;
+	display: inline-flex !important;
 	align-items: center;
 	justify-content: center;
-	gap: 6px;
-	text-align: center;
-	padding: 7px 12px;
-	border-radius: calc(var(--tianji-radius-sm) - 1px);
-	border: none;
-	background: transparent;
+	width: 2.2em;
+	min-width: 2.2em;
+	min-height: 2.2em;
+	height: auto;
+	padding: 0 !important;
+	margin: 0 !important;
+	border: none !important;
+	border-radius: calc(var(--tianji-radius-sm) - 1px) !important;
+	box-shadow: none !important;
+	background: transparent !important;
+	background-image: none !important;
+	color: var(--text-muted) !important;
 	cursor: pointer;
-	color: var(--text-muted);
-	font-size: 0.9em;
-	font-weight: 500;
+	opacity: 1;
 	transition: background var(--tianji-ease), color var(--tianji-ease);
 }
 
-.tianji-tab-icon {
-	display: inline-flex;
+.tianji-view button.tianji-tab-nav svg,
+.tianji-tabs button.tianji-tab-nav svg {
+	width: 1.15em;
+	height: 1.15em;
+}
+
+.tianji-view button.tianji-tab-nav:hover:not(:disabled),
+.tianji-tabs button.tianji-tab-nav:hover:not(:disabled) {
+	color: var(--text-normal) !important;
+	background: color-mix(
+		in srgb,
+		var(--background-modifier-hover) 85%,
+		transparent
+	) !important;
+	border: none !important;
+	box-shadow: none !important;
+}
+
+.tianji-view button.tianji-tab-nav:disabled,
+.tianji-tabs button.tianji-tab-nav:disabled {
+	opacity: 0.3;
+	cursor: default;
+}
+
+.tianji-tab-picker {
+	position: relative;
+	flex: 1 1 auto;
+	min-width: 0;
+	display: flex;
+	align-items: stretch;
+}
+
+.tianji-view button.tianji-tab-trigger,
+.tianji-tabs button.tianji-tab-trigger,
+button.tianji-tab-trigger {
+	position: relative;
+	flex: 1 1 auto;
+	display: inline-flex !important;
 	align-items: center;
 	justify-content: center;
-	width: 1.1em;
-	height: 1.1em;
-	flex-shrink: 0;
+	gap: 6px;
+	width: 100%;
+	min-width: 0;
+	min-height: 2.2em;
+	margin: 0 !important;
+	padding: 6px 12px !important;
+	border: none !important;
+	border-radius: calc(var(--tianji-radius-sm) - 1px) !important;
+	box-shadow: none !important;
+	background: transparent !important;
+	color: var(--text-normal) !important;
+	font-size: 0.92em;
+	font-weight: 650;
+	letter-spacing: 0.02em;
+	line-height: 1.3;
+	cursor: pointer;
+	transition: background var(--tianji-ease);
 }
 
-.tianji-tab-icon svg {
-	width: 1.05em;
-	height: 1.05em;
+.tianji-view button.tianji-tab-trigger:hover:not(:disabled),
+.tianji-tabs button.tianji-tab-trigger:hover:not(:disabled),
+.tianji-tab-picker.is-open .tianji-tab-trigger {
+	background: color-mix(
+		in srgb,
+		var(--background-modifier-hover) 90%,
+		transparent
+	) !important;
 }
 
-.tianji-tab-label {
-	line-height: 1.2;
+.tianji-view button.tianji-tab-trigger:disabled {
+	cursor: default;
+	opacity: 0.9;
 }
 
-.tianji-tab:hover {
-	color: var(--text-normal);
-	background: var(--background-modifier-hover);
+.tianji-tab-trigger-label {
+	flex: 1 1 auto;
+	min-width: 0;
+	text-align: center;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
-.tianji-tab.is-active {
-	background: color-mix(in srgb, var(--interactive-accent) 22%, var(--background-primary));
-	color: var(--text-normal);
-	box-shadow: none;
-	border: 1px solid color-mix(in srgb, var(--interactive-accent) 40%, var(--tianji-border));
+.tianji-tab-menu {
+	position: absolute;
+	top: calc(100% + 6px);
+	left: 0;
+	right: 0;
+	z-index: 40;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 4px;
+	border: 1px solid var(--tianji-border);
+	border-radius: var(--tianji-radius-sm);
+	background: var(--background-primary);
+	box-shadow: 0 8px 24px color-mix(in srgb, var(--background-modifier-box-shadow) 55%, transparent);
+}
+
+.tianji-tab-menu[hidden] {
+	display: none !important;
+}
+
+.tianji-view button.tianji-tab-option,
+.tianji-tabs button.tianji-tab-option,
+button.tianji-tab-option {
+	display: block !important;
+	width: 100%;
+	margin: 0 !important;
+	padding: 8px 12px !important;
+	border: none !important;
+	border-radius: 6px !important;
+	box-shadow: none !important;
+	background: transparent !important;
+	color: var(--text-normal) !important;
+	font-size: 0.88em;
+	font-weight: 500;
+	line-height: 1.35;
+	text-align: center;
+	cursor: pointer;
+	transition: background var(--tianji-ease), color var(--tianji-ease);
+}
+
+.tianji-view button.tianji-tab-option:hover,
+.tianji-tabs button.tianji-tab-option:hover {
+	background: var(--background-modifier-hover) !important;
+	color: var(--text-normal) !important;
+}
+
+.tianji-view button.tianji-tab-option.is-active,
+.tianji-tabs button.tianji-tab-option.is-active {
+	background: color-mix(
+		in srgb,
+		var(--interactive-accent) 16%,
+		var(--background-primary)
+	) !important;
+	color: var(--text-normal) !important;
 	font-weight: 650;
 }
 
-.tianji-tab.is-active .tianji-tab-icon {
-	color: var(--interactive-accent);
+.tianji-tabs.is-single .tianji-tab-nav {
+	display: none !important;
 }
 
 /* ?? Panel switch (work / library) ?? */
@@ -2986,12 +3104,22 @@
 	.tianji-tabs {
 		width: 100%;
 		border-radius: var(--tianji-radius-sm);
+		padding: 3px;
 	}
 
-	.tianji-tab {
-		padding: 6px 8px;
-		font-size: 0.82em;
-		border-radius: 6px;
+	.tianji-view button.tianji-tab-nav,
+	.tianji-tabs button.tianji-tab-nav {
+		width: 2.1em;
+		min-width: 2.1em;
+		min-height: 2.1em;
+	}
+
+	.tianji-view button.tianji-tab-trigger,
+	.tianji-tabs button.tianji-tab-trigger {
+		font-size: 0.88em;
+		min-height: 2.1em;
+		padding-top: 5px !important;
+		padding-bottom: 5px !important;
 	}
 
 	.tianji-panel-switch {
@@ -3335,9 +3463,17 @@
 		/* padding: 10px 10px 24px; */
 	}
 
-	.tianji-tab {
-		padding: 6px 6px;
-		font-size: 0.78em;
+	.tianji-view button.tianji-tab-nav,
+	.tianji-tabs button.tianji-tab-nav {
+		width: 2em;
+		min-width: 2em;
+		min-height: 2em;
+	}
+
+	.tianji-view button.tianji-tab-trigger,
+	.tianji-tabs button.tianji-tab-trigger {
+		font-size: 0.86em;
+		min-height: 2em;
 	}
 
 	.tianji-coins {
@@ -4523,11 +4659,7 @@ input.tianji-settings-input[type='text'] {
 	line-height: normal;
 }
 
-.tianji-tabs.is-single .tianji-tab {
-	cursor: default;
-}
-
-/* ???? ????????? ???? */
+/* —— 小六壬 —— */
 .tianji-xlr-result {
 	padding: var(--tianji-card-pad, 12px);
 }
