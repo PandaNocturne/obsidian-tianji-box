@@ -20,7 +20,8 @@ export interface LibraryRenderOpts {
 	favoritesEmptyText?: string;
 	filter: LibraryFilter;
 	layout: LibraryLayout;
-	favoriteCount: number;
+	/** 当前类型全部记录数（用于「全部」按钮） */
+	totalCount: number;
 	query: string;
 	onFilterChange: (filter: LibraryFilter) => void;
 	onLayoutChange: (layout: LibraryLayout) => void;
@@ -71,11 +72,8 @@ export function renderLibraryGrid(
 		});
 		btn.addEventListener('click', () => opts.onFilterChange(id));
 	};
-	mkFilter('all', '全部');
-	mkFilter(
-		'favorites',
-		opts.favoriteCount ? `收藏 · ${opts.favoriteCount}` : '收藏',
-	);
+	mkFilter('all', `全部 (${opts.totalCount})`);
+	mkFilter('favorites', '收藏');
 
 	const right = filterBar.createDiv({ cls: 'tianji-library-filter-right' });
 	const mkLayout = (id: LibraryLayout, label: string) => {
@@ -126,7 +124,7 @@ export function renderLibraryGrid(
 					: opts.emptyText;
 			const hint =
 				opts.filter === 'favorites'
-					? '收藏的卦例会优先显示，并在此筛选中查看。'
+					? '点击星标即可收藏，并在此筛选中查看。'
 					: undefined;
 			renderLibraryEmpty(results, emptyText, hint);
 			return;
@@ -503,13 +501,13 @@ function methodLabel(
 function typeFallbackTitle(type: DivinationType): string {
 	switch (type) {
 		case 'liuyao':
-			return '六爻占卜';
+			return '六爻';
 		case 'xiaoliuren':
 			return '小六壬';
 		case 'meihua':
 			return '梅花易数';
 		case 'bazi':
-			return '八字排盘';
+			return '四柱八字';
 		case 'tarot':
 			return '塔罗抽牌';
 	}

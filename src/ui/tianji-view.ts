@@ -187,6 +187,8 @@ export class TianjiView extends ItemView {
 	private shellEl: HTMLElement | null = null;
 	private tabsEl: HTMLElement | null = null;
 	private bodyEl: HTMLElement | null = null;
+	/** 模块下拉的 document 关闭监听只注册一次 */
+	private tabMenuDocBound = false;
 
 	constructor(leaf: WorkspaceLeaf, plugin: TianjiPlugin) {
 		super(leaf);
@@ -294,6 +296,7 @@ export class TianjiView extends ItemView {
 		this.shellEl = null;
 		this.tabsEl = null;
 		this.bodyEl = null;
+		this.tabMenuDocBound = false;
 		this.contentEl.empty();
 	}
 
@@ -353,43 +356,142 @@ export class TianjiView extends ItemView {
 		if (!this.tabsEl) return;
 		this.tabsEl.empty();
 		const enabled = this.plugin.getEnabledTabs();
+		this.tabsEl.toggleClass('is-single', enabled.length <= 1);
+
+		const prevBtn = this.tabsEl.createEl('button', {
+			cls: 'tianji-tab-nav',
+			type: 'button',
+			attr: { 'aria-label': '上一个模块', title: '上一个模块' },
+		});
+		setIcon(prevBtn, 'chevron-left');
+		prevBtn.disabled = enabled.length <= 1;
+		prevBtn.addEventListener('click', (e) => {
+			e.stopPropagation();
+			this.closeTabMenu();
+			this.shiftTab(-1);
+		});
+
+		const picker = this.tabsEl.createDiv({ cls: 'tianji-tab-picker' });
+		const trigger = picker.createEl('button', {
+			cls: 'tianji-tab-trigger',
+			type: 'button',
+			attr: {
+				'aria-label': '切换占卜模块',
+				'aria-haspopup': 'listbox',
+				'aria-expanded': 'false',
+			},
+		});
+		trigger.createSpan({
+			cls: 'tianji-tab-trigger-label',
+			text: DIVINATION_TAB_META[this.activeTab]?.label ?? '天机匣',
+		});
+		trigger.disabled = enabled.length <= 1;
+
+		const menu = picker.createDiv({
+			cls: 'tianji-tab-menu',
+			attr: { role: 'listbox', hidden: 'true' },
+		});
 		for (const id of enabled) {
 			const meta = DIVINATION_TAB_META[id];
-			this.makeTab(this.tabsEl, id, meta.label, meta.icon);
+			const opt = menu.createEl('button', {
+				cls: `tianji-tab-option${id === this.activeTab ? ' is-active' : ''}`,
+				type: 'button',
+				attr: {
+					role: 'option',
+					'data-tab': id,
+					'aria-selected': id === this.activeTab ? 'true' : 'false',
+					title: `${meta.label}：${meta.blurb}`,
+				},
+			});
+			opt.createSpan({ cls: 'tianji-tab-option-title', text: meta.label });
+			opt.createSpan({ cls: 'tianji-tab-option-blurb', text: meta.blurb });
+			opt.addEventListener('click', (e) => {
+				e.stopPropagation();
+				this.closeTabMenu();
+				if (id === this.activeTab) return;
+				this.activeTab = id;
+				this.persistActiveTab(id);
+				this.syncTabs();
+				this.renderBody();
+			});
 		}
-		this.tabsEl.toggleClass('is-single', enabled.length <= 1);
+
+		trigger.addEventListener('click', (e) => {
+			e.stopPropagation();
+			if (enabled.length <= 1) return;
+			const open = !picker.hasClass('is-open');
+			this.closeTabMenu();
+			if (open) {
+				picker.addClass('is-open');
+				menu.removeAttribute('hidden');
+				trigger.setAttribute('aria-expanded', 'true');
+			}
+		});
+
+		const nextBtn = this.tabsEl.createEl('button', {
+			cls: 'tianji-tab-nav',
+			type: 'button',
+			attr: { 'aria-label': '下一个模块', title: '下一个模块' },
+		});
+		setIcon(nextBtn, 'chevron-right');
+		nextBtn.disabled = enabled.length <= 1;
+		nextBtn.addEventListener('click', (e) => {
+			e.stopPropagation();
+			this.closeTabMenu();
+			this.shiftTab(1);
+		});
+
+		this.bindTabMenuDismiss();
+	}
+
+	/** 点击外部 / Esc 关闭下拉（仅绑定一次） */
+	private bindTabMenuDismiss(): void {
+		if (this.tabMenuDocBound) return;
+		this.tabMenuDocBound = true;
+		this.registerDomEvent(document, 'click', () => {
+			this.closeTabMenu();
+		});
+		this.registerDomEvent(document, 'keydown', (ev: KeyboardEvent) => {
+			if (ev.key === 'Escape') this.closeTabMenu();
+		});
+	}
+
+	private closeTabMenu(): void {
+		if (!this.tabsEl) return;
+		const picker = this.tabsEl.querySelector('.tianji-tab-picker');
+		const menu = this.tabsEl.querySelector('.tianji-tab-menu');
+		const trigger = this.tabsEl.querySelector('.tianji-tab-trigger');
+		picker?.removeClass('is-open');
+		menu?.setAttribute('hidden', 'true');
+		trigger?.setAttribute('aria-expanded', 'false');
 	}
 
 	private syncTabs(): void {
 		if (!this.tabsEl) return;
-		const buttons = this.tabsEl.querySelectorAll('button.tianji-tab');
-		buttons.forEach((btn) => {
-			const id = btn.getAttribute('data-tab');
-			btn.toggleClass('is-active', id === this.activeTab);
+		const label = this.tabsEl.querySelector('.tianji-tab-trigger-label');
+		if (label) {
+			label.setText(DIVINATION_TAB_META[this.activeTab]?.label ?? '');
+		}
+		this.tabsEl.querySelectorAll('.tianji-tab-option').forEach((el) => {
+			const id = el.getAttribute('data-tab');
+			const on = id === this.activeTab;
+			el.toggleClass('is-active', on);
+			el.setAttribute('aria-selected', on ? 'true' : 'false');
 		});
 	}
 
-	private makeTab(
-		parent: HTMLElement,
-		id: TabId,
-		label: string,
-		iconName: string,
-	): void {
-		const btn = parent.createEl('button', {
-			cls: `tianji-tab${this.activeTab === id ? ' is-active' : ''}`,
-			type: 'button',
-			attr: { 'data-tab': id },
-		});
-		const iconWrap = btn.createSpan({ cls: 'tianji-tab-icon' });
-		setIcon(iconWrap, iconName);
-		btn.createSpan({ cls: 'tianji-tab-label', text: label });
-		btn.addEventListener('click', () => {
-			if (this.activeTab === id) return;
-			this.activeTab = id;
-			this.persistActiveTab(id);
-			this.syncTabs();
-			this.renderBody();
-		});
+	/** 按已启用顺序左右切换模块 */
+	private shiftTab(delta: -1 | 1): void {
+		const enabled = this.plugin.getEnabledTabs();
+		if (enabled.length <= 1) return;
+		let idx = enabled.indexOf(this.activeTab);
+		if (idx < 0) idx = 0;
+		const next = enabled[(idx + delta + enabled.length) % enabled.length]!;
+		if (next === this.activeTab) return;
+		this.activeTab = next;
+		this.persistActiveTab(next);
+		this.syncTabs();
+		this.renderBody();
 	}
 
 	/* -------------------- 六爻 -------------------- */
@@ -403,7 +505,7 @@ export class TianjiView extends ItemView {
 			mode: this.liuyaoPanel,
 			castLabel: '起卦',
 			chartLabel: '排盘',
-			libraryLabel: '卦例库',
+			libraryLabel: '记录',
 			type: 'liuyao',
 			onChange: (m) => {
 				this.liuyaoPanel = m;
@@ -413,7 +515,7 @@ export class TianjiView extends ItemView {
 		if (this.liuyaoPanel === 'library') {
 			this.renderTypeLibrary(container, {
 				type: 'liuyao',
-				emptyText: '暂无六爻卦例。确认起卦后将自动写入卦例库。',
+				emptyText: '暂无六爻记录。确认起卦后将自动写入。',
 			});
 			return;
 		}
@@ -1113,7 +1215,7 @@ export class TianjiView extends ItemView {
 			this.liuyaoSubject ||
 			this.liuyaoQuestion.slice(0, 20) ||
 			result.original.alias ||
-			'六爻占卜';
+			'六爻';
 		try {
 			this.liuyaoRecordId = await this.plugin.db.insertReading({
 				type: 'liuyao',
@@ -1150,7 +1252,7 @@ export class TianjiView extends ItemView {
 			mode: this.baziPanel,
 			castLabel: '起盘',
 			chartLabel: '命盘',
-			libraryLabel: '命理库',
+			libraryLabel: '记录',
 			type: 'bazi',
 			onChange: (m) => {
 				this.baziPanel = m;
@@ -1160,7 +1262,7 @@ export class TianjiView extends ItemView {
 		if (this.baziPanel === 'library') {
 			this.renderTypeLibrary(container, {
 				type: 'bazi',
-				emptyText: '暂无八字命盘。排盘后点击「添加命理库」保存。',
+				emptyText: '暂无四柱八字记录。排盘后可保存。',
 			});
 			return;
 		}
@@ -1348,7 +1450,7 @@ export class TianjiView extends ItemView {
 		});
 		const saveBtn = actions.createEl('button', {
 			cls: 'tianji-btn',
-			text: '添加命理库',
+			text: '保存记录',
 		});
 		saveBtn.addEventListener('click', () => {
 			try {
@@ -1392,7 +1494,7 @@ export class TianjiView extends ItemView {
 		if (this.baziRecordId == null) {
 			const addLib = toolbar.createEl('button', {
 				cls: 'tianji-btn tianji-btn-primary',
-				text: '添加命理库',
+				text: '保存记录',
 			});
 			addLib.addEventListener('click', () => {
 				if (!this.baziChart) return;
@@ -1725,7 +1827,7 @@ export class TianjiView extends ItemView {
 				resultJson: JSON.stringify(chart),
 			});
 			this.render();
-			new Notice(`已加入命理库：${this.baziName.trim() || '未命名'}`);
+			new Notice(`已保存记录：${this.baziName.trim() || '未命名'}`);
 		} catch (e) {
 			this.render();
 			new Notice(`存档失败：${String(e)}`);
@@ -1743,7 +1845,7 @@ export class TianjiView extends ItemView {
 			mode: this.tarotPanel,
 			castLabel: '抽牌',
 			chartLabel: '牌阵',
-			libraryLabel: '牌阵库',
+			libraryLabel: '记录',
 			type: 'tarot',
 			onChange: (m) => {
 				this.tarotPanel = m;
@@ -1753,7 +1855,7 @@ export class TianjiView extends ItemView {
 		if (this.tarotPanel === 'library') {
 			this.renderTypeLibrary(container, {
 				type: 'tarot',
-				emptyText: '暂无塔罗牌阵。洗牌抽牌后将自动写入牌阵库。',
+				emptyText: '暂无塔罗记录。洗牌抽牌后将自动写入。',
 			});
 			return;
 		}
@@ -2765,7 +2867,7 @@ export class TianjiView extends ItemView {
 			mode: this.meihuaPanel,
 			castLabel: '起卦',
 			chartLabel: '排盘',
-			libraryLabel: '卦例库',
+			libraryLabel: '记录',
 			type: 'meihua',
 			onChange: (m) => {
 				this.meihuaPanel = m;
@@ -2775,7 +2877,7 @@ export class TianjiView extends ItemView {
 		if (this.meihuaPanel === 'library') {
 			this.renderTypeLibrary(container, {
 				type: 'meihua',
-				emptyText: '暂无梅花易数卦例。起卦排盘后将自动写入卦例库。',
+				emptyText: '暂无梅花易数记录。起卦排盘后将自动写入。',
 			});
 			return;
 		}
@@ -3249,7 +3351,7 @@ export class TianjiView extends ItemView {
 			mode: this.xiaoliurenPanel,
 			castLabel: '起卦',
 			chartLabel: '排盘',
-			libraryLabel: '课例库',
+			libraryLabel: '记录',
 			type: 'xiaoliuren',
 			onChange: (m) => {
 				this.xiaoliurenPanel = m;
@@ -3259,7 +3361,7 @@ export class TianjiView extends ItemView {
 		if (this.xiaoliurenPanel === 'library') {
 			this.renderTypeLibrary(container, {
 				type: 'xiaoliuren',
-				emptyText: '暂无小六壬课例。起卦排盘后将自动写入课例库。',
+				emptyText: '暂无小六壬记录。起卦排盘后将自动写入。',
 			});
 			return;
 		}
@@ -3707,9 +3809,6 @@ export class TianjiView extends ItemView {
 			onChange: (mode: PanelMode) => void;
 		},
 	): void {
-		const count = this.plugin.db?.isReady()
-			? this.plugin.db.countReadings(opts.type)
-			: 0;
 		const bar = container.createDiv({ cls: 'tianji-panel-switch' });
 		const mk = (mode: PanelMode, label: string) => {
 			const btn = bar.createEl('button', {
@@ -3721,7 +3820,7 @@ export class TianjiView extends ItemView {
 		};
 		mk('cast', opts.castLabel);
 		mk('chart', opts.chartLabel);
-		mk('library', `${opts.libraryLabel}${count ? ` · ${count}` : ''}`);
+		mk('library', opts.libraryLabel);
 	}
 
 	private renderTypeLibrary(
@@ -3733,13 +3832,13 @@ export class TianjiView extends ItemView {
 	): void {
 		const favoritesOnly = this.libraryFilter === 'favorites';
 		const list = this.plugin.db.listReadings(opts.type, 300, favoritesOnly);
-		const favoriteCount = this.plugin.db.countReadings(opts.type, true);
+		const totalCount = this.plugin.db.countReadings(opts.type, false);
 		renderLibraryGrid(container, list, {
 			emptyText: opts.emptyText,
 			favoritesEmptyText: '暂无收藏。点击星标即可收藏。',
 			filter: this.libraryFilter,
 			layout: this.plugin.settings.libraryLayout ?? 'table',
-			favoriteCount,
+			totalCount,
 			query: this.libraryQuery,
 			onFilterChange: (f) => {
 				this.libraryFilter = f;
@@ -3768,20 +3867,23 @@ export class TianjiView extends ItemView {
 		const title = rec?.title?.trim() || '该记录';
 		const hasNote = rec ? readingHasNote(rec) : false;
 		const message = hasNote
-			? `确定删除「${title}」？关联的笔记文件不会被删除。此操作不可撤销。`
-			: `确定删除「${title}」？此操作不可撤销。`;
+			? `确定删除「${title}」？\n关联的笔记文件不会被删除。此操作不可撤销。`
+			: `确定删除「${title}」？\n此操作不可撤销。`;
 
-		new ConfirmModal(this.app, {
-			title: '删除记录',
-			message,
-			confirmText: '删除',
-			danger: true,
-			onConfirm: async () => {
-				await this.plugin.db.deleteReading(id);
-				new Notice('已删除');
-				this.render();
-			},
-		}).open();
+		// 延后打开，避免与点击事件抢焦点导致弹窗一闪即关
+		window.setTimeout(() => {
+			new ConfirmModal(this.app, {
+				title: '确认删除',
+				message,
+				confirmText: '确认删除',
+				danger: true,
+				onConfirm: async () => {
+					await this.plugin.db.deleteReading(id);
+					new Notice('已删除');
+					this.render();
+				},
+			}).open();
+		}, 0);
 	}
 
 	private openReadingNote(rec: ReadingRecord): void {

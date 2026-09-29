@@ -30,6 +30,7 @@ export class ConfirmModal extends Modal {
 
 	onOpen(): void {
 		this.modalEl.addClass('tianji-confirm-modal');
+		if (this.danger) this.modalEl.addClass('mod-warning');
 		this.setTitle(this.titleText);
 
 		const { contentEl } = this;
@@ -62,6 +63,9 @@ export class ConfirmModal extends Modal {
 				ok.removeAttribute('disabled');
 			}
 		});
+
+		// 危险操作默认聚焦取消，避免回车误删
+		window.setTimeout(() => cancel.focus(), 0);
 	}
 
 	onClose(): void {

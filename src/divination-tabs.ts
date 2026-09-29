@@ -10,13 +10,38 @@ export const ALL_DIVINATION_TYPES: DivinationType[] = [
 
 export const DIVINATION_TAB_META: Record<
 	DivinationType,
-	{ label: string; shortLabel: string; icon: string }
+	{ label: string; shortLabel: string; icon: string; blurb: string }
 > = {
-	liuyao: { label: '六爻占卜', shortLabel: '六爻', icon: 'hexagon' },
-	xiaoliuren: { label: '小六壬', shortLabel: '小六壬', icon: 'circle-dot' },
-	meihua: { label: '梅花易数', shortLabel: '梅花', icon: 'flower-2' },
-	tarot: { label: '塔罗牌', shortLabel: '塔罗', icon: 'layout-grid' },
-	bazi: { label: '八字分析', shortLabel: '八字', icon: 'calendar' },
+	liuyao: {
+		label: '六爻',
+		shortLabel: '六爻',
+		icon: 'hexagon',
+		blurb: '周易六爻，一事一卦问吉凶',
+	},
+	xiaoliuren: {
+		label: '小六壬',
+		shortLabel: '六壬',
+		icon: 'circle-dot',
+		blurb: '民间小术，六宫简断宜忌',
+	},
+	meihua: {
+		label: '梅花易数',
+		shortLabel: '梅花',
+		icon: 'flower-2',
+		blurb: '观象取数，体用生克论事',
+	},
+	tarot: {
+		label: '塔罗牌',
+		shortLabel: '塔罗',
+		icon: 'layout-grid',
+		blurb: '西方牌阵，象征指引心绪与走向',
+	},
+	bazi: {
+		label: '四柱八字',
+		shortLabel: '八字',
+		icon: 'calendar',
+		blurb: '生辰四柱，论命局运势与流年',
+	},
 };
 
 /** 默认：六爻 > 小六壬 > 梅花易数 > 塔罗牌 > 八字 */
