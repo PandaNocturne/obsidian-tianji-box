@@ -1,6 +1,6 @@
 {
 	"name": "tianji-box",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "Local Liuyao, Bazi and Tarot charting for Obsidian",
 	"main": "main.js",
 	"type": "module",
