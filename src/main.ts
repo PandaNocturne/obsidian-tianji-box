@@ -56,7 +56,7 @@ export default class TianjiPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'open-tianji-bazi',
-			name: '打开八字分析',
+			name: '打开四柱八字',
 			callback: () => {
 				void this.activateView('bazi');
 			},

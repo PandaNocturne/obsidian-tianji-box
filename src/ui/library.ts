@@ -509,7 +509,7 @@ function typeFallbackTitle(type: DivinationType): string {
 		case 'meihua':
 			return '梅花易数';
 		case 'bazi':
-			return '八字排盘';
+			return '四柱八字';
 		case 'tarot':
 			return '塔罗抽牌';
 	}

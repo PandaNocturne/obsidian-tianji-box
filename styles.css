@@ -215,10 +215,14 @@ button.tianji-tab-trigger {
 .tianji-view button.tianji-tab-option,
 .tianji-tabs button.tianji-tab-option,
 button.tianji-tab-option {
-	display: block !important;
+	display: flex !important;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 2px;
 	width: 100%;
 	margin: 0 !important;
-	padding: 8px 12px !important;
+	padding: 9px 12px !important;
 	border: none !important;
 	border-radius: 6px !important;
 	box-shadow: none !important;
@@ -232,10 +236,27 @@ button.tianji-tab-option {
 	transition: background var(--tianji-ease), color var(--tianji-ease);
 }
 
+.tianji-tab-option-title {
+	font-weight: 650;
+	line-height: 1.3;
+}
+
+.tianji-tab-option-blurb {
+	font-size: 0.78em;
+	font-weight: 450;
+	line-height: 1.35;
+	color: var(--text-muted);
+}
+
 .tianji-view button.tianji-tab-option:hover,
 .tianji-tabs button.tianji-tab-option:hover {
 	background: var(--background-modifier-hover) !important;
 	color: var(--text-normal) !important;
+}
+
+.tianji-view button.tianji-tab-option:hover .tianji-tab-option-blurb,
+.tianji-tabs button.tianji-tab-option:hover .tianji-tab-option-blurb {
+	color: var(--text-muted);
 }
 
 .tianji-view button.tianji-tab-option.is-active,
@@ -246,7 +267,11 @@ button.tianji-tab-option {
 		var(--background-primary)
 	) !important;
 	color: var(--text-normal) !important;
-	font-weight: 650;
+}
+
+.tianji-view button.tianji-tab-option.is-active .tianji-tab-option-title,
+.tianji-tabs button.tianji-tab-option.is-active .tianji-tab-option-title {
+	font-weight: 700;
 }
 
 .tianji-tabs.is-single .tianji-tab-nav {

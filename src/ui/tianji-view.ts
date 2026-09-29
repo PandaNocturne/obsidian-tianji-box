@@ -396,13 +396,15 @@ export class TianjiView extends ItemView {
 			const opt = menu.createEl('button', {
 				cls: `tianji-tab-option${id === this.activeTab ? ' is-active' : ''}`,
 				type: 'button',
-				text: meta.label,
 				attr: {
 					role: 'option',
 					'data-tab': id,
 					'aria-selected': id === this.activeTab ? 'true' : 'false',
+					title: `${meta.label}：${meta.blurb}`,
 				},
 			});
+			opt.createSpan({ cls: 'tianji-tab-option-title', text: meta.label });
+			opt.createSpan({ cls: 'tianji-tab-option-blurb', text: meta.blurb });
 			opt.addEventListener('click', (e) => {
 				e.stopPropagation();
 				this.closeTabMenu();
