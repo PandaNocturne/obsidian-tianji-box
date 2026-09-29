@@ -1,7 +1,7 @@
 {
 	"id": "tianji-box",
 	"name": "天机匣",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"minAppVersion": "1.5.0",
 	"description": "本地简单的六爻、八字、塔罗排盘玩具。",
 	"author": "PandaNocturne",
