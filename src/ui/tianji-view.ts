@@ -168,6 +168,7 @@ export class TianjiView extends ItemView {
 
 	// 小六壬 state
 	private xiaoliurenSubject = '问事';
+	private xiaoliurenGender: Gender = 'male';
 	private xiaoliurenQuestion = '';
 	private xiaoliurenMethod: XiaoliurenMethod = 'day-hour';
 	private xiaoliurenNumber = '';
@@ -179,6 +180,7 @@ export class TianjiView extends ItemView {
 
 	// 梅花易数 state
 	private meihuaSubject = '问事';
+	private meihuaGender: Gender = 'male';
 	private meihuaQuestion = '';
 	private meihuaMethod: MeihuaMethod = 'time';
 	private meihuaNum1 = '';
@@ -3025,6 +3027,19 @@ export class TianjiView extends ItemView {
 				this.meihuaSubject = input.value;
 			});
 		});
+		this.field(top, '性别', (el) => {
+			const wrap = el.createDiv({ cls: 'tianji-radio-row' });
+			this.radio(wrap, '男', this.meihuaGender === 'male', () => {
+				if (this.meihuaGender === 'male') return;
+				this.meihuaGender = 'male';
+				this.syncChipRow(wrap, '男');
+			});
+			this.radio(wrap, '女', this.meihuaGender === 'female', () => {
+				if (this.meihuaGender === 'female') return;
+				this.meihuaGender = 'female';
+				this.syncChipRow(wrap, '女');
+			});
+		});
 		this.field(top, '起卦时间', (el) => {
 			const input = el.createEl('input', {
 				type: 'datetime-local',
@@ -3200,6 +3215,7 @@ export class TianjiView extends ItemView {
 			const result = buildMeihuaResult({
 				cast,
 				subject: this.meihuaSubject,
+				gender: this.meihuaGender,
 				question: this.meihuaQuestion,
 			});
 			await this.saveMeihuaCast(result);
@@ -3222,6 +3238,7 @@ export class TianjiView extends ItemView {
 				title,
 				inputJson: JSON.stringify({
 					subject: this.meihuaSubject,
+					gender: this.meihuaGender,
 					question: this.meihuaQuestion,
 					method: this.meihuaMethod,
 					methodLabel: result.methodLabel,
@@ -3409,6 +3426,7 @@ export class TianjiView extends ItemView {
 		const result = JSON.parse(rec.resultJson) as MeihuaResult;
 		let input: {
 			subject?: string;
+			gender?: Gender;
 			question?: string;
 			method?: MeihuaMethod;
 			castTime?: string;
@@ -3423,6 +3441,7 @@ export class TianjiView extends ItemView {
 		}
 
 		this.meihuaSubject = input.subject ?? result.subject ?? '问事';
+		this.meihuaGender = input.gender ?? result.gender ?? 'male';
 		this.meihuaQuestion = input.question ?? result.question ?? '';
 		this.meihuaMethod = input.method ?? result.method ?? 'time';
 		this.meihuaNum1 =
@@ -3504,6 +3523,19 @@ export class TianjiView extends ItemView {
 			});
 			input.addEventListener('input', () => {
 				this.xiaoliurenSubject = input.value;
+			});
+		});
+		this.field(top, '性别', (el) => {
+			const wrap = el.createDiv({ cls: 'tianji-radio-row' });
+			this.radio(wrap, '男', this.xiaoliurenGender === 'male', () => {
+				if (this.xiaoliurenGender === 'male') return;
+				this.xiaoliurenGender = 'male';
+				this.syncChipRow(wrap, '男');
+			});
+			this.radio(wrap, '女', this.xiaoliurenGender === 'female', () => {
+				if (this.xiaoliurenGender === 'female') return;
+				this.xiaoliurenGender = 'female';
+				this.syncChipRow(wrap, '女');
 			});
 		});
 		this.field(top, '起卦时间', (el) => {
@@ -3642,6 +3674,7 @@ export class TianjiView extends ItemView {
 			const result = buildXiaoliurenResult({
 				cast,
 				subject: this.xiaoliurenSubject,
+				gender: this.xiaoliurenGender,
 				question: this.xiaoliurenQuestion,
 			});
 			await this.saveXiaoliurenCast(result);
@@ -3667,6 +3700,7 @@ export class TianjiView extends ItemView {
 				title,
 				inputJson: JSON.stringify({
 					subject: this.xiaoliurenSubject,
+					gender: this.xiaoliurenGender,
 					question: this.xiaoliurenQuestion,
 					method: this.xiaoliurenMethod,
 					methodLabel: result.methodLabel,
@@ -3880,6 +3914,7 @@ export class TianjiView extends ItemView {
 		const result = JSON.parse(rec.resultJson) as XiaoliurenResult;
 		let input: {
 			subject?: string;
+			gender?: Gender;
 			question?: string;
 			method?: XiaoliurenMethod;
 			castTime?: string;
@@ -3892,6 +3927,7 @@ export class TianjiView extends ItemView {
 		}
 
 		this.xiaoliurenSubject = input.subject ?? result.subject ?? '问事';
+		this.xiaoliurenGender = input.gender ?? result.gender ?? 'male';
 		this.xiaoliurenQuestion = input.question ?? result.question ?? '';
 		this.xiaoliurenMethod = input.method ?? result.method ?? 'day-hour';
 		this.xiaoliurenNumber =

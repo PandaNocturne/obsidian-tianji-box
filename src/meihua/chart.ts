@@ -1,4 +1,4 @@
-import type { HexagramInfo } from '../types';
+import type { Gender, HexagramInfo } from '../types';
 import { getHexagramByBinary } from '../liuyao/hexagrams';
 import { MEIHUA_METHOD_LABELS, type MeihuaCastCore } from './casting';
 import {
@@ -16,6 +16,7 @@ export interface MeihuaResult {
 	method: MeihuaCastCore['method'];
 	methodLabel: string;
 	subject: string;
+	gender: Gender;
 	question: string;
 	castTime: string;
 	solarText: string;
@@ -47,9 +48,10 @@ export interface MeihuaResult {
 export function buildMeihuaResult(params: {
 	cast: MeihuaCastCore;
 	subject: string;
+	gender: Gender;
 	question: string;
 }): MeihuaResult {
-	const { cast, subject, question } = params;
+	const { cast, subject, gender, question } = params;
 	const benBinary = hexagramBinary(cast.lower, cast.upper);
 	const original = getHexagramByBinary(benBinary);
 	const mutual = getHexagramByBinary(mutualBinary(benBinary));
@@ -68,6 +70,7 @@ export function buildMeihuaResult(params: {
 		method: cast.method,
 		methodLabel: MEIHUA_METHOD_LABELS[cast.method],
 		subject,
+		gender,
 		question,
 		castTime: cast.castTime,
 		solarText: cast.solarText,
@@ -108,10 +111,16 @@ function trigramLine(t: MeihuaTrigram, role?: string): string {
 }
 
 export function formatMeihuaChartText(r: MeihuaResult): string {
+	const genderLabel = r.gender === 'female' ? '女' : '男';
+	const subjectPart = r.subject.trim() || '问事';
+	const questionPart = r.question.trim();
+	const header = questionPart
+		? `${genderLabel}测: ${subjectPart}(${questionPart})`
+		: `${genderLabel}测: ${subjectPart}`;
+
 	const lines: string[] = [
 		'【梅花易数排盘】',
-		`事由：${r.subject || '问事'}`,
-		`问题：${r.question || '—'}`,
+		header,
 		`起卦：${r.methodLabel}`,
 		`公历：${r.solarText}`,
 		`农历：${r.lunarText}`,

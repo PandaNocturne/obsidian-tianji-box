@@ -1,3 +1,4 @@
+import type { Gender } from '../types';
 import type { XiaoliurenCastCore } from './casting';
 import { XIAOLIUREN_METHOD_LABELS } from './casting';
 import {
@@ -35,6 +36,7 @@ export interface XiaoliurenResult {
 	method: XiaoliurenCastCore['method'];
 	methodLabel: string;
 	subject: string;
+	gender: Gender;
 	question: string;
 	castTime: string;
 	solarText: string;
@@ -289,11 +291,13 @@ function formatChartText(
 	if (result.method === 'number' && result.inputNumber != null) {
 		lines.push(`报数：${result.inputNumber}`);
 	}
-	lines.push(
-		`占测事由：${result.subject.trim() || '问事'}`,
-		`占测问题：${result.question.trim() || '（未填写）'}`,
-		``,
-	);
+	const genderLabel = result.gender === 'female' ? '女' : '男';
+	const subjectPart = result.subject.trim() || '问事';
+	const questionPart = result.question.trim();
+	const header = questionPart
+		? `${genderLabel}测: ${subjectPart}(${questionPart})`
+		: `${genderLabel}测: ${subjectPart}`;
+	lines.push(header, ``);
 	if (result.dayPalace) lines.push(`日宫：${result.dayPalace}`);
 	if (result.numberPalace) lines.push(`数宫：${result.numberPalace}`);
 	lines.push(`时宫：${result.hourPalace}`);
@@ -361,9 +365,10 @@ export function formatXiaoliurenChartText(
 export function buildXiaoliurenResult(params: {
 	cast: XiaoliurenCastCore;
 	subject: string;
+	gender: Gender;
 	question: string;
 }): XiaoliurenResult {
-	const { cast, subject, question } = params;
+	const { cast, subject, gender, question } = params;
 	const branches = placeBranches(cast.bodyPalace, cast.bodyBranch);
 	const relations = placeRelations(branches, cast.bodyPalace);
 	const spirits = placeSpirits(cast.bodyBranch);
@@ -385,6 +390,7 @@ export function buildXiaoliurenResult(params: {
 		method: cast.method,
 		methodLabel: XIAOLIUREN_METHOD_LABELS[cast.method],
 		subject,
+		gender,
 		question,
 		castTime: cast.castTime,
 		solarText: cast.solarText,
