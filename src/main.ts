@@ -78,6 +78,14 @@ export default class TianjiPlugin extends Plugin {
 			},
 		});
 
+		this.addCommand({
+			id: 'open-tianji-meihua',
+			name: '打开梅花易数',
+			callback: () => {
+				void this.activateView('meihua');
+			},
+		});
+
 		this.addSettingTab(new TianjiSettingTab(this.app, this));
 	}
 
@@ -174,7 +182,8 @@ export default class TianjiPlugin extends Plugin {
 			last !== 'liuyao' &&
 			last !== 'bazi' &&
 			last !== 'tarot' &&
-			last !== 'xiaoliuren'
+			last !== 'xiaoliuren' &&
+			last !== 'meihua'
 		) {
 			this.settings.lastActiveTab = null;
 		}

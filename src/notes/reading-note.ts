@@ -34,6 +34,8 @@ export function noteTypeLabel(type: DivinationType): string {
 			return '六爻';
 		case 'xiaoliuren':
 			return '小六壬';
+		case 'meihua':
+			return '梅花';
 		case 'tarot':
 			return '塔罗牌';
 		case 'bazi':

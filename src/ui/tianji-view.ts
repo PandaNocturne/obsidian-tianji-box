@@ -12,6 +12,7 @@ import type {
 import {
 	YAO_LABELS,
 	YAO_POSITION_NAMES,
+	getHexagramByBinary,
 } from '../liuyao/hexagrams';
 import { getZhouyiByBinary, type ZhouyiText } from '../liuyao/zhouyi';
 import {
@@ -62,6 +63,17 @@ import {
 	PALACES_GRID,
 	type XiaoliurenPalace,
 } from '../xiaoliuren/palaces';
+import {
+	castMeihua,
+	MEIHUA_METHOD_LABELS,
+	type MeihuaMethod,
+} from '../meihua/casting';
+import {
+	buildMeihuaResult,
+	formatMeihuaChartText,
+	type MeihuaResult,
+} from '../meihua/chart';
+import { mutualBinary } from '../meihua/trigrams';
 import { TarotPickModal } from './tarot-pick-modal';
 import { TarotShuffleModal } from './tarot-shuffle-modal';
 import {
@@ -96,6 +108,7 @@ export class TianjiView extends ItemView {
 	private baziPanel: PanelMode = 'cast';
 	private tarotPanel: PanelMode = 'cast';
 	private xiaoliurenPanel: PanelMode = 'cast';
+	private meihuaPanel: PanelMode = 'cast';
 	/** 历史库筛选：全部 / 仅收藏 */
 	private libraryFilter: LibraryFilter = 'all';
 	/** 历史库搜索关键词 */
@@ -160,6 +173,17 @@ export class TianjiView extends ItemView {
 	/** 立太极宫位；null 表示未立，六亲按身宫 */
 	private xiaoliurenTaijiPalace: XiaoliurenPalace | null = null;
 
+	// 梅花易数 state
+	private meihuaSubject = '问事';
+	private meihuaQuestion = '';
+	private meihuaMethod: MeihuaMethod = 'time';
+	private meihuaNum1 = '';
+	private meihuaNum2 = '';
+	private meihuaNum3 = '';
+	private meihuaCastLocal = '';
+	private meihuaResult: MeihuaResult | null = null;
+	private meihuaRecordId: number | null = null;
+
 	private shellEl: HTMLElement | null = null;
 	private tabsEl: HTMLElement | null = null;
 	private bodyEl: HTMLElement | null = null;
@@ -173,6 +197,7 @@ export class TianjiView extends ItemView {
 		this.baziDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 		this.liuyaoCastLocal = this.toDatetimeLocal(now);
 		this.xiaoliurenCastLocal = this.toDatetimeLocal(now);
+		this.meihuaCastLocal = this.toDatetimeLocal(now);
 	}
 
 	/** 上次打开的标签（若仍启用），否则第一个已启用模块 */
@@ -308,6 +333,7 @@ export class TianjiView extends ItemView {
 			if (this.activeTab === 'liuyao') this.renderLiuyao(this.bodyEl);
 			else if (this.activeTab === 'xiaoliuren')
 				this.renderXiaoliuren(this.bodyEl);
+			else if (this.activeTab === 'meihua') this.renderMeihua(this.bodyEl);
 			else if (this.activeTab === 'bazi') this.renderBazi(this.bodyEl);
 			else this.renderTarot(this.bodyEl);
 		} catch (e) {
@@ -2728,6 +2754,490 @@ export class TianjiView extends ItemView {
 		this.render();
 	}
 
+	/* -------------------- 梅花易数 -------------------- */
+
+	private renderMeihua(container: HTMLElement): void {
+		const workTop =
+			this.meihuaPanel === 'chart'
+				? container.createDiv({ cls: 'tianji-work-top' })
+				: container;
+		this.renderPanelSwitch(workTop, {
+			mode: this.meihuaPanel,
+			castLabel: '起卦',
+			chartLabel: '排盘',
+			libraryLabel: '卦例库',
+			type: 'meihua',
+			onChange: (m) => {
+				this.meihuaPanel = m;
+				this.render();
+			},
+		});
+		if (this.meihuaPanel === 'library') {
+			this.renderTypeLibrary(container, {
+				type: 'meihua',
+				emptyText: '暂无梅花易数卦例。起卦排盘后将自动写入卦例库。',
+			});
+			return;
+		}
+		if (this.meihuaPanel === 'chart') {
+			this.renderMeihuaChart(container, workTop);
+			return;
+		}
+		this.renderMeihuaCast(container);
+	}
+
+	private renderMeihuaCast(container: HTMLElement): void {
+		const stage = container.createDiv({ cls: 'tianji-stage' });
+		const form = stage.createDiv({ cls: 'tianji-form tianji-cast-card' });
+
+		const top = form.createDiv({ cls: 'tianji-cast-row' });
+		this.field(top, '占测事由', (el) => {
+			const input = el.createEl('input', {
+				type: 'text',
+				cls: 'tianji-input',
+				placeholder: '如：事业、感情、财运…',
+				value: this.meihuaSubject,
+			});
+			input.addEventListener('input', () => {
+				this.meihuaSubject = input.value;
+			});
+		});
+		this.field(top, '起卦时间', (el) => {
+			const input = el.createEl('input', {
+				type: 'datetime-local',
+				cls: 'tianji-input',
+				value: this.normalizeDatetimeLocal(this.meihuaCastLocal),
+			});
+			input.step = '1';
+			input.addEventListener('change', () => {
+				this.meihuaCastLocal = this.normalizeDatetimeLocal(input.value);
+				input.value = this.meihuaCastLocal;
+			});
+			const nowBtn = el.createEl('button', {
+				cls: 'tianji-btn',
+				text: '此刻',
+			});
+			nowBtn.addEventListener('click', () => {
+				this.meihuaCastLocal = this.toDatetimeLocal(new Date());
+				input.value = this.meihuaCastLocal;
+			});
+		});
+
+		this.field(form, '占测问题（必填）', (el) => {
+			const ta = el.createEl('textarea', {
+				cls: 'tianji-textarea',
+				placeholder: '请描述您的具体问题（必填）',
+				attr: { required: 'true' },
+			});
+			ta.value = this.meihuaQuestion;
+			ta.rows = 3;
+			ta.addEventListener('input', () => {
+				this.meihuaQuestion = ta.value;
+			});
+		});
+
+		this.field(form, '起卦方式', (el) => {
+			const wrap = el.createDiv({ cls: 'tianji-radio-row' });
+			(Object.keys(MEIHUA_METHOD_LABELS) as MeihuaMethod[]).forEach(
+				(id) => {
+					this.radio(
+						wrap,
+						MEIHUA_METHOD_LABELS[id],
+						this.meihuaMethod === id,
+						() => {
+							if (this.meihuaMethod === id) return;
+							this.meihuaMethod = id;
+							this.render();
+						},
+					);
+				},
+			);
+		});
+
+		if (this.meihuaMethod === 'numbers' || this.meihuaMethod === 'three') {
+			const row = form.createDiv({ cls: 'tianji-cast-row is-2' });
+			this.field(row, '上卦数（必填）', (el) => {
+				const input = el.createEl('input', {
+					type: 'number',
+					cls: 'tianji-input',
+					placeholder: '正整数',
+					attr: { min: '1', step: '1' },
+					value: this.meihuaNum1,
+				});
+				input.addEventListener('input', () => {
+					this.meihuaNum1 = input.value;
+				});
+			});
+			this.field(row, '下卦数（必填）', (el) => {
+				const input = el.createEl('input', {
+					type: 'number',
+					cls: 'tianji-input',
+					placeholder: '正整数',
+					attr: { min: '1', step: '1' },
+					value: this.meihuaNum2,
+				});
+				input.addEventListener('input', () => {
+					this.meihuaNum2 = input.value;
+				});
+			});
+		}
+		if (this.meihuaMethod === 'three') {
+			this.field(form, '动爻数（必填）', (el) => {
+				const input = el.createEl('input', {
+					type: 'number',
+					cls: 'tianji-input',
+					placeholder: '正整数，取余定动爻',
+					attr: { min: '1', step: '1' },
+					value: this.meihuaNum3,
+				});
+				input.addEventListener('input', () => {
+					this.meihuaNum3 = input.value;
+				});
+			});
+		}
+
+		const notes = form.createEl('details', { cls: 'tianji-notes' });
+		notes.createEl('summary', { text: '起卦说明' });
+		const ul = notes.createEl('ul');
+		const tips: Record<MeihuaMethod, string[]> = {
+			time: [
+				'农历年支数（子1…亥12）+ 月 + 日，除 8 取余得上卦；再加时支数得下卦与动爻（除 6 取余）。',
+				'先天数：1乾 2兑 3离 4震 5巽 6坎 7艮 8坤；余 0 作 8 / 6。',
+			],
+			numbers: [
+				'两数分别除 8 取余为上、下卦；两数之和除 6 取余为动爻。',
+				'动爻在下卦（初–三）则下为用、上为体；在上卦（四–上）则上为用、下为体。',
+			],
+			three: [
+				'三数分别定上卦、下卦、动爻（除 8 / 8 / 6 取余）。',
+				'排盘含本卦、互卦、变卦与体用五行生克。',
+			],
+		};
+		for (const tip of tips[this.meihuaMethod]) {
+			ul.createEl('li', { text: tip });
+		}
+
+		const actions = form.createDiv({
+			cls: 'tianji-actions tianji-cast-actions',
+		});
+		const btn = actions.createEl('button', {
+			cls: 'tianji-btn tianji-btn-primary',
+			text: '起卦排盘',
+		});
+		btn.addEventListener('click', () => {
+			void this.runMeihuaCast();
+		});
+	}
+
+	private requireMeihuaQuestion(): boolean {
+		if (this.meihuaQuestion.trim()) return true;
+		new Notice('占测问题不能为空');
+		return false;
+	}
+
+	private parseMeihuaCastTime(): Date {
+		const d = new Date(this.normalizeDatetimeLocal(this.meihuaCastLocal));
+		return Number.isNaN(d.getTime()) ? new Date() : d;
+	}
+
+	private parseMeihuaInt(raw: string, label: string): number | null {
+		const n = Number(raw);
+		if (!Number.isFinite(n) || n < 1 || !Number.isInteger(n)) {
+			new Notice(`${label}须为正整数`);
+			return null;
+		}
+		return n;
+	}
+
+	private async runMeihuaCast(): Promise<void> {
+		if (!this.requireMeihuaQuestion()) return;
+		let num1: number | undefined;
+		let num2: number | undefined;
+		let num3: number | undefined;
+		if (this.meihuaMethod === 'numbers' || this.meihuaMethod === 'three') {
+			const a = this.parseMeihuaInt(this.meihuaNum1, '上卦数');
+			const b = this.parseMeihuaInt(this.meihuaNum2, '下卦数');
+			if (a == null || b == null) return;
+			num1 = a;
+			num2 = b;
+		}
+		if (this.meihuaMethod === 'three') {
+			const c = this.parseMeihuaInt(this.meihuaNum3, '动爻数');
+			if (c == null) return;
+			num3 = c;
+		}
+		try {
+			const cast = castMeihua({
+				method: this.meihuaMethod,
+				castTime: this.parseMeihuaCastTime(),
+				num1,
+				num2,
+				num3,
+			});
+			const result = buildMeihuaResult({
+				cast,
+				subject: this.meihuaSubject,
+				question: this.meihuaQuestion,
+			});
+			await this.saveMeihuaCast(result);
+		} catch (e) {
+			new Notice(String(e));
+		}
+	}
+
+	private async saveMeihuaCast(result: MeihuaResult): Promise<void> {
+		if (!this.requireMeihuaQuestion()) return;
+		this.meihuaResult = result;
+		this.meihuaPanel = 'chart';
+		const title =
+			this.meihuaSubject.trim() ||
+			this.meihuaQuestion.trim().slice(0, 20) ||
+			'梅花易数';
+		try {
+			this.meihuaRecordId = await this.plugin.db.insertReading({
+				type: 'meihua',
+				title,
+				inputJson: JSON.stringify({
+					subject: this.meihuaSubject,
+					question: this.meihuaQuestion,
+					method: this.meihuaMethod,
+					methodLabel: result.methodLabel,
+					castTime: result.castTime,
+					num1: result.num1,
+					num2: result.num2,
+					num3: result.num3,
+				}),
+				resultJson: JSON.stringify(result),
+			});
+			new Notice(`已排盘：${result.methodLabel}`);
+		} catch (e) {
+			new Notice(`排盘已出，存档失败：${String(e)}`);
+		}
+		this.render();
+	}
+
+	private renderMeihuaChart(
+		container: HTMLElement,
+		topBar?: HTMLElement,
+	): void {
+		const stage = container.createDiv({
+			cls: 'tianji-stage tianji-chart-stage',
+		});
+		if (!this.meihuaResult) {
+			this.renderChartEmpty(
+				stage,
+				'尚未起卦。请先在「起卦」完成排盘。',
+				'去起卦',
+				() => {
+					this.meihuaPanel = 'cast';
+					this.render();
+				},
+			);
+			return;
+		}
+
+		const r = this.meihuaResult;
+		const toolbar = (topBar ?? stage).createDiv({
+			cls: 'tianji-chart-toolbar',
+		});
+		const backBtn = toolbar.createEl('button', {
+			cls: 'tianji-btn',
+			text: '返回起卦',
+		});
+		backBtn.addEventListener('click', () => {
+			this.meihuaPanel = 'cast';
+			this.render();
+		});
+		const copyBtn = toolbar.createEl('button', {
+			cls: 'tianji-btn tianji-btn-primary',
+			text: '复制排盘',
+		});
+		copyBtn.addEventListener('click', () => {
+			void this.copyText(formatMeihuaChartText(r), '排盘已复制');
+		});
+		this.appendFavoriteToolbarBtn(toolbar, this.meihuaRecordId);
+
+		const card = stage.createDiv({
+			cls: 'tianji-result-card tianji-mh-result',
+		});
+		const info = card.createDiv({ cls: 'tianji-mh-info' });
+		info.createEl('h4', { text: '基本信息' });
+		const infoGrid = info.createDiv({ cls: 'tianji-mh-info-grid' });
+		const subject = r.question.trim()
+			? `${r.subject || '问事'}（${r.question.trim()}）`
+			: r.subject || '问事';
+		this.addInfoCell(infoGrid, '占测事由', subject);
+		this.addInfoCell(infoGrid, '起卦方式', r.methodLabel);
+		this.addInfoCell(infoGrid, '公历', r.solarText);
+		this.addInfoCell(infoGrid, '农历', r.lunarText);
+		this.addInfoCell(infoGrid, '时辰', `${r.hourBranch}时`);
+		if (r.method === 'numbers') {
+			this.addInfoCell(infoGrid, '报数', `上${r.num1} / 下${r.num2}`);
+		}
+		if (r.method === 'three') {
+			this.addInfoCell(
+				infoGrid,
+				'三数',
+				`上${r.num1} / 下${r.num2} / 动${r.num3}`,
+			);
+		}
+		this.addInfoCell(infoGrid, '动爻', `${r.movingLineName}（第${r.movingLine}爻）`);
+		this.addInfoCell(
+			infoGrid,
+			'体用',
+			`体${r.ti.name}${r.ti.nature} · 用${r.yong.name}${r.yong.nature}`,
+		);
+		this.addInfoCell(
+			infoGrid,
+			'生克',
+			`${r.relation}（体${r.ti.wuxing} / 用${r.yong.wuxing}）`,
+		);
+
+		const board = card.createDiv({ cls: 'tianji-mh-board' });
+		board.createEl('h4', { text: '本卦 · 互卦 · 变卦' });
+		const pair = board.createDiv({ cls: 'tianji-mh-pair' });
+		this.renderMeihuaGuaCard(pair, '本卦', r.original, r, 'original');
+		this.renderMeihuaGuaCard(pair, '互卦', r.mutual, r, 'mutual');
+		this.renderMeihuaGuaCard(pair, '变卦', r.changed, r, 'changed');
+
+		this.appendReadingNoteSection(stage, this.meihuaRecordId);
+	}
+
+	private renderMeihuaGuaCard(
+		parent: HTMLElement,
+		title: string,
+		gua: {
+			index: number;
+			name: string;
+			alias: string;
+			binary: string;
+			nature: string;
+		},
+		r: MeihuaResult,
+		kind: 'original' | 'mutual' | 'changed',
+	): void {
+		const card = parent.createDiv({ cls: 'tianji-mh-gua' });
+		card.createDiv({ cls: 'tianji-mh-gua-title', text: title });
+		card.createDiv({
+			cls: 'tianji-mh-gua-name',
+			text: gua.alias || gua.name,
+		});
+		card.createDiv({
+			cls: 'tianji-mh-gua-meta',
+			text: `第${gua.index}卦 · ${gua.nature || '—'}`,
+		});
+
+		const lines = card.createDiv({ cls: 'tianji-mh-yao-lines' });
+		for (let display = 5; display >= 0; display--) {
+			const pos = display + 1;
+			const yang = gua.binary[display] === '1';
+			const isMoving = kind === 'original' && pos === r.movingLine;
+			const isChangedMark = kind === 'changed' && pos === r.movingLine;
+			const row = lines.createDiv({
+				cls: `tianji-mh-yao-row${isMoving ? ' is-moving' : ''}`,
+			});
+			row.createSpan({
+				cls: 'tianji-mh-yao-pos',
+				text: ['初', '二', '三', '四', '五', '上'][display]!,
+			});
+			this.renderYaoBar(row, {
+				yang,
+				moving: isMoving || isChangedMark,
+			});
+			if (isMoving) {
+				row.createSpan({ cls: 'tianji-mh-yao-mark', text: '动' });
+			} else if (isChangedMark) {
+				row.createSpan({ cls: 'tianji-mh-yao-mark', text: '变' });
+			} else {
+				row.createSpan({ cls: 'tianji-mh-yao-mark', text: '' });
+			}
+		}
+
+		const trigrams = card.createDiv({ cls: 'tianji-mh-trigrams' });
+		if (kind === 'original') {
+			const upperRole = r.movingInUpper
+				? r.yong.id === r.upper.id
+					? '用'
+					: '体'
+				: r.ti.id === r.upper.id
+					? '体'
+					: '用';
+			const lowerRole = !r.movingInUpper
+				? r.yong.id === r.lower.id
+					? '用'
+					: '体'
+				: r.ti.id === r.lower.id
+					? '体'
+					: '用';
+			trigrams.createSpan({
+				text: `上${r.upper.name}${r.upper.nature}（${upperRole}） · ${r.upper.wuxing}`,
+			});
+			trigrams.createSpan({
+				text: `下${r.lower.name}${r.lower.nature}（${lowerRole}） · ${r.lower.wuxing}`,
+			});
+		} else if (kind === 'mutual') {
+			trigrams.createSpan({
+				text: '取本卦二三四为下、三四五为上',
+			});
+		}
+	}
+
+	private restoreMeihua(rec: ReadingRecord): void {
+		const result = JSON.parse(rec.resultJson) as MeihuaResult;
+		let input: {
+			subject?: string;
+			question?: string;
+			method?: MeihuaMethod;
+			castTime?: string;
+			num1?: number | null;
+			num2?: number | null;
+			num3?: number | null;
+		} = {};
+		try {
+			input = JSON.parse(rec.inputJson) as typeof input;
+		} catch {
+			/* ignore */
+		}
+
+		this.meihuaSubject = input.subject ?? result.subject ?? '问事';
+		this.meihuaQuestion = input.question ?? result.question ?? '';
+		this.meihuaMethod = input.method ?? result.method ?? 'time';
+		this.meihuaNum1 =
+			input.num1 != null
+				? String(input.num1)
+				: result.num1 != null
+					? String(result.num1)
+					: '';
+		this.meihuaNum2 =
+			input.num2 != null
+				? String(input.num2)
+				: result.num2 != null
+					? String(result.num2)
+					: '';
+		this.meihuaNum3 =
+			input.num3 != null
+				? String(input.num3)
+				: result.num3 != null
+					? String(result.num3)
+					: '';
+		if (input.castTime || result.castTime) {
+			const d = new Date(input.castTime || result.castTime);
+			if (!Number.isNaN(d.getTime())) {
+				this.meihuaCastLocal = this.toDatetimeLocal(d);
+			}
+		}
+		this.meihuaResult = result;
+		if (!result.mutual?.binary && result.original?.binary) {
+			result.mutual = getHexagramByBinary(
+				mutualBinary(result.original.binary),
+			);
+		}
+		this.meihuaRecordId = rec.id;
+		this.meihuaPanel = 'chart';
+		this.activeTab = 'meihua';
+		this.persistActiveTab('meihua');
+	}
+
 	/* -------------------- 小六壬 -------------------- */
 
 	private renderXiaoliuren(container: HTMLElement): void {
@@ -3504,6 +4014,7 @@ export class TianjiView extends ItemView {
 		try {
 			if (rec.type === 'liuyao') this.restoreLiuyao(rec);
 			else if (rec.type === 'xiaoliuren') this.restoreXiaoliuren(rec);
+			else if (rec.type === 'meihua') this.restoreMeihua(rec);
 			else if (rec.type === 'bazi') this.restoreBazi(rec);
 			else this.restoreTarot(rec);
 			new Notice('已打开排盘');

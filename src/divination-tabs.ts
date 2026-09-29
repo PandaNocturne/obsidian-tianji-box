@@ -3,6 +3,7 @@ import type { DivinationTabConfig, DivinationType, TianjiSettings } from './type
 export const ALL_DIVINATION_TYPES: DivinationType[] = [
 	'liuyao',
 	'xiaoliuren',
+	'meihua',
 	'tarot',
 	'bazi',
 ];
@@ -13,14 +14,16 @@ export const DIVINATION_TAB_META: Record<
 > = {
 	liuyao: { label: '六爻占卜', shortLabel: '六爻', icon: 'hexagon' },
 	xiaoliuren: { label: '小六壬', shortLabel: '小六壬', icon: 'circle-dot' },
+	meihua: { label: '梅花易数', shortLabel: '梅花', icon: 'flower-2' },
 	tarot: { label: '塔罗牌', shortLabel: '塔罗', icon: 'layout-grid' },
 	bazi: { label: '八字分析', shortLabel: '八字', icon: 'calendar' },
 };
 
-/** 默认：六爻 > 小六壬 > 塔罗牌 > 八字 */
+/** 默认：六爻 > 小六壬 > 梅花易数 > 塔罗牌 > 八字 */
 export const DEFAULT_DIVINATION_TABS: DivinationTabConfig[] = [
 	{ id: 'liuyao', enabled: true },
 	{ id: 'xiaoliuren', enabled: true },
+	{ id: 'meihua', enabled: true },
 	{ id: 'tarot', enabled: true },
 	{ id: 'bazi', enabled: true },
 ];
@@ -38,6 +41,7 @@ export function normalizeDivinationTabs(
 			if (
 				id !== 'liuyao' &&
 				id !== 'xiaoliuren' &&
+				id !== 'meihua' &&
 				id !== 'tarot' &&
 				id !== 'bazi'
 			) {
