@@ -182,7 +182,7 @@ export class TianjiDatabase {
 		if (!this.db) return [];
 		const db = this.db;
 		const favClause = favoritesOnly ? ' AND is_favorite = 1' : '';
-		const order = 'ORDER BY is_favorite DESC, id DESC LIMIT ?';
+		const order = 'ORDER BY id DESC LIMIT ?';
 
 		const stmt = type
 			? db.prepare(

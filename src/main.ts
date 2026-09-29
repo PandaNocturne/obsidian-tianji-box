@@ -48,7 +48,7 @@ export default class TianjiPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'open-tianji-liuyao',
-			name: '打开六爻占卜',
+			name: '打开六爻',
 			callback: () => {
 				void this.activateView('liuyao');
 			},

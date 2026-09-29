@@ -13,7 +13,7 @@ export const DIVINATION_TAB_META: Record<
 	{ label: string; shortLabel: string; icon: string; blurb: string }
 > = {
 	liuyao: {
-		label: '六爻占卜',
+		label: '六爻',
 		shortLabel: '六爻',
 		icon: 'hexagon',
 		blurb: '周易六爻，一事一卦问吉凶',

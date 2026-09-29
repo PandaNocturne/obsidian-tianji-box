@@ -15,7 +15,7 @@ export type YaoValue = 6 | 7 | 8 | 9;
 /** 打开位置：右侧边栏 / 左侧边栏 / 主区标签页 */
 export type OpenLocation = 'sidebar-right' | 'sidebar-left' | 'tab';
 
-/** 卦例库布局 */
+/** 记录列表布局 */
 export type LibraryLayout = 'table' | 'cards';
 
 /** 笔记打开方式 */
@@ -31,7 +31,7 @@ export interface DivinationTabConfig {
 export interface TianjiSettings {
 	/** 新建视图时的打开位置，默认右侧边栏 */
 	openLocation: OpenLocation;
-	/** 卦例库 / 命理库 / 牌阵库列表布局 */
+	/** 记录列表布局 */
 	libraryLayout: LibraryLayout;
 	/**
 	 * 占卜模块启用与排序。
