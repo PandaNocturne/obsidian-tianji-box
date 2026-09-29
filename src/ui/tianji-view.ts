@@ -564,14 +564,8 @@ export class TianjiView extends ItemView {
 
 		const top = form.createDiv({ cls: 'tianji-cast-row' });
 		this.field(top, '占测事由', (el) => {
-			const input = el.createEl('input', {
-				type: 'text',
-				cls: 'tianji-input',
-				placeholder: '如：事业、感情、财运…',
-				value: this.liuyaoSubject,
-			});
-			input.addEventListener('input', () => {
-				this.liuyaoSubject = input.value;
+			this.bindSubjectField(el, () => this.liuyaoSubject, (v) => {
+				this.liuyaoSubject = v;
 			});
 		});
 		this.field(top, '性别', (el) => {
@@ -2018,14 +2012,8 @@ export class TianjiView extends ItemView {
 		}
 
 		this.field(form, '占测事由', (el) => {
-			const input = el.createEl('input', {
-				type: 'text',
-				cls: 'tianji-input',
-				placeholder: '如：事业、感情、财运…',
-				value: this.tarotSubject,
-			});
-			input.addEventListener('input', () => {
-				this.tarotSubject = input.value;
+			this.bindSubjectField(el, () => this.tarotSubject, (v) => {
+				this.tarotSubject = v;
 			});
 		});
 
@@ -3017,14 +3005,8 @@ export class TianjiView extends ItemView {
 
 		const top = form.createDiv({ cls: 'tianji-cast-row' });
 		this.field(top, '占测事由', (el) => {
-			const input = el.createEl('input', {
-				type: 'text',
-				cls: 'tianji-input',
-				placeholder: '如：事业、感情、财运…',
-				value: this.meihuaSubject,
-			});
-			input.addEventListener('input', () => {
-				this.meihuaSubject = input.value;
+			this.bindSubjectField(el, () => this.meihuaSubject, (v) => {
+				this.meihuaSubject = v;
 			});
 		});
 		this.field(top, '性别', (el) => {
@@ -3515,14 +3497,8 @@ export class TianjiView extends ItemView {
 
 		const top = form.createDiv({ cls: 'tianji-cast-row' });
 		this.field(top, '占测事由', (el) => {
-			const input = el.createEl('input', {
-				type: 'text',
-				cls: 'tianji-input',
-				placeholder: '如：事业、感情、财运…',
-				value: this.xiaoliurenSubject,
-			});
-			input.addEventListener('input', () => {
-				this.xiaoliurenSubject = input.value;
+			this.bindSubjectField(el, () => this.xiaoliurenSubject, (v) => {
+				this.xiaoliurenSubject = v;
 			});
 		});
 		this.field(top, '性别', (el) => {
@@ -4444,6 +4420,182 @@ export class TianjiView extends ItemView {
 		row.createDiv({ cls: 'tianji-label', text: label });
 		const control = row.createDiv({ cls: 'tianji-control' });
 		build(control);
+	}
+
+	/** 占测事由：可输入 + 自定义下拉提示菜单 */
+	private bindSubjectField(
+		el: HTMLElement,
+		get: () => string,
+		set: (value: string) => void,
+	): void {
+		const suggestions = this.plugin.settings.subjectSuggestions ?? [];
+		const wrap = el.createDiv({ cls: 'tianji-subject-field' });
+		const inputWrap = wrap.createDiv({ cls: 'tianji-subject-input-wrap' });
+
+		const input = inputWrap.createEl('input', {
+			type: 'text',
+			cls: 'tianji-input tianji-subject-input',
+			placeholder: '选择或输入事由',
+			value: get(),
+			attr: {
+				spellcheck: 'false',
+				autocomplete: 'off',
+				role: 'combobox',
+				'aria-autocomplete': 'list',
+				'aria-expanded': 'false',
+			},
+		});
+
+		const toggle = inputWrap.createEl('button', {
+			cls: 'tianji-subject-toggle',
+			type: 'button',
+			attr: {
+				title: '事由提示',
+				'aria-label': '事由提示',
+				tabindex: '-1',
+			},
+		});
+		setIcon(toggle, 'chevron-down');
+
+		const menu = wrap.createDiv({
+			cls: 'tianji-subject-menu',
+			attr: { role: 'listbox', hidden: 'true' },
+		});
+
+		let activeIndex = -1;
+		let filtered = [...suggestions];
+
+		const setExpanded = (open: boolean) => {
+			menu.toggleAttribute('hidden', !open);
+			input.setAttribute('aria-expanded', open ? 'true' : 'false');
+			wrap.toggleClass('is-open', open);
+			if (!open) activeIndex = -1;
+		};
+
+		const paintActive = () => {
+			const opts = Array.from(
+				menu.querySelectorAll('.tianji-subject-option'),
+			) as HTMLElement[];
+			opts.forEach((opt, i) => {
+				opt.toggleClass('is-active', i === activeIndex);
+				opt.setAttribute(
+					'aria-selected',
+					i === activeIndex ? 'true' : 'false',
+				);
+			});
+			opts[activeIndex]?.scrollIntoView({ block: 'nearest' });
+		};
+
+		const applyValue = (value: string) => {
+			set(value);
+			input.value = value;
+			setExpanded(false);
+		};
+
+		const renderMenu = (query: string, opts?: { browse?: boolean }) => {
+			const q = query.trim().toLowerCase();
+			const browse = opts?.browse ?? false;
+			// 浏览打开（聚焦/箭头）始终列出全部，便于已有事由时切换；输入时再筛选
+			const exactMatch = suggestions.some((s) => s.toLowerCase() === q);
+			filtered =
+				browse || !q || exactMatch
+					? [...suggestions]
+					: suggestions.filter((s) => s.toLowerCase().includes(q));
+			menu.empty();
+			if (filtered.length === 0) {
+				menu.createDiv({
+					cls: 'tianji-subject-empty',
+					text: '无匹配提示',
+				});
+				activeIndex = -1;
+				return;
+			}
+			const current = get().trim();
+			filtered.forEach((label, i) => {
+				const opt = menu.createEl('button', {
+					cls: `tianji-subject-option${current === label ? ' is-current' : ''}`,
+					type: 'button',
+					text: label,
+					attr: {
+						role: 'option',
+						'aria-selected': 'false',
+					},
+				});
+				opt.addEventListener('mousedown', (e) => {
+					e.preventDefault();
+					applyValue(label);
+				});
+				opt.addEventListener('mouseenter', () => {
+					activeIndex = i;
+					paintActive();
+				});
+			});
+			activeIndex = filtered.findIndex((s) => s === current);
+			if (activeIndex < 0 && filtered.length > 0) activeIndex = 0;
+			paintActive();
+		};
+
+		const openMenu = (opts?: { browse?: boolean }) => {
+			renderMenu(input.value, opts);
+			setExpanded(true);
+		};
+
+		input.addEventListener('input', () => {
+			set(input.value);
+			openMenu({ browse: false });
+		});
+		input.addEventListener('focus', () => openMenu({ browse: true }));
+		input.addEventListener('keydown', (e) => {
+			const open = !menu.hasAttribute('hidden');
+			if (e.key === 'ArrowDown') {
+				e.preventDefault();
+				if (!open) {
+					openMenu({ browse: true });
+					return;
+				}
+				if (filtered.length === 0) return;
+				activeIndex = (activeIndex + 1) % filtered.length;
+				paintActive();
+			} else if (e.key === 'ArrowUp') {
+				e.preventDefault();
+				if (!open) {
+					openMenu({ browse: true });
+					return;
+				}
+				if (filtered.length === 0) return;
+				activeIndex =
+					(activeIndex - 1 + filtered.length) % filtered.length;
+				paintActive();
+			} else if (e.key === 'Enter') {
+				if (open && activeIndex >= 0 && filtered[activeIndex]) {
+					e.preventDefault();
+					applyValue(filtered[activeIndex]!);
+				}
+			} else if (e.key === 'Escape') {
+				if (open) {
+					e.preventDefault();
+					setExpanded(false);
+				}
+			}
+		});
+
+		toggle.addEventListener('mousedown', (e) => {
+			e.preventDefault();
+			if (menu.hasAttribute('hidden')) {
+				input.focus();
+				openMenu({ browse: true });
+			} else {
+				setExpanded(false);
+			}
+		});
+
+		input.addEventListener('blur', () => {
+			window.setTimeout(() => {
+				if (!wrap.contains(document.activeElement)) {
+					setExpanded(false);
+				}
+			}, 120);
+		});
 	}
 
 	private radio(

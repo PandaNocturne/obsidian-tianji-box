@@ -6,7 +6,7 @@ import {
 	isTabEnabled,
 	normalizeDivinationTabs,
 } from './divination-tabs';
-import { DEFAULT_SETTINGS, TianjiSettingTab } from './settings';
+import { DEFAULT_SETTINGS, TianjiSettingTab, normalizeSubjectSuggestions } from './settings';
 import type { DivinationType, TianjiSettings } from './types';
 import { TarotImageCache } from './tarot/image-cache';
 import { TIANJI_VIEW_TYPE, TianjiView, type TabId } from './ui/tianji-view';
@@ -176,6 +176,9 @@ export default class TianjiPlugin extends Plugin {
 		this.settings.divinationTabs = normalizeDivinationTabs(
 			loaded?.divinationTabs ?? DEFAULT_SETTINGS.divinationTabs,
 		);
+		this.settings.subjectSuggestions = normalizeSubjectSuggestions(
+			loaded?.subjectSuggestions ?? DEFAULT_SETTINGS.subjectSuggestions,
+		);
 		const last = this.settings.lastActiveTab;
 		if (
 			last !== null &&
@@ -217,6 +220,9 @@ export default class TianjiPlugin extends Plugin {
 	async saveSettings() {
 		this.settings.divinationTabs = normalizeDivinationTabs(
 			this.settings.divinationTabs,
+		);
+		this.settings.subjectSuggestions = normalizeSubjectSuggestions(
+			this.settings.subjectSuggestions,
 		);
 		await this.saveData(this.settings);
 	}

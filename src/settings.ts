@@ -13,9 +13,25 @@ import type {
 	TianjiSettings,
 } from './types';
 
+export const DEFAULT_SUBJECT_SUGGESTIONS: string[] = [
+	'财运',
+	'事业',
+	'合作',
+	'婚姻',
+	'疾病',
+	'学业',
+	'出行',
+	'失物',
+	'争讼',
+	'考试',
+	'比赛',
+	'天气',
+];
+
 export const DEFAULT_SETTINGS: TianjiSettings = {
 	openLocation: 'sidebar-right',
 	libraryLayout: 'table',
+	subjectSuggestions: [...DEFAULT_SUBJECT_SUGGESTIONS],
 	divinationTabs: DEFAULT_DIVINATION_TABS.map((t) => ({ ...t })),
 	lastActiveTab: null,
 	noteFolder: '天机匣/笔记',
@@ -25,6 +41,31 @@ export const DEFAULT_SETTINGS: TianjiSettings = {
 	noteOpenMode: 'modal',
 	noteAutoCreate: false,
 };
+
+/** 去空、去重、保序；全空时回退默认列表 */
+export function normalizeSubjectSuggestions(
+	raw: unknown,
+): string[] {
+	const list = Array.isArray(raw)
+		? raw
+		: typeof raw === 'string'
+			? raw.split(/[,，]/)
+			: [];
+	const seen = new Set<string>();
+	const out: string[] = [];
+	for (const item of list) {
+		if (typeof item !== 'string') continue;
+		const t = item.trim();
+		if (!t || seen.has(t)) continue;
+		seen.add(t);
+		out.push(t);
+	}
+	return out.length > 0 ? out : [...DEFAULT_SUBJECT_SUGGESTIONS];
+}
+
+export function formatSubjectSuggestions(list: string[]): string {
+	return normalizeSubjectSuggestions(list).join('，');
+}
 
 export class TianjiSettingTab extends PluginSettingTab {
 	plugin: TianjiPlugin;
@@ -138,7 +179,48 @@ export class TianjiSettingTab extends PluginSettingTab {
 				});
 		});
 
+		this.displaySubjectSuggestions(containerEl);
 		this.displayNoteSettings(containerEl);
+	}
+
+	private displaySubjectSuggestions(containerEl: HTMLElement): void {
+		new Setting(containerEl)
+			.setName('占测事由提示')
+			.setDesc('用中文逗号「，」或英文逗号「,」分隔。起卦表单可点选，也可自由输入。')
+			.setHeading();
+
+		const wrap = containerEl.createDiv({
+			cls: 'tianji-settings-subject-box',
+		});
+		const ta = wrap.createEl('textarea', {
+			cls: 'tianji-settings-subject-textarea',
+			attr: {
+				rows: '4',
+				spellcheck: 'false',
+				placeholder: formatSubjectSuggestions(DEFAULT_SUBJECT_SUGGESTIONS),
+			},
+		});
+		ta.value = formatSubjectSuggestions(
+			this.plugin.settings.subjectSuggestions,
+		);
+		ta.addEventListener('change', async () => {
+			this.plugin.settings.subjectSuggestions =
+				normalizeSubjectSuggestions(ta.value);
+			ta.value = formatSubjectSuggestions(
+				this.plugin.settings.subjectSuggestions,
+			);
+			await this.plugin.saveSettings();
+		});
+
+		new Setting(containerEl).addButton((btn) => {
+			btn.setButtonText('恢复默认').onClick(async () => {
+				this.plugin.settings.subjectSuggestions = [
+					...DEFAULT_SUBJECT_SUGGESTIONS,
+				];
+				await this.plugin.saveSettings();
+				this.display();
+			});
+		});
 	}
 
 	private displayNoteSettings(containerEl: HTMLElement): void {

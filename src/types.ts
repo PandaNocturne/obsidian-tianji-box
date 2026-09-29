@@ -34,6 +34,10 @@ export interface TianjiSettings {
 	/** 记录列表布局 */
 	libraryLayout: LibraryLayout;
 	/**
+	 * 占测事由文字提示（起卦表单快捷建议，可在设置中增删改）。
+	 */
+	subjectSuggestions: string[];
+	/**
 	 * 占卜模块启用与排序。
 	 * 默认顺序：六爻 > 小六壬 > 梅花易数 > 塔罗牌 > 八字。
 	 */
