@@ -26,17 +26,21 @@ jobs:
                   npm ci
                   npm run build
 
-            - name: Check for optional styles
-              id: styles
+            - name: Package release assets
               run: |
-                  [ -f styles.css ] && echo "exists=true" >> "$GITHUB_OUTPUT" || echo "exists=false" >> "$GITHUB_OUTPUT"
+                  mkdir -p dist-release
+                  cp main.js manifest.json styles.css sql-wasm.wasm dist-release/
+                  cp -r assets dist-release/
+                  (cd dist-release && zip -r ../tianji-box.zip .)
 
             - name: Attest build provenance
               uses: actions/attest@v4
               with:
                   subject-path: |
                       main.js
-                      ${{ steps.styles.outputs.exists == 'true' && 'styles.css' || '' }}
+                      styles.css
+                      sql-wasm.wasm
+                      tianji-box.zip
 
             - name: Create release
               env:
@@ -47,4 +51,4 @@ jobs:
                   gh release create "$tag" \
                     --title="$tag" \
                     --draft \
-                    main.js manifest.json ${{ steps.styles.outputs.exists == 'true' && 'styles.css' || '' }}
+                    main.js manifest.json styles.css sql-wasm.wasm tianji-box.zip

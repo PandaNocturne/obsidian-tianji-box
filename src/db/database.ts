@@ -1,6 +1,7 @@
 import initSqlJs, { type Database, type SqlJsStatic } from 'sql.js';
 import type { Plugin } from 'obsidian';
 import type { DivinationType, ReadingRecord } from '../types';
+import embeddedWasm from 'sql.js/dist/sql-wasm.wasm';
 
 const READING_COLS =
 	'id, type, title, input_json, result_json, ai_response, ai_thinking, note_md, note_uid, is_favorite, created_at';
@@ -14,23 +15,19 @@ export class TianjiDatabase {
 		this.dbPath = `${plugin.manifest.dir}/tianji.db`;
 	}
 
+	/**
+	 * 优先使用打包进 main.js 的 wasm（BRAT 只下发 main.js 时也能用），
+	 * 其次读插件目录下的 sql-wasm.wasm。不依赖外网 CDN。
+	 */
 	async init(): Promise<void> {
-		const wasmPath = `${this.plugin.manifest.dir}/sql-wasm.wasm`;
-		let wasmBinary: ArrayBuffer | undefined;
-		try {
-			wasmBinary = await this.plugin.app.vault.adapter.readBinary(wasmPath);
-		} catch {
-			/* fallback locateFile */
+		const wasmBinary = await this.resolveWasmBinary();
+		if (!wasmBinary || wasmBinary.byteLength === 0) {
+			throw new Error(
+				'缺少 sql-wasm.wasm：请使用含完整资源的 Release / 重新构建插件。',
+			);
 		}
 
-		this.SQL = await initSqlJs(
-			wasmBinary
-				? { wasmBinary }
-				: {
-						locateFile: (file: string) =>
-							`https://sql.js.org/dist/${file}`,
-					},
-		);
+		this.SQL = await initSqlJs({ wasmBinary });
 
 		try {
 			const existing = await this.plugin.app.vault.adapter.readBinary(
@@ -58,6 +55,26 @@ export class TianjiDatabase {
 		`);
 		this.migrate();
 		await this.persist();
+	}
+
+	isReady(): boolean {
+		return this.db !== null;
+	}
+
+	private async resolveWasmBinary(): Promise<ArrayBuffer | undefined> {
+		if (embeddedWasm?.byteLength) {
+			return embeddedWasm.buffer.slice(
+				embeddedWasm.byteOffset,
+				embeddedWasm.byteOffset + embeddedWasm.byteLength,
+			) as ArrayBuffer;
+		}
+
+		const wasmPath = `${this.plugin.manifest.dir}/sql-wasm.wasm`;
+		try {
+			return await this.plugin.app.vault.adapter.readBinary(wasmPath);
+		} catch {
+			return undefined;
+		}
 	}
 
 	private migrate(): void {
@@ -162,7 +179,8 @@ export class TianjiDatabase {
 		limit = 50,
 		favoritesOnly = false,
 	): ReadingRecord[] {
-		const db = this.ensureDb();
+		if (!this.db) return [];
+		const db = this.db;
 		const favClause = favoritesOnly ? ' AND is_favorite = 1' : '';
 		const order = 'ORDER BY is_favorite DESC, id DESC LIMIT ?';
 
@@ -190,8 +208,8 @@ export class TianjiDatabase {
 	}
 
 	countReadings(type: DivinationType, favoritesOnly = false): number {
-		const db = this.ensureDb();
-		const stmt = db.prepare(
+		if (!this.db) return 0;
+		const stmt = this.db.prepare(
 			favoritesOnly
 				? `SELECT COUNT(*) as c FROM readings WHERE type = ? AND is_favorite = 1`
 				: `SELECT COUNT(*) as c FROM readings WHERE type = ?`,
@@ -204,8 +222,8 @@ export class TianjiDatabase {
 	}
 
 	getReading(id: number): ReadingRecord | null {
-		const db = this.ensureDb();
-		const stmt = db.prepare(
+		if (!this.db) return null;
+		const stmt = this.db.prepare(
 			`SELECT ${READING_COLS} FROM readings WHERE id = ?`,
 		);
 		stmt.bind([id]);

@@ -54,6 +54,10 @@ const context = await esbuild.context({
 	treeShaking: true,
 	outfile: 'main.js',
 	minify: prod,
+	// BRAT 只下发 main.js：把 sql.js wasm 打进包，避免侧边栏因缺 wasm 白屏
+	loader: {
+		'.wasm': 'binary',
+	},
 });
 
 if (prod) {

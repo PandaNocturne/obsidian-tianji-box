@@ -110,7 +110,8 @@ export default class TianjiPlugin extends Plugin {
 			});
 		}
 
-		workspace.revealLeaf(leaf);
+		// Obsidian 1.7+ 延迟视图：必须 await，否则 leaf.view 可能仍是 DeferredView
+		await workspace.revealLeaf(leaf);
 		const view = leaf.view;
 		if (view instanceof TianjiView) {
 			if (tab) {

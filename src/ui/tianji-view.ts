@@ -296,11 +296,31 @@ export class TianjiView extends ItemView {
 			return;
 		}
 		this.bodyEl.empty();
-		if (this.activeTab === 'liuyao') this.renderLiuyao(this.bodyEl);
-		else if (this.activeTab === 'xiaoliuren')
-			this.renderXiaoliuren(this.bodyEl);
-		else if (this.activeTab === 'bazi') this.renderBazi(this.bodyEl);
-		else this.renderTarot(this.bodyEl);
+		try {
+			if (!this.plugin.db?.isReady()) {
+				const warn = this.bodyEl.createDiv({
+					cls: 'tianji-form tianji-db-warning',
+				});
+				warn.createEl('p', {
+					text: '本地数据库未就绪，历史库与存档暂不可用；起卦界面仍可浏览。可尝试重载插件或更新到最新版。',
+				});
+			}
+			if (this.activeTab === 'liuyao') this.renderLiuyao(this.bodyEl);
+			else if (this.activeTab === 'xiaoliuren')
+				this.renderXiaoliuren(this.bodyEl);
+			else if (this.activeTab === 'bazi') this.renderBazi(this.bodyEl);
+			else this.renderTarot(this.bodyEl);
+		} catch (e) {
+			console.error('Tianji render failed', e);
+			const err = this.bodyEl.createDiv({ cls: 'tianji-form' });
+			err.createEl('p', {
+				text: '界面渲染失败，请查看控制台或重新加载插件。',
+			});
+			err.createEl('p', {
+				cls: 'tianji-muted',
+				text: String(e),
+			});
+		}
 	}
 
 	private buildTabs(): void {
@@ -3177,7 +3197,9 @@ export class TianjiView extends ItemView {
 			onChange: (mode: PanelMode) => void;
 		},
 	): void {
-		const count = this.plugin.db.countReadings(opts.type);
+		const count = this.plugin.db?.isReady()
+			? this.plugin.db.countReadings(opts.type)
+			: 0;
 		const bar = container.createDiv({ cls: 'tianji-panel-switch' });
 		const mk = (mode: PanelMode, label: string) => {
 			const btn = bar.createEl('button', {
